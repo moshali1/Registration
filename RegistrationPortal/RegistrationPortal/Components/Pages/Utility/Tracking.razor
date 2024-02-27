@@ -1,0 +1,210 @@
+﻿@page "/tracking"
+@page "/track-changes"
+@inject IUserData UserData
+@inject IFormData FormData
+@inject AuthenticationStateProvider AuthState
+@rendermode InteractiveServer
+
+@attribute [Authorize]
+
+<div class="bg-white shadow rounded-lg">
+    <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-base font-semibold leading-6 text-gray-900">Form Tracking</h3>
+        <div class="mt-2 max-w-xl text-sm text-gray-500">
+            <p>Track activity of a form from submission throughout the competition.</p>
+        </div>
+            @if (hideParticipantSelection == true && selectedForm is null)
+            {
+                <div class="mt-5 sm:flex sm:items-center">
+                    <div class="w-full sm:max-w-xs">
+                        <label class="sr-only">Division</label>
+                        <select class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6" @bind="selectedDivision">
+                            <option value="">Select Division</option>
+                            <option value="Memorization">Memorization</option>
+                            <option value="Ten Qira'at">Ten Qiraat</option>
+                            <option value="Best Voice">Best Voice</option>
+                        </select>
+                    </div>
+                    <button @onclick="OnDivisionSelection" class="mt-3 inline-flex w-full items-center justify-center rounded-md bg-cyan-700 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cyan-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-700 sm:ml-3 sm:mt-0 sm:w-auto">Next</button>
+                </div>
+                @if (displayErrorMessage == true)
+                {
+                <div class="mt-3">
+                    <p class="text-red-600">There are no existing forms in the selected division.</p>
+                </div>
+                }
+            }
+            else if (hideParticipantSelection == false && selectedForm is null)
+            {
+                <div class="mt-5 sm:flex sm:items-center">
+                    <div class="w-full sm:max-w-xs">
+                        <label class="sr-only">Division</label>
+                        <input type="text" readonly class="block w-full rounded-md border-0 py-1.5 text-gray-900 bg-gray-100 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6" @bind="selectedDivision" />
+                    </div>
+                 </div>
+
+                <div class="mt-5 sm:flex sm:items-center">
+                    <div class="w-full sm:max-w-xs">
+                        <label class="sr-only">Full Name</label>
+                        <select class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6" @bind="selectedParticipantId">
+                            <option disabled selected>Choose a Participant</option>
+                            @foreach (var form in forms)
+                            {
+                                <option value="@form.Id">@form.PersonalInfo.GetFullName()</option>
+                            }
+                        </select>
+                    </div>
+                    <button @onclick="OnInput" class="mt-3 inline-flex w-full items-center justify-center rounded-md bg-cyan-700 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cyan-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-700 sm:ml-3 sm:mt-0 sm:w-auto">Track</button>
+                </div>
+            }
+        else if (selectedForm is not null)
+        {
+            <div class="mt-5 sm:flex sm:items-center">
+                <button @onclick="ResetTrackingSearch" class="mt-3 inline-flex w-full items-center justify-start rounded-md bg-cyan-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cyan-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-700 sm:ml-0 sm:mt-0 sm:w-auto">Reset Tracking Search</button>
+            </div>
+        }
+    </div>
+</div>
+
+
+@if (selectedForm is not null)
+{
+    <div class="flex justify-center mt-6">
+        <div class="md:basis-3/4 basis-full bg-white shadow rounded-lg px-2 py-4">
+            <p class="text-sm text-center">@selectedForm.CompetitionInfo.Division Form | @selectedForm.PersonalInfo.GetFullName()</p>
+            <ul role="list" class="space-y-6 mt-4">
+                @foreach (var tracking in selectedForm.FormHistory)
+                {
+                    <li class="relative flex gap-x-4">
+                        <div class="absolute left-0 top-0 flex w-6 justify-center -bottom-6">
+                            <div class="w-px bg-gray-200"></div>
+                        </div>
+                        <div class="relative flex h-6 w-6 flex-none items-center justify-center bg-white">
+                            <div class="h-1.5 w-1.5 rounded-full bg-gray-100 ring-1 ring-gray-300"></div>
+                        </div>
+                        <p class="flex-auto py-0.5 text-xs leading-5 text-gray-500"><span class="font-medium text-gray-900">@tracking.DisplayName</span> @tracking.TrackingAction.</p>
+                        <p class="flex-none py-0.5 text-xs leading-5 text-gray-500">@TimeAgo(tracking.ActionDateTime)</p>
+                    </li>
+                    @if (tracking.Descriptions is not null)
+                    {
+                        @foreach (var description in tracking.Descriptions)
+                        {
+                            <li class="relative flex gap-x-4">
+                                <div class="absolute left-0 top-0 flex w-6 justify-center -bottom-6">
+                                </div>
+                                <div class="relative flex h-6 w-6 flex-none items-center justify-center bg-white">
+                                </div>
+                                <p class="flex py-0.5 text-xs leading-5 text-gray-500">@description</p>
+                            </li>
+                        }
+                    }
+                }
+            </ul>
+        </div>
+    </div>
+}
+
+
+@code {
+    private User loggedInUser;
+    private List<Form> forms;
+
+    private Form selectedForm;
+
+    private string selectedParticipantId;
+    private string selectedDivision;
+
+    private bool displayErrorMessage = false;
+
+    private bool hideParticipantSelection = true;
+
+    private bool IsAdmin { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        loggedInUser = await AuthState.GetUserFromAuth(UserData);
+
+        var authState = await AuthState.GetAuthenticationStateAsync();
+        var user = authState.User;
+        IsAdmin = user.IsInRole("Admin");
+    }
+
+    private async Task OnDivisionSelection()
+    {
+        if (string.IsNullOrWhiteSpace(selectedDivision) == false)
+        {
+            var results = new List<Form>();
+
+            if (IsAdmin)    
+            {
+                results = await FormData.GetForms();
+            }
+            else
+            {
+                results = await FormData.GetFormsByCreator(loggedInUser.Id);
+            }
+
+            forms = results.Where(f => f.CompetitionInfo.Division == selectedDivision).ToList();
+            if (forms.Count() == 0)  
+            {
+                ResetTrackingSearch();
+                displayErrorMessage = true;
+            }
+            else
+            {
+                hideParticipantSelection = false;
+            }
+
+        }
+    }
+
+    private void OnInput()
+    {
+        if (string.IsNullOrWhiteSpace(selectedParticipantId) == false)
+        {
+            selectedForm = forms.Where(m => m.Id == selectedParticipantId).FirstOrDefault();
+        }
+    }
+
+    private void ResetTrackingSearch()
+    {
+        displayErrorMessage = false;
+        selectedDivision = null;
+        selectedParticipantId = null;
+        forms = null;
+        selectedForm = null;
+        hideParticipantSelection = true;
+    }
+
+    public static string TimeAgo(DateTime dateTime)
+    {
+        DateTime now = DateTime.UtcNow; // Use UTC time
+        dateTime = dateTime.ToUniversalTime(); // Convert to UTC
+
+        TimeSpan timeSpan = now - dateTime;
+        double delta = timeSpan.TotalSeconds;
+
+        if (delta < 0)
+        {
+            return "";
+        }
+
+        if (delta < 60)
+        {
+            return timeSpan.Seconds == 1 ? "one second ago" : timeSpan.Seconds + " seconds ago";
+        }
+        if (delta < 3600)
+        {
+            return timeSpan.Minutes == 1 ? "one minute ago" : timeSpan.Minutes + " minutes ago";
+        }
+        if (delta < 86400)
+        {
+            return timeSpan.Hours == 1 ? "an hour ago" : timeSpan.Hours + " hours ago";
+        }
+        if (delta < 604800)
+        {
+            return timeSpan.Days == 1 ? "yesterday" : timeSpan.Days + " days ago";
+        }
+        return dateTime.ToString("yyyy-MM-dd");
+    }
+}

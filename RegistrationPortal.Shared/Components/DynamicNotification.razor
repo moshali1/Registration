@@ -1,0 +1,84 @@
+﻿@*Did I have to use a Parent and Component if I am not using @ChildContent??? I guess not. Future venture. *@
+@if (Show)
+{
+    <div aria-live="assertive" class="pointer-events-none fixed inset-0 flex items-end px-4 py-6 sm:items-start sm:p-6">
+        <div class="flex w-full flex-col items-center space-y-4 sm:items-end transform ease-out duration-300 transition @_animationStyles">
+            <ErrorNotification ParentContent="this" />
+        </div>
+    </div>
+}
+
+@code{
+    private string _animationStyles = "translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2";
+
+    private CancellationTokenSource delayCancellationTokenSource;
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Show)
+        {
+            // Cancel any previous delay if it exists
+            delayCancellationTokenSource?.Cancel();
+            delayCancellationTokenSource = new CancellationTokenSource();
+
+            // This ensures the animation starts from its initial state every time Show is set to true.
+            _animationStyles = "translate-y-3 opacity-0 sm:translate-y-0 sm:translate-x-2";
+            await Task.Delay(100); // Small delay to ensure the initial state is rendered
+            TriggerAnimation();
+
+
+            try
+            {
+                // Show notification for 5 seconds
+                await Task.Delay(5000, delayCancellationTokenSource.Token);
+                CloseNotification(true);
+            }
+            catch (TaskCanceledException)
+            {
+                // If the delay is cancelled, prevent further execution.
+                // This catch block intentionally left empty.
+            }
+        }
+    }
+
+    private void TriggerAnimation(){
+        _animationStyles = "translate-y-0 opacity-100 sm:translate-x-0";
+        StateHasChanged();
+    }
+
+    [Parameter]
+    public bool Show { get; set; } = false;  
+
+    // public void CloseNotification()
+    // {
+    //     Show = false;
+    //     StateHasChanged();
+    // }
+
+    private bool autoCloseTriggered = false;
+
+    public void CloseNotification(bool isAutomatic = false)
+    {
+        if (isAutomatic)
+        {
+            autoCloseTriggered = true;
+            // Trigger the closing animation
+            _animationStyles = "translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2 ease-in duration-500";
+            StateHasChanged();
+            // Allow time for the animation to play before hiding the notification
+            Task.Delay(500).ContinueWith(_ =>
+            {
+                Show = false;
+                autoCloseTriggered = false; // Reset the flag
+                StateHasChanged();
+            });
+        }
+        else
+        {
+            // Immediate close for manual trigger without animation
+            Show = false;
+            StateHasChanged();
+        }
+    }
+}

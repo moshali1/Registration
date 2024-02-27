@@ -1,0 +1,11 @@
+﻿@media (min-width: 768px) {
+    .list-type-dropdown {
+        display: none;
+    }
+}
+
+@media (max-width: 767px) {
+    .list-type-tab {
+        display: none;
+    }
+}

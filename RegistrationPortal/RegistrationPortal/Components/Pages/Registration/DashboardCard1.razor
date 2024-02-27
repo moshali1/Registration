@@ -1,0 +1,60 @@
+﻿<li class="col-span-1 divide-y divide-gray-200 rounded-lg bg-white shadow">
+    <div class="flex w-full items-center justify-between space-x-6 p-5">
+        <div class="flex-1 truncate">
+            <div class="flex items-center space-x-3">
+                <h3 class="truncate text-sm font-medium text-gray-900">Previous Forms</h3>
+                <span class="hidden lg:block inline-flex flex-shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">@ArchivedForms?.Count() @(ArchivedForms?.Count() == 1 ? "Form" : "Forms") Found</span>
+            </div>
+            @if (ArchivedForms is not null)
+            {
+                <ul class="list-none mt-1 truncate text-sm text-gray-500">
+                    <li>
+                        <span class="font-medium">Ten Qira'at Forms:</span> @ArchivedForms.Where(f => f.CompetitionInfo.Division == DivisionConstants.TenQiraat).Count()
+                    </li>
+                    <li>
+                        <span class="font-medium">Memorization Forms:</span> @ArchivedForms.Where(f => f.CompetitionInfo.Division == DivisionConstants.Memorization).Count()
+                    </li>
+                    <li>
+                        <span class="font-medium">Best Voice Forms:</span> @ArchivedForms.Where(f => f.CompetitionInfo.Division == DivisionConstants.BestVoice).Count()
+                    </li>
+                </ul>
+            }
+        </div>
+        <img class="h-20 w-20 flex-shrink-0 rounded-full bg-gray-300" src="/images/archived-forms2.jpg" alt="archived-forms">
+    </div>
+    <div>
+        <div class="-mt-px flex divide-x divide-gray-200">
+            <div class="flex w-0 flex-1">
+                <a href="/register" class="relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="h-5 w-5 text-gray-400" viewBox="0 0 16 16">
+                        <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0M9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1M8.5 7v1.5H10a.5.5 0 0 1 0 1H8.5V11a.5.5 0 0 1-1 0V9.5H6a.5.5 0 0 1 0-1h1.5V7a.5.5 0 0 1 1 0" />
+                    </svg>
+                    New Form
+                </a>
+            </div>
+            <div class="-ml-px flex w-0 flex-1">
+                <button @onclick="ShowModal" class="relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="h-5 w-5 text-gray-400" viewBox="0 0 16 16">
+                        <path d="M12.643 15C13.979 15 15 13.845 15 12.5V5H1v7.5C1 13.845 2.021 15 3.357 15zM5.5 7h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1 0-1M.8 1a.8.8 0 0 0-.8.8V3a.8.8 0 0 0 .8.8h14.4A.8.8 0 0 0 16 3V1.8a.8.8 0 0 0-.8-.8z" />
+                    </svg>
+                    Autofill
+                </button>
+            </div>
+        </div>
+    </div>
+</li>
+
+
+<PreviousFormsModal Show="showModal" ArchivedForms="@ArchivedForms" />
+
+@code {
+    private bool showModal = false;
+
+    private void ShowModal()
+    {
+        showModal = true;
+    }
+
+    [Parameter]
+    public List<Form> ArchivedForms { get; set; }
+}

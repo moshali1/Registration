@@ -1,0 +1,263 @@
+﻿@page "/details/{Id}"
+@inject FetchSasUri FetchSasUri
+@inject IFormData FormData
+@inject NavigationManager NavManager
+
+<PageTitle>Register</PageTitle>
+
+@rendermode InteractiveServer
+
+@if (showError is true)
+{
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <strong class="font-bold">Error:</strong>
+        <span class="block sm:inline">An error has occurred. Please try again later.</span>
+    </div>
+}
+else
+{
+    <div class="sm:flex sm:items-center">
+        <div class="sm:flex-auto">
+            <h1 class="text-2xl font-bold mb-3" tabindex="-1">Form Submission Details</h1>
+            <p class="mt-2 text-gray-700">This page serves as a complete record of the participant's personal information, division, category, status, and any messages or notes associated with their account."</p>
+        </div>
+    </div>
+
+    <div class="flex flex-wrap">
+        <div class="w-full md:w-3/4 md:pr-2">
+            <div class="box-border border-4 border-cyan-800/50 rounded-lg p-4 bg-white">
+                <div class="px-4 sm:px-0">
+                    <h3 class="text-base font-semibold leading-7 text-gray-900">Registration Information</h3>
+                    <p class="max-w-2xl text-sm leading-6 text-gray-500">@form.</p>
+                </div>
+                <div class="border-t border-gray-100">
+                    <dl class="divide-y divide-gray-100">
+                        <div class="px-4 py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+                            <dt class="font-medium leading-6 text-gray-900">Full name</dt>
+                            <dd class="mt-1 leading-6 text-gray-700 sm:col-span-2 sm:mt-0">@form.PersonalInfo.GetFirstMiddleLastName()</dd>
+                        </div>
+                        <div class="px-4 py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+                            <dt class="font-medium leading-6 text-gray-900">Gender</dt>
+                            <dd class="mt-1 leading-6 text-gray-700 sm:col-span-2 sm:mt-0">@form.PersonalInfo.Gender</dd>
+                        </div>
+                        <div class="px-4 py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+                            <dt class="font-medium leading-6 text-gray-900">Date of Birth</dt>
+                            <dd class="mt-1 leading-6 text-gray-700 sm:col-span-2 sm:mt-0">@form.PersonalInfo.DOB</dd>
+                        </div>
+                        <div class="px-4 py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+                            <dt class="font-medium leading-6 text-gray-900">Region</dt>
+                            <dd class="mt-1 leading-6 text-gray-700 sm:col-span-2 sm:mt-0">@form.AddressInfo.City, @form.AddressInfo.StateProvince, @form.AddressInfo.Country</dd>
+                        </div>
+                        <div class="px-4 py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+                            <dt class="font-medium leading-6 text-gray-900">Competition Information</dt>
+                            <dd class="mt-1 leading-6 text-gray-700 sm:col-span-2 sm:mt-0">@form.CompetitionInfo.Division | @form.CompetitionInfo.Category - @form.CompetitionInfo.Portion</dd>
+                        </div>
+                        <div class="px-4 py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+                            <dt class="font-medium leading-6 text-gray-900">Parent Information</dt>
+                            <dd class="mt-1 leading-6 text-gray-700 sm:col-span-2 sm:mt-0">Full Name: @form.ParentInfo.GetParentFullName() | Phone Number: @form.ParentInfo.ParentPhoneNumber</dd>
+                        </div>
+                        <div class="px-4 py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+                            <dt class="font-medium leading-6 text-gray-900">Teacher Information</dt>
+                            <dd class="mt-1 leading-6 text-gray-700 sm:col-span-2 sm:mt-0">Full Name: @form.TeacherInfo.GetTeacherFullName() | Phone Number: @form.TeacherInfo.TeacherPhoneNumber</dd>
+                        </div>
+                        <div class="px-4 py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+                            <dt class="font-medium leading-6 text-gray-900">Agreement</dt>
+                            <dd class="mt-1 leading-6 text-gray-700 sm:col-span-2 sm:mt-0">@(form.AgreedToTerms is true ? "Agreed to Terms" : "") </dd>
+                        </div>
+                        <div class="px-4 py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+                            <dt class="font-medium leading-6 text-gray-900">Attachments</dt>
+                            <dd class="mt-2 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                                <ul role="list" class="divide-y divide-gray-100 rounded-md border border-gray-200">
+                                    <li class="flex items-center justify-between py-4 pl-4 pr-5 leading-6">
+                                        <div class="flex w-0 flex-1 items-center">
+                                            <svg class="h-5 w-5 flex-shrink-0 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                <path fill-rule="evenodd" d="M15.621 4.379a3 3 0 00-4.242 0l-7 7a3 3 0 004.241 4.243h.001l.497-.5a.75.75 0 011.064 1.057l-.498.501-.002.002a4.5 4.5 0 01-6.364-6.364l7-7a4.5 4.5 0 016.368 6.36l-3.455 3.553A2.625 2.625 0 119.52 9.52l3.45-3.451a.75.75 0 111.061 1.06l-3.45 3.451a1.125 1.125 0 001.587 1.595l3.454-3.553a3 3 0 000-4.242z" clip-rule="evenodd" />
+                                            </svg>
+                                            <div class="ml-4 flex min-w-0 flex-1 gap-2">
+                                                <span class="truncate font-medium">@form.FileUploadInfo.IDFileName</span>
+                                                <span class="flex-shrink-0 text-gray-400">@FormatFileSize(form.FileUploadInfo.IDFileSize)</span>
+                                            </div>
+                                        </div>
+                                        <div class="ml-4 flex-shrink-0">
+                                            <button @onclick="(() => OnDownload(form.FileUploadInfo.IDFileName))" class="font-medium text-cyan-700 hover:text-cyan-600">Download</button>
+                                        </div>
+                                    </li>
+                                    <li class="flex items-center justify-between py-4 pl-4 pr-5 text-sm leading-6">
+                                        <div class="flex w-0 flex-1 items-center">
+                                            <svg class="h-5 w-5 flex-shrink-0 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                <path fill-rule="evenodd" d="M15.621 4.379a3 3 0 00-4.242 0l-7 7a3 3 0 004.241 4.243h.001l.497-.5a.75.75 0 011.064 1.057l-.498.501-.002.002a4.5 4.5 0 01-6.364-6.364l7-7a4.5 4.5 0 016.368 6.36l-3.455 3.553A2.625 2.625 0 119.52 9.52l3.45-3.451a.75.75 0 111.061 1.06l-3.45 3.451a1.125 1.125 0 001.587 1.595l3.454-3.553a3 3 0 000-4.242z" clip-rule="evenodd" />
+                                            </svg>
+                                            <div class="ml-4 flex min-w-0 flex-1 gap-2">
+                                                <span class="truncate font-medium">@form.FileUploadInfo.PhotoFileName</span>
+                                                <span class="flex-shrink-0 text-gray-400">@FormatFileSize(form.FileUploadInfo.IDFileSize)</span>
+                                            </div>
+                                        </div>
+                                        <div class="ml-4 flex-shrink-0">
+                                            <button @onclick="(() => OnDownload(form.FileUploadInfo.PhotoFileName))" class="font-medium text-cyan-700 hover:text-cyan-600">Download</button>
+                                        </div>
+                                    </li>
+                                    @if (form.CompetitionInfo.Division == DivisionConstants.BestVoice)
+                                    {
+                                        <li class="flex flex-col justify-between py-4 pl-4 pr-5 text-sm leading-6">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex w-0 flex-1 items-center">
+                                                    <svg class="h-5 w-5 flex-shrink-0 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                        <svg class="h-5 w-5 flex-shrink-0 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                            <path fill-rule="evenodd" d="M15.621 4.379a3 3 0 00-4.242 0l-7 7a3 3 0 004.241 4.243h.001l.497-.5a.75.75 0 011.064 1.057l-.498.501-.002.002a4.5 4.5 0 01-6.364-6.364l7-7a4.5 4.5 0 016.368 6.36l-3.455 3.553A2.625 2.625 0 119.52 9.52l3.45-3.451a.75.75 0 111.061 1.06l-3.45 3.451a1.125 1.125 0 001.587 1.595l3.454-3.553a3 3 0 000-4.242z" clip-rule="evenodd" />
+                                                        </svg>
+                                                    </svg>
+                                                    <div class="ml-4 flex min-w-0 flex-1 gap-2">
+                                                        <span class="truncate font-medium">@form.FileUploadInfo.VideoFileName</span>
+                                                        <span class="flex-shrink-0 text-gray-400">@FormatFileSize(form.FileUploadInfo.VideoFileSize)</span>
+                                                    </div>
+                                                </div>
+                                                <div class="ml-4 flex-shrink-0">
+                                                    <button @onclick="(() => OnDownload(form.FileUploadInfo.VideoFileName))" class="font-medium text-cyan-700 hover:text-cyan-600">Download</button>
+                                                </div>
+                                            </div>
+                                            <!-- Brief note about video availability, now on its own line below the flex container -->
+                                            <div class="mt-2 ml-5 text-xs text-gray-500 italic">
+                                                (Video may not be available for download immediately after upload)
+                                            </div>
+                                        </li>
+                                    }
+                                </ul>
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="w-full md:w-1/4 flex flex-col items-center">
+            <!-- Image Container -->
+            <div class="relative w-full aspect-w-16 aspect-h-8 h-80 rounded-lg overflow-hidden border-4 border-cyan-800/50 my-2 hover:scale-[1.02] transition-all">
+                <!-- Background Image (Blurred) -->
+                <img src="@idSasUrl" alt="form id" class="absolute inset-0 w-full h-full object-cover object-center filter blur-[5px]">
+
+                <!-- Overlay to match the background color -->
+                <div class="absolute inset-0 bg-gray-200 bg-opacity-75"></div>
+
+                <img src="@idSasUrl" alt="form id" @onclick="() => OpenDialog(idSasUrl)" class="absolute inset-0 w-full h-full object-contain object-center">
+            </div>
+            <div class="relative w-full aspect-w-16 aspect-h-8 h-80 rounded-lg overflow-hidden border-4 border-cyan-800/50 mb-2 hover:scale-[1.02] transition-all">
+                <!-- Background Image (Blurred) -->
+                <img src="@photoSasUrl" alt="form photo" class="absolute inset-0 w-full h-full object-cover object-center filter blur-[5px]">
+
+                <!-- Overlay to match the background color -->
+                <div class="absolute inset-0 bg-gray-200 bg-opacity-75"></div>
+
+                <img src="@photoSasUrl" alt="form photo" @onclick="() => OpenDialog(photoSasUrl)" class="absolute inset-0 w-full h-full object-contain object-center">
+            </div>
+        </div>
+    </div>
+
+    <!-- Dialog Component -->
+    @if (dialogImageUrl != null)
+    {
+        <div @onclick="CloseDialog" class="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50">
+            <div class="relative max-w-3xl max-h-[90vh] p-4">
+                <img src="@dialogImageUrl" alt="Dialog Image" class="max-w-full max-h-full" />
+                <button class="absolute top-0 right-0 p-2 bg-black bg-opacity-70 rounded-full text-gray-100 hover:text-gray-300" @onclick="CloseDialog">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    [Parameter] public string Id { get; set; }
+
+    private Form form = new();
+    private bool showError = false;
+
+    private string idSasUrl;
+    private string photoSasUrl;
+    private string videoSasUrl;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id is not null)
+        {
+            try
+            {
+                form = await FormData.GetForm(Id);
+                if (form is null)   
+                {
+                    throw new Exception("Form data is null");
+                }
+
+                // sperate method?
+                idSasUrl = FetchSasUri.GetSasUri(form.FileUploadInfo.IDFileName);
+                photoSasUrl = FetchSasUri.GetSasUri(form.FileUploadInfo.PhotoFileName);
+
+                if (String.IsNullOrWhiteSpace(idSasUrl))
+                {
+                    idSasUrl = "/images/filenotfound.png";
+                }
+
+                if (String.IsNullOrWhiteSpace(photoSasUrl))
+                {
+                    photoSasUrl = "/images/filenotfound.png";
+                }
+
+                if (form.FileUploadInfo.IDFileExtension == ".pdf")
+                {
+                    idSasUrl = "/images/filepdf.png";
+                }
+
+                if (form.CompetitionInfo.Division == DivisionConstants.BestVoice)   
+                {
+                    videoSasUrl = FetchSasUri.GetSasUri(form.FileUploadInfo.IDFileName);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                showError = true;
+            }
+
+        }
+    }
+
+    private string FormatFileSize(double bytes)
+    {
+        const double oneKB = 1024.0;
+        const double oneMB = 1048576.0;
+
+        // If size is less than 1 MB, show in KB
+        if (bytes < oneMB)
+        {
+            double sizeInKB = bytes / oneKB;
+            return $"{sizeInKB:0.#} KB";
+        }
+        else // Otherwise, show in MB
+        {
+            double sizeInMB = bytes / oneMB;
+            return $"{sizeInMB:0.#} MB";
+        }
+    }
+
+    private string sasUri;
+    private void OnDownload(string fileName)
+    {
+        var sasUri = FetchSasUri.GetSasUri(fileName);
+
+        NavManager.NavigateTo(sasUri);
+
+    }
+
+    private string dialogImageUrl;
+
+    private void OpenDialog(string imageUrl)
+    {
+        dialogImageUrl = imageUrl;
+    }
+
+    private void CloseDialog()
+    {
+        dialogImageUrl = null;
+    }
+}

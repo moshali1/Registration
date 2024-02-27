@@ -1,0 +1,101 @@
+﻿@inject NavigationManager NavManager
+<p class="text-sm"><strong>Number of Records</strong>: @Forms?.Count()</p>
+@if (ShowTable is true)
+{
+    <div class="box-border border-4 border-cyan-800/50 rounded-lg p-4 bg-white">
+        <div class="mt-1 flow-root">
+            <div class="-mx-4 -my-2 sm:-mx-6 lg:-mx-8">
+                <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                    <table class="min-w-full divide-y divide-gray-300">
+                        <thead>
+                            <tr class="divide-x divide-gray-200">
+                                <th scope="col" class="py-3.5 pl-4 pr-3 text-left font-semibold text-gray-900 sm:pl-0">Personal Info</th>
+                                <th scope="col" class="px-3 py-3.5 text-left font-semibold text-gray-900">Division / Category</th>
+                                <th scope="col" class="px-3 py-3.5 text-left font-semibold text-gray-900 sec-col">Region</th>
+                                <th scope="col" class="px-3 py-3.5 text-left font-semibold text-gray-900 sec-col">Status</th>
+                                <th scope="col" class="px-3 py-3.5 text-left font-semibold text-gray-900 sec-col">Message</th>
+                                <th scope="col" class="py-3.5 pl-3 pr-4 sm:pr-0 sec-col">
+                                    <span class="sr-only">Action</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            @if (Forms is not null)
+                            {
+                                @foreach (var Form in Forms)
+                                {
+                                    <tr class="divide-x divide-gray-200">
+                                        <td class="whitespace-normal py-3 pl-4 pr-3 sm:pl-0 sm:pr-0">
+                                            <div class="flex items-center">
+                                                <div class="ml-0">
+                                                    <div class="font-medium text-gray-900">@Form.PersonalInfo.GetFirstMiddleLastName()</div>
+                                                    <div class="my-2 text-gray-600">@Form.PersonalInfo.Gender | @Form.PersonalInfo.DOB</div>
+
+                                                    <div class="sec-col-main pt-1 whitespace-nowrap">
+                                                        <h2 class="text-sm font-semibold">Status</h2>
+                                                        <span class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 my-2 font-medium text-800-700 ring-1 ring-inset ring-cyan-600/20">@Form.StatusInfo.Status</span>
+                                                    </div>
+                                                    <div class="sec-col-main pt-1 whitespace-nowrap">
+                                                        <span class="text-sm font-semibold">Actions:</span>
+                                                        <a href="edit/@Form.CompetitionInfo.Division/@Form.Id" class="text-cyan-700 hover:text-cyan-900">Edit</a> |
+                                                        <a href="details/@Form.Id" class="text-cyan-700 hover:text-cyan-900">Details</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="whitespace-normal px-2 py-3">
+                                            <div class="text-gray-900">@Form.CompetitionInfo.Division</div>
+                                            <div class="mt-1 text-gray-600">@Form.CompetitionInfo.Category | @Form.CompetitionInfo.Portion</div>
+
+                                            <div class="text-gray-900">
+                                                <h2 class="py-2 text-sm font-semibold sec-col-main">Message</h2>
+                                                <span class="sec-col-main py-2">None</span>
+                                            </div>
+                                        </td>
+                                        <td class="whitespace-normal px-3 py-3 text-gray-500 sec-col">
+                                            <div class="text-gray-900">@Form.AddressInfo.StateProvince, @Form.AddressInfo.Country</div>
+                                            <div class="mt-1 text-gray-600">@Form.AddressInfo.City</div>
+                                        </td>
+                                        <td class="whitespace-normal px-3 py-3 text-gray-600 sec-col">
+                                            <span class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 font-medium text-800-700 ring-1 ring-inset ring-cyan-600/20">@Form.StatusInfo.Status</span>
+                                        </td>
+                                        <td class="whitespace-normal px-3 py-3 text-gray-600 sec-col">
+                                            <span>None</span>
+                                        </td>
+                                        <td class="whitespace-normal py-3 pl-3 pr-4 text-right font-medium sm:pr-0 sec-col">
+                                            <ButtonWithDropdown Form="@Form" SetActiveDropdown="SetActiveDropdown" ActiveDropdownId="@activeDropdownId" OnItemDeleted="OnItemDeleted" />
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] 
+    public List<Form> Forms { get; set; }
+
+    [Parameter]
+    public bool ShowTable { get; set; }
+
+    private string activeDropdownId;
+
+    private void SetActiveDropdown(string id)
+    {
+        activeDropdownId = id;
+        StateHasChanged();
+    }
+
+    [Parameter]
+    public EventCallback<string> OnItemDeleted { get; set; }
+
+    private async Task HandleItemDeleted()
+    {
+        await OnItemDeleted.InvokeAsync();
+    }
+}

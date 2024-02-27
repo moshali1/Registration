@@ -1,0 +1,101 @@
+﻿@using AutoMapper
+@inject FormSelectionService FormSelection
+@inject NavigationManager NavManager
+@inject IMapper Mapper
+
+@if (Show is true)
+{
+    <div class="fixed inset-0 bg-black bg-opacity-50 z-55"></div>
+    <div class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-[higher-value] flex justify-center items-center sm:items-start w-full h-full sm:h-[calc(100%-1rem)] max-h-full">
+        <div class="relative p-4 w-full max-w-md max-h-full">
+            <!-- Modal content -->
+            <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+                <!-- Modal header -->
+                <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                        Previous Forms
+                    </h3>
+                    <button @onclick="CloseModal" type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm h-8 w-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" >
+                        <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                        </svg>
+                        <span class="sr-only">Close modal</span>
+                    </button>
+                </div>
+                @{
+                    int formIndex = 0; // Initialize a counter for unique IDs
+                }
+                <!-- Modal body -->
+                <div class="p-4 md:p-5 max-h-[calc(100vh-200px)] overflow-y-auto">
+                    <p class="text-gray-500 dark:text-gray-400 mb-2">Select the form to prefill from last year:</p>
+                    <ul class="space-y-4 mb-4">
+                        @if (ArchivedForms is not null)
+                        {
+                            @foreach (var form in ArchivedForms)
+                            {
+                                <li @onclick="(() => SelectFormAndNavigate(form))">
+                                    <input type="radio" id="@($"job-{formIndex}")" name="job" value="@($"form-{formIndex}")" class="hidden peer" required />
+                                    <label for="@($"job-{formIndex}")" class="inline-flex items-center justify-between w-full p-5 text-gray-900 bg-white border border-gray-200 rounded-lg cursor-pointer dark:hover:text-gray-300 dark:border-gray-500 dark:peer-checked:text-cyan-500 peer-checked:border-cyan-600 peer-checked:text-cyan-600 hover:text-gray-900 hover:bg-gray-100 dark:text-white dark:bg-gray-600 dark:hover:bg-gray-500">
+                                        <div class="block">
+                                            <div class="w-full text-lg font-semibold">@form.PersonalInfo.GetFullName()</div>
+                                            <div class="w-full text-gray-500 dark:text-gray-400">@form.CompetitionInfo.Division</div>
+                                        </div>
+                                        <svg class="w-4 h-4 ms-3 rtl:rotate-180 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9" /></svg>
+                                    </label>
+                                </li>
+                                formIndex++; // Increment the counter for the next loop iteration
+                            }
+                        }
+                    </ul>
+                    @if (!ArchivedForms.Any())
+                    {
+                        <p class="text-gray-800 dark:text-gray-400 mb-2"><b>No forms</b> from the previous year were found in your account.</p>
+                    }
+                    <button @onclick="CloseModal" class="text-white inline-flex w-full justify-center bg-cyan-700 hover:bg-cyan-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-cyan-600 dark:hover:bg-cyan-700 dark:focus:ring-cyan-800">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code{
+    [Parameter]
+    public bool Show { get; set; } = false;
+
+    [Parameter]
+    public List<Form> ArchivedForms { get; set; }
+
+    private void CloseModal()
+    {
+        Show = false;
+    }
+
+    private void SelectFormAndNavigate(Form selectedForm)
+    {
+
+        string urlDivision = "";
+
+        switch (selectedForm.CompetitionInfo.Division)
+        {
+            case "Memorization":
+                urlDivision = "memorization";
+                break;
+            case "Ten Qira'at":
+                urlDivision = "ten-qiraat";
+                break;
+            case "Best Voice":
+                urlDivision = "best-voice";
+                break;
+            default:
+                NavManager.NavigateTo("/");
+                break;
+        }
+
+        var selectedFormDto = Mapper.Map<FormDto>(selectedForm);
+        FormSelection.SelectForm(selectedFormDto);
+
+        NavManager.NavigateTo($"/create/{urlDivision}/prev"); // Adjust the path as necessary
+    }
+}

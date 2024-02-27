@@ -1,0 +1,662 @@
+﻿@page "/edit/{Division}/{Id}"
+
+@using System.Text.Json
+@using System.Net.Http.Headers
+
+@inject DefaultListService DefaultList
+@inject IHttpClientFactory HttpClientFactory
+@inject IUserService UserService
+@inject IFormService FormService
+@inject NavigationManager NavManager
+
+@rendermode InteractiveServer
+
+@attribute [Authorize]
+
+<PageTitle>Register</PageTitle>
+
+<FormHeader Division="@Division" />
+
+<CascadingValue Value="@notificationText">
+    <DynamicNotification Show="showNotification" />
+</CascadingValue>
+
+<EditForm Model="form" OnValidSubmit="OnValidSubmit">
+    <ObjectGraphDataAnnotationsValidator />
+    <div class="max-w-screen-md">
+        <div class="space-y-4">
+            <div class="border-b border-gray-900/10 pb-3">
+                <h2 class="text-base font-semibold leading-7 text-gray-900">Personal Information</h2>
+                <PersonalInfoEditor PersonalInfo="form.PersonalInfo" />
+            </div>
+            <div class="border-b border-gray-900/10 pb-3">
+                <h2 class="text-base font-semibold leading-7 text-gray-900">Address Information</h2>
+                <AddressInfoEditor AddressInfo="form.AddressInfo" />
+            </div>
+            <div class="border-b border-gray-900/10 pb-3">
+                <h2 class="text-base font-semibold leading-7 text-gray-900">Competition Information</h2>
+                <CompetitionInfoEditor CompetitionInfo="form.CompetitionInfo" Division="@Division" />
+            </div>
+            <div class="border-b border-gray-900/10 pb-3">
+                <h2 class="text-base font-semibold leading-7 text-gray-900">Parent Information</h2>
+                <ParentInfoEditor ParentInfo="form.ParentInfo" />
+            </div>
+            <div class="border-b border-gray-900/10 pb-3">
+                <h2 class="text-base font-semibold leading-7 text-gray-900">Teacher Information</h2>
+                <TeacherInfoEditor TeacherInfo="form.TeacherInfo" />
+            </div>
+            <div class="border-b border-gray-900/10 pb-3">
+                <div class="flex flex-row flex-nowrap">
+                    <div class="basis-1/2 pr-3">
+                        <label class="block text-sm font-medium leading-6 text-gray-900 mb-1">ID Upload</label>
+                        @if (isChangingID)
+                        {
+                            <button type="button" class="p-1"></button>
+                            <InputFile OnChange="LoadIDFile" accept=".png,.jpeg,.jpg,.pdf" class="block w-full rounded-md border-0 text-sm text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 file:cursor-pointer cursor-pointer file:border-0 file:py-2 file:px-4 file:mr-4 file:bg-gray-500 file:hover:bg-gray-600 file:text-white focus:ring-1 focus:ring-inset sm:leading-6" />
+                            <p class="text-xs text-gray-500 mt-2">PNG, JPEG, JPG, and PDF are Allowed.</p>
+                            <ValidationMessage For="() => form.FileUploadInfo.IDFileName" />
+                        }
+                        else
+                        {
+                            @*TEMPORARY: Added a button here to prevent the user from selecting a new file and then navigating back,
+                                which would lead to irreversible changes.*@
+                            <button type="button" class="rounded-lg bg-cyan-700 text-white text-xs p-1" @onclick="() => isChangingID = !isChangingID">Resubmit</button>
+                            <div class="mt-1">
+                                <input type="text" value="@form.FileUploadInfo.IDFileName" readonly class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6 bg-gray-200" />
+                            </div>
+                        }
+                    </div>
+                    <div class="basis-1/2 pl-3">
+                        <label class="block text-sm font-medium leading-6 text-gray-900 mb-1">Photo Upload</label>
+                        @if (isChangingPhoto)
+                        {
+                            <button type="button" class="p-1"></button>
+                            <InputFile OnChange="LoadPhotoFile" accept=".png,.jpeg,.jpg" class="block w-full rounded-md border-0 text-sm text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 file:cursor-pointer cursor-pointer file:border-0 file:py-2 file:px-4 file:mr-4 file:bg-gray-500 file:hover:bg-gray-600 file:text-white focus:ring-1 focus:ring-inset sm:leading-6" />
+                            <p class="text-xs text-gray-500 mt-2">PNG, JPEG, and JPG are Allowed.</p>
+                            <ValidationMessage For="() => form.FileUploadInfo.PhotoFileName" />
+                        }
+                        else
+                        {
+                            @*TEMPORARY: Added a button here to prevent the user from selecting a new file and then navigating back,
+                                which would lead to irreversible changes.*@
+                            <button type="button" class="rounded-lg bg-cyan-700 text-white text-xs p-1" @onclick="() => isChangingPhoto = !isChangingPhoto">Resubmit</button>
+                            <div class="mt-1">
+                                <input type="text" value="@form.FileUploadInfo.PhotoFileName" readonly class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6 bg-gray-200" />
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            
+            @if (Division == "Best Voice")
+            {
+                <div class="border-b border-gray-900/10 pb-3">
+                    <div class="flex flex-row flex-nowrap">
+                        <div class="basis-3/4 pr-3">
+                        <label class="block text-sm font-medium leading-6 text-gray-900 mb-1">Video Upload</label>
+                        
+                            @if (isChangingVideo)
+                            {
+                                <SfUploader @ref="UploadObj1" ID="uploadFile" AutoUpload="false" AllowMultiple="false" AllowedExtensions=".mp4, .avi, .mov, .wmv, .flv, .mkv, .mpeg" MaxFileSize=524288000>
+                                    <UploaderAsyncSettings SaveUrl="api/FileUpload/Save" RemoveUrl="api/FileUpload/Remove"></UploaderAsyncSettings>
+                                    <UploaderEvents OnRemove="OnVideoFileRemove" FileSelected="OnVideoFileSelect"></UploaderEvents>
+                                </SfUploader>
+                                <ValidationMessage For="() => form.FileUploadInfo.VideoFileName" />
+                            }
+                            else
+                            {
+                                @*TEMPORARY: Added a button here to prevent the user from selecting a new file and then navigating back, 
+                                    which would lead to irreversible changes.*@
+                                <button type="button" class="rounded-lg bg-cyan-700 text-white text-xs p-1" @onclick="() => isChangingVideo = !isChangingVideo">Resubmit</button>
+                                <div class="mt-1">
+                                    <input type="text" value="@form.FileUploadInfo.VideoFileName" readonly class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6 bg-gray-200" />
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+            <div class="border-b border-gray-900/10 pb-3">
+                <h2 class="text-base font-semibold leading-7 text-gray-900">Terms of Agreement</h2>
+                <div class="mt-6 space-y-3">
+                    <div class="relative flex gap-x-3">
+                        <div class="flex h-6 items-center">
+                            <InputCheckbox @bind-Value="form.AgreedToTerms" class="h-4 w-4 rounded border-gray-300 text-cyan-700 focus:ring-cyan-600" />
+                        </div>
+                        <div class="text-sm leading-6">
+                            <label class="font-medium text-gray-900">Agreement</label>
+                            <p class="text-gray-500">I confirm that I have read and agree to abide by the Terms of Registration outlined by the North America Imam Al-Shatibi Qur'an Competition, as detailed in the official rules and regulations for the year of 2024.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <span class="text-red-600">@exceptionMessage</span>
+
+        <div class="mt-3 flex items-center justify-end gap-x-6">
+            <button type="submit" disabled="@isSubmitting" class="inline-flex items-center px-3 py-2 font-semibold leading-6 text-sm shadow rounded-md text-white bg-cyan-700 hover:bg-cyan-600 transition ease-in-out duration-150">
+                @if (isSubmitting is false)
+                {
+                    <span>Submit</span>
+                }
+                else
+                {
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Processing...</span>
+                }
+            </button>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter] public string Division { get; set; }
+    [Parameter] public string Id { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; }
+
+    private UserDto user;
+    private FormDto form = new();
+
+    private IBrowserFile IDFile;
+    private IBrowserFile PhotoFile;
+    SfUploader UploadObj1;
+
+    private bool isChangingID = false;
+    private bool isChangingPhoto = false;
+    private bool isChangingVideo = false;
+
+    private FileUploadInfoDto historicalFiles = new();
+
+    private bool showNotification = false;
+    private NotificationText notificationText;
+
+    // Miscellaneous Fields
+    private bool isSubmitting = false;
+    private string exceptionMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        if (Id is not null)
+        {
+            form = await FormService.GetForm(Id);
+
+            // Store current files in historicalFiles before they are overwritten by new uploads in form.FileUploadInfo.
+            historicalFiles = form.FileUploadInfo;
+        }
+    }
+
+    private async Task OnValidSubmit()
+    {
+        showNotification = false;
+        isSubmitting = true;
+
+        try
+        {
+            if (AuthenticationState is not null)
+            {
+                var authState = await AuthenticationState;
+
+                string objectId = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("objectidentifier"))?.Value;
+                user = await UserService.GetUserFromAuthentication(objectId);
+            }
+            else
+            {
+                isSubmitting = false;
+                return;
+            }
+
+            // Perform age eligibility verification on the client side.
+            if (CheckAgeEligibility() == false)
+            {
+                return;
+            }
+
+            form.Creator = user.Id;
+
+            // Currently, there's client-side validation upon submission, but server-side validation is lacking.
+            // Action item: Implement server-side validation for file size before IDFile and PhotoFile are processed and excluded.
+            // Action item: Implement server-side validation for file extensions before IDFile and PhotoFile are processed and excluded.
+
+            // Check if the ID file is being replaced. If so, save the current file information before setting the new file information.
+            if (isChangingID)
+            {
+                form.FileUploadInfo.ReplacedFiles.Add(historicalFiles.IDFileName);
+                SetFileInfo(IDFile, "id");
+            }
+            if (isChangingPhoto)
+            {
+                form.FileUploadInfo.ReplacedFiles.Add(historicalFiles.PhotoFileName);
+                SetFileInfo(PhotoFile, "photo");
+            }
+            if (isChangingVideo)
+            {
+                if (Division == "Best Voice")
+                {
+                    form.FileUploadInfo.ReplacedFiles.Add(historicalFiles.VideoFileName);
+                }
+            }
+
+            // Potential Issue: The form is marked as submitted in cases of server-side errors, such as duplicate entries (DUPL).
+            // This might lead to inaccurate tracking of form submissions.
+            // Need to investigate and address how server-side errors, particularly duplicates, are handled post-submission.
+            await UpdateTrackingInfo();
+
+            await FormService.UpdateForm(form);
+
+            if (isChangingID)
+            {
+                await UploadFile(IDFile, "id", form.FileUploadInfo.IDFileName);
+            }
+            if (isChangingPhoto)
+            {
+                await UploadFile(PhotoFile, "photo", form.FileUploadInfo.PhotoFileName);
+
+            }
+            if (isChangingVideo)
+            {
+                if (Division == "Best Voice")
+                {
+                    await UploadObj1.UploadAsync();
+
+                }
+            }
+
+            isSubmitting = false;
+
+            form = new();
+            DefaultList.SetShowDialog(true);
+            DefaultList.LastTab(Division[0]);
+            NavManager.NavigateTo("/list");
+        }
+        catch (Exception ex)
+        {
+            isSubmitting = false;
+
+            string serverMessage = ex.Message;
+            string clientMessage = ErrorMappingService.MapServerMessageToClientMessage(serverMessage);
+
+            switch (clientMessage)
+            {
+                case "Validation Error":
+                    exceptionMessage = serverMessage;
+                    break;
+
+                case "Age Eligibility Error":
+                    // Handle age eligibility error
+                    notificationText = ModalInfo.AgeEligibilityError();
+                    showNotification = true;
+                    break;
+
+                case "Duplicate Entry Error":
+                    // Handle duplicate entry error
+                    notificationText = ModalInfo.DuplicateEntry();
+                    showNotification = true;
+                    break;
+
+                default:
+                    // Placeholder for handling unexpected errors. Important: Remove this section before deploying to production.
+                    exceptionMessage = "An unexpected error occured.";
+                    break;
+            }
+
+            // In case of a server-side exception, undo the most recent tracking entry.
+            // Assuming there's only one entry relevant in this context, remove the last item from FormHistory if it exists.
+            if (form.FormHistory.Any())
+            {
+                form.FormHistory.RemoveAt(form.FormHistory.Count - 1);
+            }
+        }
+    }
+
+    private bool CheckAgeEligibility()
+    {
+        // Perform age eligibility verification on the client side.
+        var isElligible = AgeEligibilityChecker.CheckAgeEligibility(form.CompetitionInfo.Division, form.CompetitionInfo.Category, form.PersonalInfo.DOB);
+        if (isElligible == false)
+        {
+            notificationText = ModalInfo.AgeEligibilityError();
+            showNotification = true;
+            return false;
+        }
+        return true;
+    }
+
+    private async Task UpdateTrackingInfo()
+    {
+        TrackingDto tracking = new();
+        tracking.PerformedById = user.Id;
+        tracking.FullName = user.GetFullName();
+        tracking.DisplayName = user.DisplayName;
+        tracking.UserRole = user.Role;
+        tracking.TrackingAction = "edited the form";
+        tracking.Descriptions = await TrackChanges();
+        form.FormHistory.Add(tracking);
+    }
+
+    private void LoadIDFile(InputFileChangeEventArgs e)
+    {
+        Console.WriteLine("IDFile loading initiated!");
+
+        exceptionMessage = null;
+
+        var maxAllowedSize = 1024 * 1024 * 2; // 2 MB
+        var file = e.File; // IBrowserFile
+
+        if (file is not null)
+        {
+            var allowedExtIDFile = new[] { ".png", ".jpeg", ".jpg", ".pdf" };
+
+            if (!allowedExtIDFile.Contains(Path.GetExtension(file.Name)))
+            {
+                exceptionMessage = "ID file extension not allowed.";
+                return;
+            }
+
+            if (file.Size > maxAllowedSize)
+            {
+                Console.WriteLine("File size exceeds the allowed limit.");
+                exceptionMessage = "File size exceeds 2 MB";
+                return;
+            }
+
+            IDFile = file;
+
+            // Skip assigning a temporary filename since this is an edit form where the variable already holds a value, 
+            // fulfilling client-side form validation requirements.
+        }
+        else
+        {
+            Console.WriteLine("IDFile null!");
+        }
+    }
+
+    private void LoadPhotoFile(InputFileChangeEventArgs e)
+    {
+        Console.WriteLine("Photo File loading initiated!");
+
+        exceptionMessage = null;
+
+        var maxAllowedSize = 1024 * 1024 * 5; // 5 MB
+        var file = e.File; // IBrowserFile
+
+        if (file is not null)
+        {
+            var allowedExtPhotoFile = new[] { ".png", ".jpeg", ".jpg" };
+
+            if (!allowedExtPhotoFile.Contains(Path.GetExtension(file.Name)))
+            {
+                exceptionMessage = "Photo file extension not allowed.";
+                return;
+            }
+
+            if (file.Size > maxAllowedSize)
+            {
+                Console.WriteLine("File size exceeds the allowed limit.");
+                exceptionMessage = "File size exceeds 5 MB";
+                return;
+            }
+
+            PhotoFile = file;
+
+            // Skip assigning a temporary filename since this is an edit form where the variable already holds a value,
+            // fulfilling client-side form validation requirements.
+        }
+    }
+
+    private async Task UploadFile(IBrowserFile file, string fileType, string uniqueFileName)
+    {
+        if (file is null)
+        {
+            Console.WriteLine("No file selected.");
+            return;
+        }
+
+        // The default limit for OpenReadStream is set to 500KB.
+        // Adjust the maximum allowed file size based on the specific file requirements later.
+        var maxAllowedSize = 5 * 1024 * 1024; // 5 MB
+
+        using var content = new MultipartFormDataContent();
+        using var fileContent = new StreamContent(file.OpenReadStream(maxAllowedSize));
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
+
+        content.Add(fileContent, "uploadFile", file.Name);
+
+        // Serialize additional data if needed
+        ContainerInfo containerInfo = new()
+        {
+            UniqueFileName = uniqueFileName, 
+            Year = DateTime.Now.Year.ToString(),
+            Division = form.CompetitionInfo.Division,
+            UploadType = fileType
+        };
+
+        var containerInfoJson = JsonSerializer.Serialize(containerInfo);
+        content.Add(new StringContent(containerInfoJson), "containerInfoJson");
+
+        var client = HttpClientFactory.CreateClient("API");
+        var response = await client.PostAsync("api/FileUpload/Save", content);
+
+        if (response.IsSuccessStatusCode)
+        {
+            // Handle success
+            Console.WriteLine("File uploaded successfully.");
+        }
+        else
+        {
+            // Handle failure
+            Console.WriteLine($"Failed to upload file. Status code: {response.StatusCode}");
+        }
+    }
+
+    private void OnVideoFileSelect(SelectedEventArgs args)
+    {
+        exceptionMessage = null;
+
+        var uniqueFileName = GetUniqueFileName(args.FilesData[0].Name, "video");
+
+        // Consider updating file information after form submission to accommodate scenarios where the user modifies their DOB
+        // but does not update the video file.
+        form.FileUploadInfo.VideoFileName = uniqueFileName;
+        form.FileUploadInfo.VideoFileSize = args.FilesData[0].Size;
+        form.FileUploadInfo.VideoFileExtension = Path.GetExtension(args.FilesData[0].Name);
+
+        ContainerInfo containerInfo = new()
+        {
+            UniqueFileName = uniqueFileName,
+            Year = DateTime.Now.Year.ToString(),
+            Division = form.CompetitionInfo.Division,
+            UploadType = "video"
+        };
+
+        var containerInfoJson = JsonSerializer.Serialize(containerInfo);
+
+        args.CustomFormData = new List<object> { new { containerInfoJson = containerInfoJson } };
+    }
+
+    // Code to revert changes when a video file is deselected
+    private void OnVideoFileRemove()
+    {
+        // Reset video file information to default values or null
+        form.FileUploadInfo.VideoFileName = null;
+        form.FileUploadInfo.VideoFileSize = 0;
+        form.FileUploadInfo.VideoFileExtension = null;
+    }
+
+    private void SetFileInfo(IBrowserFile file, string fileType)
+    {
+        var uniqueFileName = GetUniqueFileName(file.Name, fileType);
+
+        if (fileType == "id")
+        {
+            form.FileUploadInfo.IDFileName = uniqueFileName;
+            form.FileUploadInfo.IDFileSize = file.Size;
+            form.FileUploadInfo.IDFileExtension = Path.GetExtension(file.Name);
+        }
+        else if (fileType == "photo")
+        {
+            form.FileUploadInfo.PhotoFileName = uniqueFileName;
+            form.FileUploadInfo.PhotoFileSize = file.Size;
+            form.FileUploadInfo.PhotoFileExtension = Path.GetExtension(file.Name);
+        }
+
+    }
+
+    private string GetUniqueFileName(string fileName, string fileType)
+    {
+        fileName = Path.GetFileName(fileName);
+        string prefix;
+        switch (fileType)
+        {
+            case "id":
+                prefix = "ID";
+                break;
+            case "photo":
+                prefix = "Photo";
+                break;
+            case "video":
+                prefix = "Video"; // Different between Groups A and B?
+                break;
+            default:
+                prefix = "";
+                break;
+        }
+        return prefix
+        + $"_{form.CompetitionInfo.Division.Substring(0, 1)}_"
+        + form.PersonalInfo.FirstName + "_" + form.PersonalInfo.LastName + "_" + form.PersonalInfo.DOBUSFormat
+        + "_"
+        + Guid.NewGuid().ToString().Substring(0, 4).ToUpper()
+        + Path.GetExtension(fileName); // fileName is just for the extension
+    }
+
+    private async Task<List<string>> TrackChanges()
+    {
+        var existingMForm = await FormService.GetForm(Id);
+        List<string> changes = new List<string>();
+
+        if (existingMForm == null)
+        {
+            changes.Add("Existing form not found.");
+            return changes;
+        }
+
+        // Compare properties and append changes to the StringBuilder
+        if (form.PersonalInfo.FirstName != existingMForm.PersonalInfo.FirstName)
+        {
+            changes.Add($"Changed First Name from {existingMForm.PersonalInfo.FirstName} to {form.PersonalInfo.FirstName}.");
+        }
+
+        if (form.PersonalInfo.MiddleName != existingMForm.PersonalInfo.MiddleName)
+        {
+            changes.Add($"Changed Middle Name from {existingMForm.PersonalInfo.MiddleName} to {form.PersonalInfo.MiddleName}.");
+        }
+
+        if (form.PersonalInfo.LastName != existingMForm.PersonalInfo.LastName)
+        {
+            changes.Add($"Changed Last Name from {existingMForm.PersonalInfo.LastName} to {form.PersonalInfo.LastName}.");
+        }
+
+        if (form.PersonalInfo.Gender != existingMForm.PersonalInfo.Gender)
+        {
+            changes.Add($"Changed Gender from {existingMForm.PersonalInfo.Gender} to {form.PersonalInfo.Gender}.");
+        }
+
+        if (form.PersonalInfo.DOB != existingMForm.PersonalInfo.DOB)
+        {
+            changes.Add($"Changed Date of Birth from {existingMForm.PersonalInfo.DOB} to {form.PersonalInfo.DOB}.");
+        }
+
+        if (form.AddressInfo.Country != existingMForm.AddressInfo.Country)
+        {
+            changes.Add($"Changed Country from {existingMForm.AddressInfo.Country} to {form.AddressInfo.Country}.");
+        }
+
+        if (form.AddressInfo.StateProvince != existingMForm.AddressInfo.StateProvince)
+        {
+            changes.Add($"Changed State/Province from {existingMForm.AddressInfo.StateProvince} to {form.AddressInfo.StateProvince}.");
+        }
+
+        if (form.AddressInfo.City != existingMForm.AddressInfo.City)
+        {
+            changes.Add($"Changed City from {existingMForm.AddressInfo.City} to {form.AddressInfo.City}.");
+        }
+
+        if (form.ParentInfo.ParentFirstName != existingMForm.ParentInfo.ParentFirstName)
+        {
+            changes.Add($"Changed Parent First Name from {existingMForm.ParentInfo.ParentFirstName} to {form.ParentInfo.ParentFirstName}.");
+        }
+
+        if (form.ParentInfo.ParentLastName != existingMForm.ParentInfo.ParentLastName)
+        {
+            changes.Add($"Changed Parent Last Name from {existingMForm.ParentInfo.ParentLastName} to {form.ParentInfo.ParentLastName}.");
+        }
+
+        if (form.ParentInfo.ParentPhoneNumber != existingMForm.ParentInfo.ParentPhoneNumber)
+        {
+            changes.Add($"Changed Parent Phone Number from {existingMForm.ParentInfo.ParentPhoneNumber} to {form.ParentInfo.ParentPhoneNumber}.");
+        }
+
+        if (form.TeacherInfo.TeacherFirstName != existingMForm.TeacherInfo.TeacherFirstName)
+        {
+            changes.Add($"Changed Teacher First Name from {existingMForm.TeacherInfo.TeacherFirstName} to {form.TeacherInfo.TeacherFirstName}.");
+        }
+
+        if (form.TeacherInfo.TeacherLastName != existingMForm.TeacherInfo.TeacherLastName)
+        {
+            changes.Add($"Changed Teacher Last Name from {existingMForm.TeacherInfo.TeacherLastName} to {form.TeacherInfo.TeacherLastName}.");
+        }
+
+        if (form.TeacherInfo.TeacherPhoneNumber != existingMForm.TeacherInfo.TeacherPhoneNumber)
+        {
+            changes.Add($"Changed Teacher Phone Number from {existingMForm.TeacherInfo.TeacherPhoneNumber} to {form.TeacherInfo.TeacherPhoneNumber}.");
+        }
+
+        if (form.TeacherInfo.Institution != existingMForm.TeacherInfo.Institution)
+        {
+            changes.Add($"Changed Quran Institution from {existingMForm.TeacherInfo.Institution} to {form.TeacherInfo.Institution}.");
+        }
+
+        if (form.CompetitionInfo.Division != existingMForm.CompetitionInfo.Division)
+        {
+            changes.Add($"Changed Division from {existingMForm.CompetitionInfo.Division} to {form.CompetitionInfo.Division}.");
+        }
+
+        if (form.CompetitionInfo.Category != existingMForm.CompetitionInfo.Category)
+        {
+            changes.Add($"Changed Category from {existingMForm.CompetitionInfo.Category} to {form.CompetitionInfo.Category}.");
+        }
+
+        if (form.CompetitionInfo.Portion != existingMForm.CompetitionInfo.Portion)
+        {
+            changes.Add($"Changed Portion from {existingMForm.CompetitionInfo.Portion} to {form.CompetitionInfo.Portion}.");
+        }
+
+        if (form.FileUploadInfo.IDFileName != existingMForm.FileUploadInfo.IDFileName)
+        {
+            changes.Add($"Changed Portion from {existingMForm.FileUploadInfo.IDFileName} to {form.FileUploadInfo.IDFileName}.");
+        }
+
+        if (form.FileUploadInfo.PhotoFileName != existingMForm.FileUploadInfo.PhotoFileName)
+        {
+            changes.Add($"Changed Portion from {existingMForm.FileUploadInfo.PhotoFileName} to {form.FileUploadInfo.PhotoFileName}.");
+        }
+
+        if (form.FileUploadInfo.VideoFileName != existingMForm.FileUploadInfo.VideoFileName)
+        {
+            changes.Add($"Changed Portion from {existingMForm.FileUploadInfo.VideoFileName} to {form.FileUploadInfo.VideoFileName}.");
+        }
+
+        if (changes.Count == 0)
+        {
+            changes.Add("No changes detected.");
+        }
+
+        return changes;
+    }
+}

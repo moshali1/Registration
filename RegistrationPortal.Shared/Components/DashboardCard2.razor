@@ -1,0 +1,98 @@
+﻿@using System.Timers
+@implements IDisposable
+
+@rendermode RenderMode.InteractiveWebAssembly
+
+<li class="col-span-1 divide-y divide-gray-200 rounded-lg bg-white shadow">
+    <div class="flex w-full items-center justify-between space-x-6 p-5">
+        <div class="flex-1 truncate">
+            <div class="flex items-center space-x-3">
+                <h3 class="truncate text-sm font-medium text-gray-900">@title</h3>
+            </div>
+            <div>
+                <p class="mt-2 flex items-baseline gap-x-2">
+                    <span class="md:text-2xl font-semibold text-center">@DisplayCountdownText()</span>
+                </p>
+            </div>
+        </div>
+        <img class="h-20 w-20 flex-shrink-0 rounded-full bg-gray-300" src="/images/countdown.jpg" alt="archived-forms">
+    </div>
+    <div>
+        <div class="-mt-px flex divide-x divide-gray-200">
+            <div class="flex w-0 flex-1">
+                <button @onclick="RegCloseInfo" class="-mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm text-gray-900 @(activeTab == "Reg" ? "font-bold" : "")">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="h-5 w-5 text-gray-400" viewBox="0 0 16 16">
+                        <path d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5z" />
+                        <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z" />
+                    </svg>
+                    Registration
+                </button>
+            </div>
+            <div class="-ml-px flex w-0 flex-1 @(activeTab == "Prelim" ? "font-semibold" : "")">
+                <button @onclick="PrelimStartInfo" class="inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm text-gray-900 @(activeTab == "Prelim" ? "font-bold" : "")">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="h-5 w-5 text-gray-400" viewBox="0 0 16 16">
+                        <path d="M9 7a1 1 0 0 1 1-1h5v2h-5a1 1 0 0 1-1-1M1 9h4a1 1 0 0 1 0 2H1z" />
+                        <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z" />
+                    </svg>
+                    Prelim Round
+                </button>
+            </div>
+        </div>
+    </div>
+</li>
+
+@code {
+    private string title = "Registration Closes In";
+    private string activeTab = "Reg";
+
+    private DateTime regCloseDate = new DateTime(2024, 3, 17);
+    private DateTime prelimStartDate = new DateTime(2024, 5, 15);
+    private TimeSpan regCountdown;
+    private TimeSpan prelimCountdown;
+    private Timer timer;
+
+    protected override void OnInitialized()
+    {
+        timer = new Timer(1000);
+        timer.Elapsed += TimerElapsed;
+        timer.Enabled = true;
+
+        UpdateCountdowns(); // Initial update
+    }
+
+    private void TimerElapsed(object sender, ElapsedEventArgs e)
+    {
+        UpdateCountdowns();
+        InvokeAsync(StateHasChanged); // Re-render the component
+    }
+
+    private void UpdateCountdowns()
+    {
+        var now = DateTime.Now;
+        regCountdown = regCloseDate - now;
+        prelimCountdown = prelimStartDate - now;
+    }
+
+    private string DisplayCountdownText()
+    {
+        var countdown = activeTab == "Reg" ? regCountdown : prelimCountdown;
+        return $"{countdown.Days}d {countdown.Hours}h {countdown.Minutes}m {countdown.Seconds}s";
+    }
+
+    private void RegCloseInfo()
+    {
+        title = "Registration Closes In";
+        activeTab = "Reg";
+    }
+
+    private void PrelimStartInfo()
+    {
+        title = "Prelim Round Starts In";
+        activeTab = "Prelim";
+    }
+
+    public void Dispose()
+    {
+        timer?.Dispose();
+    }
+}

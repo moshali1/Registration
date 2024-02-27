@@ -1,0 +1,72 @@
+﻿<div class="mt-3 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-6">
+    <div class="sm:col-span-2 sm:col-start-1">
+        <label class="block text-sm font-medium leading-6 text-gray-900">Division</label>
+        <div class="mt-2">
+            <InputText type="text" @bind-Value="CompetitionInfo.Division" readonly class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6 bg-gray-200" />
+        </div>
+    </div>
+
+    <div class="sm:col-span-2">
+        <label class="block text-sm font-medium leading-6 text-gray-900">Category</label>
+        <div class="mt-2">
+            <InputSelect @bind-Value="CompetitionInfo.Category" @oninput="OnCategoryInput" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:max-w-xs sm:text-sm sm:leading-6">
+                <option selected disabled>Choose a Category</option>
+                @foreach (var category in CurrentCategories)
+                {
+                    <option value="@category.CategoryName">@category.CategoryName</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => CompetitionInfo.Category)" />
+        </div>
+    </div>
+
+    <div class="sm:col-span-2">
+        <label class="block text-sm font-medium leading-6 text-gray-900">Portion</label>
+        <div class="mt-2">
+            <InputSelect @bind-Value="CompetitionInfo.Portion" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:max-w-xs sm:text-sm sm:leading-6">
+                <option selected disabled>Choose a Portion</option>
+                @foreach (var portion in CurrentPortions)
+                {
+                    <option value="@portion">@portion</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => CompetitionInfo.Portion)" />
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public CompetitionInfoDto CompetitionInfo { get; set; }
+
+    [Parameter]
+    public string Division { get; set; }
+
+    public string selectedCategory;
+    public string selectedPortion;
+
+    public List<CategoryOption> CurrentCategories => CompetitionOptions.Divisions.FirstOrDefault(d => d.DivisionName == Division)?.Categories ?? new();
+    public List<string> CurrentPortions => CurrentCategories.FirstOrDefault(c => c.CategoryName == selectedCategory)?.Portions ?? new();
+
+    protected override void OnParametersSet()
+    {
+        if (CompetitionInfo != null && !string.IsNullOrEmpty(Division))
+        {
+            CompetitionInfo.Division = Division;
+
+            selectedCategory = CompetitionInfo.Category; 
+        }
+    }
+
+    private void OnCategoryInput(ChangeEventArgs e)
+    {
+        selectedCategory = e.Value.ToString();
+        selectedPortion = null;
+
+        CompetitionInfo.Portion = (Division == "Memorization" && (selectedCategory == "1 Juz" || selectedCategory == "30 Juz")) ? "NA" : "Choose a Portion";
+
+        if (Division == "Ten Qira'at") { CompetitionInfo.Portion = "Top"; }
+
+        if (Division == "Best Voice") { CompetitionInfo.Portion = "NA"; }
+    }
+}

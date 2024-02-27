@@ -1,0 +1,39 @@
+﻿<div class="mt-3 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-6">
+
+    <div class="sm:col-span-2 sm:col-start-1">
+        <label class="block text-sm font-medium leading-6 text-gray-900">Teacher First Name</label>
+        <div class="mt-1">
+            <InputText type="text" @bind-Value="TeacherInfo.TeacherFirstName" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6" />
+            <ValidationMessage For="@(() => TeacherInfo.TeacherFirstName)" />
+        </div>
+    </div>
+
+    <div class="sm:col-span-2">
+        <label class="block text-sm font-medium leading-6 text-gray-900">Teacher Last Name</label>
+        <div class="mt-1">
+            <InputText type="text" @bind-Value="TeacherInfo.TeacherLastName" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6" />
+            <ValidationMessage For="@(() => TeacherInfo.TeacherLastName)" />
+        </div>
+    </div>
+
+    <div class="sm:col-span-2">
+        <label class="block text-sm font-medium leading-6 text-gray-900">Teacher Phone Number</label>
+        <div class="mt-1">
+            <InputText type="text" @bind-Value="TeacherInfo.TeacherPhoneNumber" class="block w-full rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6" placeholder="(012) 345-6789" />
+            <ValidationMessage For="@(() => TeacherInfo.TeacherPhoneNumber)" />
+        </div>
+    </div>
+
+    <div class="sm:col-span-2 sm:col-start-1">
+        <label class="block text-sm font-medium leading-6 text-gray-900">Quran Institution</label>
+        <div class="mt-2">
+            <InputText type="text" @bind-Value="TeacherInfo.Institution" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6" />
+            <ValidationMessage For="@(() => TeacherInfo.Institution)" />
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public TeacherInfoDto TeacherInfo { get; set; }
+}

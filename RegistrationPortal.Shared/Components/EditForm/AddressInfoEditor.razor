@@ -1,0 +1,79 @@
+﻿<div class="mt-3 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-6">
+
+    <div class="sm:col-span-2 sm:col-start-1">
+        <label class="block text-sm font-medium leading-6 text-gray-900">Country</label>
+        <div class="mt-1">
+            <InputSelect @bind-Value="AddressInfo.Country" @oninput="OnCountryInput" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6">
+                <option selected disabled>Choose your Country</option>
+                @foreach (var country in CountryOptions.Countries)
+                {
+                    <option value="@country.Value">@country.Text</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => AddressInfo.Country)" />
+        </div>
+    </div>
+
+    @if (selectedCountry == "United States")
+    {
+        <div class="sm:col-span-2">
+            <label class="block text-sm font-medium leading-6 text-gray-900">State</label>
+            <div class="mt-1">
+                <InputSelect @bind-Value="AddressInfo.StateProvince" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6">
+                    <option selected disabled>Choose your State</option>
+                    @foreach (var state in StateOptions.States)
+                    {
+                        <option value="@state.Value">@state.Text</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="@(() => AddressInfo.StateProvince)" />
+            </div>
+        </div>
+    }
+    else if (selectedCountry == "Canada" || selectedCountry == "Mexico")
+    {
+        <div class="sm:col-span-2">
+            <label class="block text-sm font-medium leading-6 text-gray-900">Province</label>
+            <div class="mt-1">
+                <InputText type="text" @bind-Value="AddressInfo.StateProvince" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6" />
+                <ValidationMessage For="@(() => AddressInfo.StateProvince)" />
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="sm:col-span-2">
+            <label class="block text-sm font-medium leading-6 text-gray-900">State / Province</label>
+            <div class="mt-1">
+                <InputText type="text" @bind-Value="AddressInfo.StateProvince" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6" />
+                <ValidationMessage For="@(() => AddressInfo.StateProvince)" />
+            </div>
+        </div>
+    }
+
+    <div class="sm:col-span-2">
+        <label class="block text-sm font-medium leading-6 text-gray-900">City</label>
+        <div class="mt-1">
+            <InputText type="text" @bind-Value="AddressInfo.City" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6" />
+            <ValidationMessage For="@(() => AddressInfo.City)" />
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] 
+    public AddressInfoDto AddressInfo { get; set; }
+
+    private string selectedCountry;
+
+    protected override void OnParametersSet()
+    {
+        selectedCountry = AddressInfo.Country;
+    }
+
+    private void OnCountryInput(ChangeEventArgs e)
+    {
+        selectedCountry = e.Value.ToString();
+        AddressInfo.StateProvince = null;
+    }
+}

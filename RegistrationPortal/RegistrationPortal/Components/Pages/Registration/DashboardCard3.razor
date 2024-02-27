@@ -1,0 +1,61 @@
+﻿@inject IUserData UserData
+@inject IFormData FormData
+@inject AuthenticationStateProvider AuthState
+
+<li class="col-span-1 divide-y divide-gray-200 rounded-lg bg-white shadow">
+    <div class="flex w-full items-center justify-between space-x-6 p-5">
+        <div class="flex-1 truncate">
+            <div class="flex items-center space-x-3">
+                <h3 class="truncate text-sm font-medium text-gray-900">Current Forms</h3>
+                <span class="hidden lg:block inline-flex flex-shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-vlue-700 ring-1 ring-inset ring-blue-600/20">@forms?.Count() @(forms?.Count() == 1 ? "Form" : "Forms") Found</span>
+            </div>
+            @if (forms is not null)
+            {
+                <ul class="list-none mt-1 truncate text-sm text-gray-500">
+                    <li>
+                        <span class="font-medium">Ten Qira'at Forms:</span> @forms.Where(f => f.CompetitionInfo.Division == DivisionConstants.TenQiraat).Count()
+                    </li>
+                    <li>
+                        <span class="font-medium">Memorization Forms:</span> @forms.Where(f => f.CompetitionInfo.Division == DivisionConstants.Memorization).Count()
+                    </li>
+                    <li>
+                        <span class="font-medium">Best Voice Forms:</span> @forms.Where(f => f.CompetitionInfo.Division == DivisionConstants.BestVoice).Count()
+                    </li>
+                </ul>
+            }
+        </div>
+        <img class="h-20 w-20 flex-shrink-0 rounded-full bg-gray-300" src="/images/current-forms2.jpg" alt="current-forms">
+    </div>
+    <div>
+        <div class="-mt-px flex divide-x divide-gray-200">
+            <div class="-ml-px flex w-0 flex-1">
+                <a href="/list" class="inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="h-5 w-5 text-gray-400" viewBox="0 0 16 16">
+                        <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 0 11 4.5h2V9H3V2a1 1 0 0 1 1-1h5.5zM3 12v-2h2v2zm0 1h2v2H4a1 1 0 0 1-1-1zm3 2v-2h3v2zm4 0v-2h3v1a1 1 0 0 1-1 1zm3-3h-3v-2h3zm-7 0v-2h3v2z" />
+                    </svg>
+                    View List
+                </a>
+            </div>
+            <div class="flex w-0 flex-1">
+                <a href="/track-changes" class="-mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="h-5 w-5 text-gray-400" viewBox="0 0 16 16">
+                        <path d="M3 4.5h10a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2m0 1a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1zM1 2a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 2m0 12a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 14" />
+                    </svg>
+                    Track Changes
+                </a>
+            </div>
+        </div>
+    </div>
+</li>
+
+@code {
+    [Parameter]
+    public string UserId { get; set; }
+
+    private List<Form> forms;
+
+    protected override async Task OnInitializedAsync()
+    {
+        forms = await FormData.GetFormsByCreator(UserId);
+    }
+}

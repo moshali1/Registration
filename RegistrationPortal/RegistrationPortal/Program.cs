@@ -1,0 +1,44 @@
+using RegistrationPortal.Components;
+using RegistrationPortal.Identity;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.ConfigureServices();
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseWebAssemblyDebugging();
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+else
+{
+    app.UseExceptionHandler("/Error", createScopeForErrors: true);
+    app.UseHsts();
+}
+
+app.UseSecurityHeaders(
+    SecurityHeadersDefinitions.GetHeaderPolicyCollection(app.Environment.IsDevelopment(),
+        app.Configuration["AzureAd:Instance"]));
+
+app.UseHttpsRedirection();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.UseStaticFiles();
+app.UseAntiforgery();
+
+AuthenticationExtensions.SetupEndpoints(app);
+
+app.MapControllers();
+
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode()
+    .AddInteractiveWebAssemblyRenderMode()
+    .AddAdditionalAssemblies(typeof(RegistrationPortal.Client._Imports).Assembly);
+
+app.Run();

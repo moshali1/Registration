@@ -1,0 +1,10 @@
+﻿global using Microsoft.AspNetCore.Mvc;
+global using RegistrationPortal;
+global using RegistrationPortal.Data.DataAccess;
+global using RegistrationPortal.Data.Models;
+global using RegistrationPortal.Helpers;
+global using RegistrationPortal.Services;
+global using RegistrationPortal.Shared.Helpers;
+global using RegistrationPortal.Shared.InputSelectionOptions;
+global using RegistrationPortal.Shared.Models;
+global using RegistrationPortal.Client.Pages;

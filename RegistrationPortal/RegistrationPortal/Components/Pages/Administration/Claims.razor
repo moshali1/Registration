@@ -1,0 +1,89 @@
+﻿@page "/claims"
+@using System.Security.Claims
+@inject AuthenticationStateProvider AuthStateProvider
+@attribute [Authorize(Roles = "Admin")]
+
+<div class="mx-auto max-w-7xl sm:px-2 lg:px-6">
+    <div class="mx-auto max-w-6xl">
+        <div class="bg-cyan-950 rounded rounded-lg mb-4 md:px-6 lg:px-8">
+            <div class="mx-auto max-w-6xl">
+                <div class="bg-cyan-950 py-4">
+                    <div class="px-4 sm:px-3 lg:px-4">
+                        <div class="sm:flex sm:items-center">
+                            <div class="sm:flex-auto">
+                                <h1 class="text-base font-semibold leading-6 text-white">Welcome!</h1>
+                                <p class="mt-2 text-sm text-white">You are signed in! Below are the claims in your ID token. For more information, visit: <a href="https://learn.microsoft.com/azure/active-directory/develop/id-tokens" class="text-cyan-600 hover:text-cyan-700">Microsoft identity platform ID tokens</a></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="mx-auto max-w-7xl sm:px-2 lg:px-8">
+    <div class="mx-auto max-w-6xl">
+        <div class="bg-cyan-900 rounded rounded-lg mb-4 md:px-6 lg:px-8">
+            <div class="mx-auto max-w-6xl">
+                <div class="bg-cyan-900 py-2">
+                    <div class="px-4 sm:px-3 lg:px-4">
+                        <div class="mt-2 flow-root">
+                            <!-- Mobile View -->
+                            <div class="sm:hidden">
+                                @foreach (var item in user.Claims)
+                                {
+                                    <div class="px-4 py-2 bg-cyan-800 rounded-lg mt-3">
+                                        <div class="font-semibold text-white">Claim Type</div>
+                                        <div class="text-gray-300 mb-2 break-all">@item.Type</div>
+                                        <div class="font-semibold text-white">Claim Value</div>
+                                        <div class="text-gray-300 break-all">@item.Value</div>
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- Desktop View -->
+                            <div class="hidden sm:block">
+                                <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                                    <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                                        <table class="min-w-full divide-y divide-gray-500">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-white sm:pl-0">Claim Type</th>
+                                                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-white">Claim Value</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-500">
+                                                @foreach (var item in user.Claims)
+                                                {
+                                                    <tr>
+                                                        <td class="break-words py-4 pl-4 pr-3 text-sm font-medium text-white sm:pl-0">@item.Type</td>
+                                                        <td class="break-words px-3 py-4 text-sm text-gray-300">@item.Value</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+@code {
+    private ClaimsPrincipal user;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        user = authState.User;
+    }
+}

@@ -1,0 +1,166 @@
+﻿@page "/list"
+
+@inject IFormData FormData
+@inject IUserData UserData
+@inject NavigationManager NavManager
+@inject AuthenticationStateProvider AuthState 
+@inject DefaultListService DefaultList
+@attribute [Authorize]
+
+@rendermode InteractiveServer
+
+
+<PageTitle>Forms List</PageTitle>
+
+<SuccessNotification ShowSuccessNotification="@showNotification" OnCloseNotification="HandleCloseNotification" />
+
+
+<div class="sm:flex sm:items-center">
+    <div class="sm:flex-auto">
+        <h1 class="text-2xl font-bold mb-3" tabindex="-1">Form Submission List</h1>
+        <p class="mt-2 text-gray-700">A list of all the registered participants in your account, including details such as personal information, division, category, status, and messages.</p>
+    </div>
+</div>
+
+@if (forms is null | mForms is null || tForms is null || bForms is null)
+{
+    <p><em>Loading list...</em></p>
+}
+else
+{
+    <div>
+        <div class="list-type-dropdown">
+            <label for="tabs" class="sr-only">Select a tab</label>
+            <select id="tabs" name="tabs" @onchange="HandleDropdownChange" class="mt-2 block w-full rounded-lg border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-cyan-600 sm:text-sm sm:leading-6">
+                <option value="M">Memorization Forms</option>
+                <option value="T">Ten Qira'at Forms</option>
+                <option value="B">Best Voice Forms</option>
+            </select>
+        </div>
+
+        <div class="list-type-tab">
+            <nav class="isolate flex divide-x divide-gray-200 rounded-lg shadow" aria-label="Tabs">
+                <a @onclick="() => SetActiveTab('M')" class="@tabCssClass('M') cursor-pointer rounded-l-lg group relative min-w-0 flex-1 overflow-hidden bg-white py-4 px-4 text-center text-sm font-medium hover:bg-gray-50 focus:z-10" aria-current="page">
+                    <span>Memorization Forms</span>
+                    <span aria-hidden="true" class="@underlineCssClass('M') absolute inset-x-0 bottom-0 h-0.5"></span>
+                    <span class="@badgeCssClass('M') ml-3 hidden rounded-full py-0.5 px-2.5 text-xs font-medium md:inline-block">@mForms?.Count()</span>
+                </a>
+                <a @onclick="() => SetActiveTab('T')" class="@tabCssClass('T') cursor-pointer group relative min-w-0 flex-1 overflow-hidden bg-white py-4 px-4 text-center text-sm font-medium hover:bg-gray-50 focus:z-10">
+                    <span>Ten Qira'at Forms</span>
+                    <span aria-hidden="true" class="@underlineCssClass('T') absolute inset-x-0 bottom-0 h-0.5"></span>
+                    <span class="@badgeCssClass('T') ml-3 hidden rounded-full py-0.5 px-2.5 text-xs font-medium md:inline-block">@tForms?.Count()</span>
+                </a>
+                <a @onclick="() => SetActiveTab('B')" class="@tabCssClass('B') cursor-pointer rounded-r-lg group relative min-w-0 flex-1 overflow-hidden bg-white py-4 px-4 text-center text-sm font-medium hover:bg-gray-50 focus:z-10">
+                    <span>Best Voice Forms</span>
+                    <span aria-hidden="true" class="@underlineCssClass('B') absolute inset-x-0 bottom-0 h-0.5"></span>
+                    <span class="@badgeCssClass('B') ml-3 hidden rounded-full py-0.5 px-2.5 text-xs font-medium md:inline-block">@bForms?.Count()</span>
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    if (activeTab == 'M')
+    {
+        <FormTable Forms="@mForms" ShowTable="@(mForms?.Any() ?? false)" OnItemDeleted="ReloadForms"/>
+    }
+    else if (activeTab == 'T')
+    {
+        <FormTable Forms="@tForms" ShowTable="@(tForms?.Any() ?? false)" OnItemDeleted="ReloadForms" />
+    }
+    else if (activeTab == 'B')
+    {
+        <FormTable Forms="@bForms" ShowTable="@(bForms?.Any() ?? false)" OnItemDeleted="ReloadForms" />
+    }
+}
+
+@code {
+    private bool showNotification = false;
+
+    private User loggedInUser;
+    private bool IsAdmin { get; set; }
+
+    private List<Form> forms;
+
+    private List<Form> mForms;
+    private List<Form> tForms;
+    private List<Form> bForms;
+
+    private char activeTab;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (DefaultList.ShowSuccessDialog)
+        {
+            showNotification = true;
+
+            // After showing the dialog, reset the state to prevent the dialog from showing again on refresh
+            DefaultList.SetShowDialog(false);
+        }
+        loggedInUser = await AuthState.GetUserFromAuth(UserData);
+
+        var authState = await AuthState.GetAuthenticationStateAsync();
+        var user = authState.User;
+        IsAdmin = user.IsInRole("Admin");
+
+        // Directly use the ActiveTab from DefaultListService since it has a default value of 'M'
+        activeTab = DefaultList.ActiveTab;
+
+        await LoadForms();
+    }
+
+    private async Task LoadForms()
+    {
+        if (IsAdmin)
+        {
+            forms = await FormData.GetForms();
+        }
+        else
+        {
+            forms = await FormData.GetFormsByCreator(loggedInUser.Id);
+        }
+
+        mForms = forms.Where(f => f.CompetitionInfo.Division == DivisionConstants.Memorization).ToList();
+        tForms = forms.Where(f => f.CompetitionInfo.Division == DivisionConstants.TenQiraat).ToList();
+        bForms = forms.Where(f => f.CompetitionInfo.Division == DivisionConstants.BestVoice).ToList();
+    }
+
+    private void HandleCloseNotification(bool value)
+    {
+        showNotification = value;
+        StateHasChanged(); 
+    }
+
+
+    private void HandleDropdownChange(ChangeEventArgs e)
+    {
+        SetActiveTab(Convert.ToChar(e.Value.ToString()));
+        StateHasChanged();
+    }
+
+    private void SetActiveTab(char tabName)
+    {
+        activeTab = tabName;
+        DefaultList.LastTab(activeTab);
+    }
+
+    private string tabCssClass(char tabName)
+    {
+        return activeTab == tabName ? "text-gray-900 bg-white" : "text-gray-500 hover:text-gray-700";
+    }
+
+    private string badgeCssClass(char tabName)
+    {
+        return activeTab == tabName ? "bg-cyan-400 text-cyan-700" : "bg-gray-100 text-gray-900";
+    }
+
+    private string underlineCssClass(char tabName)
+    {
+        return activeTab == tabName ? "bg-cyan-600" : "bg-gray-100";
+    }
+
+    private async Task ReloadForms()
+    {
+        await LoadForms();
+    }
+}

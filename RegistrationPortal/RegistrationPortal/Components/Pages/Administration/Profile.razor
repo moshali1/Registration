@@ -1,0 +1,191 @@
+﻿@page "/profile"
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavManager
+@inject AuthenticationStateProvider authProvider
+@inject IUserData UserData
+@inject IConfiguration _configuration
+@attribute [Authorize]
+@using Azure.Identity
+@using Microsoft.Graph
+@using Microsoft.Graph.Models
+@using Microsoft.Graph.Models.ODataErrors;
+
+@attribute [StreamRendering]
+
+<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+  <!-- We've used 3xl here, but feel free to try other max-widths based on your needs -->
+    <div class="mx-auto max-w-3xl">
+        <div class="overflow-hidden rounded-lg bg-white shadow">
+            <div class="bg-cyan-950 px-4 py-5 sm:px-6">
+                <h1 class="text-base font-semibold leading-6 text-white">Profile</h1>
+                <p class="text-sm text-white">Manage your account details and settings here.</p>
+            </div>
+            <div class="px-4 py-5 sm:p-6">
+                @if (isLoading)
+                {
+                    <div class="animate-pulse">
+                        <div class="mb-4">
+                            <h6 class="mb-0">Display Name:</h6>
+                            <div class="w-1/2 h-2 bg-slate-300 rounded"></div>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">Full Name:</h6>
+                            <div class="w-1/4 h-2 bg-slate-300 rounded"></div>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">User Type:</h6>
+                            <div class="w-1/4 h-2 bg-slate-300 rounded"></div>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">Identities:</h6>
+                            <div><small>Sign-in Type: <span class="inline-block w-24 h-2 bg-slate-300 rounded"></span></small></div>
+                            <div><small>Issuer: <span class="inline-block w-24 h-2 bg-slate-300 rounded"></span></small></div>
+                            <div><small>Issuer Assigned ID: <span class="inline-block w-24 h-2 bg-slate-300 rounded"></span></small></div>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">ID:</h6>
+                            <div class="w-24 h-2 bg-slate-300 rounded"></div>
+                        </div>
+                    </div>
+
+                }
+                else
+                {
+                    <div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">Display Name:</h6>
+                            <small>@user.DisplayName</small>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">Full Name:</h6>
+                            <small>@user.GivenName @user.Surname</small>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">User Type:</h6>
+                            <small>@user.UserTypeCustom</small>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">Identities:</h6>
+                            <div><small>Sign-in Type: @user.SignInType</small></div>
+                            <div><small>Issuer: @user.Issuer</small></div>
+                            <div><small>Issuer Assigned ID: @user.IssuerAssignedId</small></div>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">ID:</h6>
+                            <small>@user.Id</small>
+                        </div>
+                    </div>
+                } 
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    private string errorMessage;
+
+    private bool isLoading = true;
+
+    private GraphUser user = new();
+
+    // Graph API settings
+    private readonly string[] scopes = new string[] { "https://graph.microsoft.com/.default" };
+
+    private string tenantId;
+    private string clientId;
+    private string clientSecret;
+    private string extensionAttributes;
+
+    private string objectId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Read from Azure AD B2C Management Settings
+        tenantId = _configuration["MicrosoftGraph:TenantId"];
+        clientId = _configuration["MicrosoftGraph:ClientId"];
+        clientSecret = _configuration["MicrosoftGraph:ClientSecret"];
+        extensionAttributes = _configuration["MicrosoftGraph:ExtensionAttributes"];
+
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        // Get the user's object ID from claims.
+        objectId = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("objectidentifier"))?.Value;
+
+        await ReadProfile(objectId);
+
+        ConstructQueryString();
+    }
+
+    private async Task ReadProfile(string userObjectId)
+    {
+        try
+        {
+            var clientSecretCredential = new ClientSecretCredential(tenantId, clientId, clientSecret);
+            var graphClient = new GraphServiceClient(clientSecretCredential, scopes);
+
+            User profile = await graphClient.Users[userObjectId].GetAsync(requestConfiguration =>
+            {
+                requestConfiguration.QueryParameters.Select = new string[] { "Id", "identities", "displayName", "GivenName", "Surname", $"{extensionAttributes}_UserType" };
+                requestConfiguration.QueryParameters.Expand = new string[] { "Extensions" };
+            });
+
+
+            // Populate the user's attributes
+            user.Id = profile.Id;
+            user.DisplayName = profile.DisplayName ?? "";
+            user.Surname = profile.Surname ?? "";
+            user.GivenName = profile.GivenName ?? "";
+
+            // Get the custom user type from the extension attributes
+            object userTypeCustom;
+            if (profile.AdditionalData.TryGetValue($"{extensionAttributes}_UserType", out userTypeCustom))
+            {
+                user.UserTypeCustom = userTypeCustom.ToString();
+            }
+
+            // Get the user identities
+            GetIdentities(profile.Identities);
+
+            isLoading = false;
+
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Can't read the profile due to the following error: {ex.Message}";
+        }
+    }
+
+    private void GetIdentities(List<ObjectIdentity> identities)
+    {
+        foreach (var identity in identities!)
+        {
+            if (identity.SignInType == "userPrincipalName")
+            {
+                continue;
+            }
+            else
+            {
+                user.Issuer = identity.Issuer;
+                user.IssuerAssignedId = identity.IssuerAssignedId;
+                user.SignInType = identity.SignInType;
+            }
+        }
+    }
+
+    private string queryString;
+
+    private void ConstructQueryString()
+    {
+        var profileInfo = new
+        {
+            DisplayName = user.DisplayName,
+            FirstName = user.GivenName,
+            LastName = user.Surname,
+            UserType = user.UserTypeCustom
+        };
+
+        // queryString = $"displayName={Uri.EscapeDataString(profileInfo.DisplayName)}&firstName={Uri.EscapeDataString(profileInfo.FirstName)}&lastName={Uri.EscapeDataString(profileInfo.LastName)}&userType={Uri.EscapeDataString(profileInfo.UserType)}";
+    }
+}

@@ -1,0 +1,39 @@
+﻿p {
+    margin: 0 !important;
+}
+
+    p a, li a {
+        color: inherit !important;
+        text-decoration: none !important;
+        text-decoration-color: inherit !important;
+    }
+
+div + p {
+    margin-top: 0 !important;
+}
+
+ul {
+    padding-left: 0 !important;
+}
+
+li {
+    list-style-type: none !important;
+    padding-left: 0 !important;
+    max-width: none !important;
+}
+
+    li + li {
+        margin-top: 0 !important;
+    }
+
+    p code, li code {
+        color: inherit !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background-color: inherit !important;
+        font-weight: normal !important;
+        overflow-wrap: normal !important;
+        font-size: inherit !important;
+        line-height: inherit !important;
+        border-radius: 0 !important;
+    }
