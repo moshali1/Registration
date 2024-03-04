@@ -1,13 +1,18 @@
 ﻿@page "/create/{Division}"
 @page "/create/{Division}/{Type}"
 
+@page "/create/{Division}/e/{Niqab}"
+
+
 @using Microsoft.AspNetCore.Http
 @using Microsoft.AspNetCore.Http.Internal
 @using System.Net.Http.Headers
 @using System.Text.Json
+@using Syncfusion.Blazor.Popups
 
 @inject DefaultListService DefaultList
 @inject FormSelectionService FormSelection
+@inject IFaceDetectionService FaceDetection
 @inject IHttpClientFactory HttpClientFactory
 @inject IFormService FormService
 @inject IUserService UserService
@@ -54,13 +59,37 @@
                     <div class="basis-1/2 pr-3">
                         <label class="block text-sm font-medium leading-6 text-gray-900 mb-1">ID Upload</label>
                         <InputFile OnChange="LoadIDFile" accept=".png,.jpeg,.jpg,.pdf" class="block w-full rounded-md border-0 text-sm text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 file:cursor-pointer cursor-pointer file:border-0 file:py-2 file:px-4 file:mr-4 file:bg-gray-500 file:hover:bg-gray-600 file:text-white focus:ring-1 focus:ring-inset sm:leading-6" />
-                        <p class="text-xs text-gray-500 mt-2">PNG, JPEG, JPG, and PDF are Allowed.</p>
+                        <SfTooltip Position="Position.BottomCenter" Target="#id-info" WindowCollision="true">
+                            <ContentTemplate>
+                                <p>Acceptable forms of identification for the competitor include a passport, driver's license, or any state-issued ID, each must feature the competitor's photo, name, and date of birth.</p>
+                            </ContentTemplate>
+                        </SfTooltip>
+                        <p class="text-xs text-gray-500 flex items-center">
+                            PNG, JPEG, JPG, and PDF are Allowed. See Instructions: 
+                            <span id="id-info" class="inline-flex items-center ml-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-cyan-700">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 a9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                                </svg>
+                            </span>
+                        </p>
                         <ValidationMessage For="() => form.FileUploadInfo.IDFileName" />
                     </div>
                     <div class="basis-1/2 pl-3">
                         <label class="block text-sm font-medium leading-6 text-gray-900 mb-1">Photo Upload</label>
                         <InputFile OnChange="LoadPhotoFile" accept=".png,.jpeg,.jpg" class="block w-full rounded-md border-0 text-sm text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 file:cursor-pointer cursor-pointer file:border-0 file:py-2 file:px-4 file:mr-4 file:bg-gray-500 file:hover:bg-gray-600 file:text-white focus:ring-1 focus:ring-inset sm:leading-6" />
-                        <p class="text-xs text-gray-500 mt-2">PNG, JPEG, and JPG are Allowed.</p>
+                        <SfTooltip Position="Position.BottomCenter" Target="#photo-info" WindowCollision="true">
+                            <ContentTemplate>
+                                <p>A high-quality, passport-style photograph is required. The background should be bright and uncluttered, free from objects, trees, or similar distractions. It is essential that the image captures only the face, clearly visible in a well-lit setting. Please note, the photo must be a standalone image and not part of an identification document. This photograph will be displayed during the competition.</p>
+                            </ContentTemplate>
+                        </SfTooltip>
+                        <p class="text-xs text-gray-500 flex items-center">
+                            PNG, JPEG, and JPG are Allowed. See Instructions: 
+                            <span id="photo-info" class="inline-flex items-center ml-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-cyan-700">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 a9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                                </svg>
+                            </span>
+                        </p>
                         <ValidationMessage For="() => form.FileUploadInfo.PhotoFileName" />
                     </div>
                 </div>
@@ -95,6 +124,7 @@
         </div>
 
         <span class="text-red-600">@exceptionMessage</span>
+        <span class="text-green-600">@successMessage</span>
 
         <div class="mt-3 flex items-center justify-end gap-x-6">
             <button type="submit" disabled="@isSubmitting" class="inline-flex items-center px-3 py-2 font-semibold leading-6 text-sm shadow rounded-md text-white bg-cyan-700 hover:bg-cyan-600 transition ease-in-out duration-150">
@@ -119,6 +149,8 @@
     [Parameter] public string Division { get; set; }
     [Parameter] public string Type { get; set; }
 
+    [Parameter] public string Niqab { get; set; }
+
     [CascadingParameter]
     private Task<AuthenticationState> AuthenticationState { get; set; }
 
@@ -135,6 +167,9 @@
     // Miscellaneous Fields
     private bool isSubmitting = false;
     private string exceptionMessage;
+    private string successMessage;
+
+    private bool niqabCompetitor = false;
 
     protected override Task OnInitializedAsync()
     {
@@ -160,6 +195,11 @@
             FormSelection.SelectedForm = null; // still removes data though?
         }
 
+        if (Niqab is not null && Niqab == "niqab")   
+        {
+            niqabCompetitor = true;
+        }
+
         // Lazy initialization of form
         form ??= new();
 
@@ -168,6 +208,7 @@
 
     private async Task OnValidSubmit()
     {
+        successMessage = null;
         showNotification = false;
         isSubmitting = true;
 
@@ -209,6 +250,7 @@
 
             SetFileInfo(IDFile, "id");
             SetFileInfo(PhotoFile, "photo");
+
 
             // Potential Issue: The form is marked as submitted in cases of server-side errors, such as duplicate entries (DUPL). 
             // This might lead to inaccurate tracking of form submissions. 
@@ -259,7 +301,8 @@
 
                 default:
                     // Placeholder for handling unexpected errors. Important: Remove this section before deploying to production.
-                    exceptionMessage = $"An unexpected error occurred. {ex}";
+                    Console.WriteLine($"An unexpected error occurred. {ex}");
+                    exceptionMessage = $"An unexpected error occurred. Error [4]";
                     break;
             }
 
@@ -291,8 +334,14 @@
         tracking.PerformedById = user.Id;
         tracking.FullName = user.GetFullName();
         tracking.DisplayName = user.DisplayName;
-        tracking.UserRole = user.Role;
-        tracking.TrackingAction = "submitted the form";
+        tracking.UserType = user.UserType;
+        tracking.TrackingAction = "Form Submission";
+
+    // Enhancing the description to include more context
+        var description = $"Form was created by {user.DisplayName} ({user.UserType}).";
+        tracking.Descriptions.Add(description);
+
+        // Assuming 'form.FormHistory' is a List<Tracking> or similar
         form.FormHistory.Add(tracking);
     }
 
@@ -302,7 +351,7 @@
 
         exceptionMessage = null;
 
-        var maxAllowedSize = 1024 * 1024 * 2; // 2 MB
+        var maxAllowedSize = 1024 * 1024 * 5; // 5 MB
         var file = e.File; // IBrowserFile 
 
         if (file is not null)  
@@ -318,7 +367,7 @@
             if (file.Size > maxAllowedSize)
             {
                 Console.WriteLine("File size exceeds the allowed limit.");
-                exceptionMessage = "File size exceeds 2 MB";
+                exceptionMessage = "File size exceeds 5 MB";
                 return;
             }
 
@@ -333,11 +382,12 @@
         }
     }
 
-    private void LoadPhotoFile(InputFileChangeEventArgs e)
+    private async Task LoadPhotoFile(InputFileChangeEventArgs e)
     {
         Console.WriteLine("Photo File loading initiated!");
 
         exceptionMessage = null;
+        successMessage = null;
 
         var maxAllowedSize = 1024 * 1024 * 5; // 5 MB
         var file = e.File; // IBrowserFile
@@ -357,6 +407,24 @@
                 Console.WriteLine("File size exceeds the allowed limit.");
                 exceptionMessage = "File size exceeds 5 MB";
                 return;
+            }
+
+            // Open the file stream
+            var stream = file.OpenReadStream(maxAllowedSize: 1024 * 1024 * 5); //5 MB limit
+
+            // Call the service
+            bool isFaceDetected = await FaceDetection.DetectFaceAsync(stream);
+
+            Console.WriteLine($"Face Detected: {isFaceDetected}");
+
+            if (isFaceDetected is false && niqabCompetitor is false)    
+            {
+                exceptionMessage = "Please upload a photo that meets our validation criteria.";
+                return;
+            }
+            else
+            {
+                successMessage = "Photo processed. Continue with form submission.";
             }
 
             PhotoFile = file;

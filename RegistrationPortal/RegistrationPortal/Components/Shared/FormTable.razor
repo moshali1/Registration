@@ -33,7 +33,7 @@
 
                                                     <div class="sec-col-main pt-1 whitespace-nowrap">
                                                         <h2 class="text-sm font-semibold">Status</h2>
-                                                        <span class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 my-2 font-medium text-800-700 ring-1 ring-inset ring-cyan-600/20">@Form.StatusInfo.Status</span>
+                                                        <span class="inline-flex items-center rounded-md px-2 py-1 my-2 font-medium text-800-700 ring-1 ring-inset ring-gray-600/20 @GetStatusSpanCssClass(Form.StatusInfo.Status)">@Form.StatusInfo.Status</span>
                                                     </div>
                                                     <div class="sec-col-main pt-1 whitespace-nowrap">
                                                         <span class="text-sm font-semibold">Actions:</span>
@@ -57,13 +57,13 @@
                                             <div class="mt-1 text-gray-600">@Form.AddressInfo.City</div>
                                         </td>
                                         <td class="whitespace-normal px-3 py-3 text-gray-600 sec-col">
-                                            <span class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 font-medium text-800-700 ring-1 ring-inset ring-cyan-600/20">@Form.StatusInfo.Status</span>
+                                            <span class="inline-flex items-center rounded-md px-2 py-1 font-medium text-800-700 ring-1 ring-inset ring-gray-600/20 @GetStatusSpanCssClass(Form.StatusInfo.Status)">@Form.StatusInfo.Status</span>
                                         </td>
                                         <td class="whitespace-normal px-3 py-3 text-gray-600 sec-col">
                                             <span>None</span>
                                         </td>
                                         <td class="whitespace-normal py-3 pl-3 pr-4 text-right font-medium sm:pr-0 sec-col">
-                                            <ButtonWithDropdown Form="@Form" SetActiveDropdown="SetActiveDropdown" ActiveDropdownId="@activeDropdownId" OnItemDeleted="OnItemDeleted" />
+                                            <ButtonWithDropdown Form="@Form" SetActiveDropdown="SetActiveDropdown" ActiveDropdownId="@activeDropdownId" OnItemDeleted="OnItemDeleted" IsAdmin="IsAdmin"/>
                                         </td>
                                     </tr>
                                 }
@@ -83,6 +83,8 @@
     [Parameter]
     public bool ShowTable { get; set; }
 
+    [Parameter] public bool IsAdmin { get; set; } = false;
+
     private string activeDropdownId;
 
     private void SetActiveDropdown(string id)
@@ -97,5 +99,26 @@
     private async Task HandleItemDeleted()
     {
         await OnItemDeleted.InvokeAsync();
+    }
+
+    private string GetStatusSpanCssClass(string status)
+    {
+        switch (status)
+        {
+            case "Awaiting Review":
+                return "bg-emerald-50 text-emerald-950"; // Light green background with dark green text
+            case "Reviewed":
+                return "bg-cyan-50 text-cyan-950"; // Light blue background with dark blue text
+            case "Verified":
+                return "bg-violet-50 text-violet-950"; // Light purple background with dark purple text
+            case "Pending":
+                return "bg-red-50 text-red-950"; // Light yellow background with dark yellow text
+            case "Disqualified":
+                return "bg-gray-50 text-gray-950"; // Light red background with dark red text
+            case "Withdrawn":
+                return "bg-amber-50 text-amber-950"; // Light gray background with dark gray text
+            default:
+                return "bg-white text-black border-gray-300"; // Default case for unknown statuses
+        }
     }
 }

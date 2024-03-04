@@ -37,7 +37,7 @@ public class FileUploadController : ControllerBase
 
                 await blobClient.UploadAsync(stream);
             }
-            else if (true)
+            else if (containerInfo.UploadType == "video")
             {
                 BlockBlobClient blockBlobClient = new BlockBlobClient(connectionString, containerName, blobName);
 

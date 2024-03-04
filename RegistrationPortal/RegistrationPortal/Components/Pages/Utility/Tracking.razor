@@ -1,5 +1,6 @@
 ﻿@page "/tracking"
 @page "/track-changes"
+@page "/track-changes/{Id}"
 @inject IUserData UserData
 @inject IFormData FormData
 @inject AuthenticationStateProvider AuthState
@@ -82,7 +83,7 @@
                         <div class="relative flex h-6 w-6 flex-none items-center justify-center bg-white">
                             <div class="h-1.5 w-1.5 rounded-full bg-gray-100 ring-1 ring-gray-300"></div>
                         </div>
-                        <p class="flex-auto py-0.5 text-xs leading-5 text-gray-500"><span class="font-medium text-gray-900">@tracking.DisplayName</span> @tracking.TrackingAction.</p>
+                        <p class="flex-auto py-0.5 text-xs leading-5 text-gray-500 font-medium text-gray-900">@tracking.TrackingAction</p>
                         <p class="flex-none py-0.5 text-xs leading-5 text-gray-500">@TimeAgo(tracking.ActionDateTime)</p>
                     </li>
                     @if (tracking.Descriptions is not null)
@@ -106,6 +107,8 @@
 
 
 @code {
+    [Parameter] public string Id { get; set; }
+
     private User loggedInUser;
     private List<Form> forms;
 
@@ -127,6 +130,18 @@
         var authState = await AuthState.GetAuthenticationStateAsync();
         var user = authState.User;
         IsAdmin = user.IsInRole("Admin");
+
+        if (Id is not null && IsAdmin) 
+        {
+            try
+            {
+                selectedForm = await FormData.GetForm(Id);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
     }
 
     private async Task OnDivisionSelection()

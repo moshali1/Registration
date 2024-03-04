@@ -19,8 +19,11 @@ builder.Services
 
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IFormService, FormService>();
+builder.Services.AddScoped<IFaceDetectionService, FaceDetectionService>();
+
 builder.Services.AddScoped<FormSelectionService>();
 builder.Services.AddScoped<DefaultListService>();
+
 
 builder.Services.AddSyncfusionBlazor();
 

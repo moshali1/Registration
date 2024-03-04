@@ -13,7 +13,6 @@
 @attribute [StreamRendering]
 
 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-  <!-- We've used 3xl here, but feel free to try other max-widths based on your needs -->
     <div class="mx-auto max-w-3xl">
         <div class="overflow-hidden rounded-lg bg-white shadow">
             <div class="bg-cyan-950 px-4 py-5 sm:px-6">
@@ -42,10 +41,13 @@
                             <div><small>Issuer: <span class="inline-block w-24 h-2 bg-slate-300 rounded"></span></small></div>
                             <div><small>Issuer Assigned ID: <span class="inline-block w-24 h-2 bg-slate-300 rounded"></span></small></div>
                         </div>
-                        <div class="mb-4">
-                            <h6 class="mb-0">ID:</h6>
-                            <div class="w-24 h-2 bg-slate-300 rounded"></div>
-                        </div>
+                        @if (user.UserTypeCustom is null)
+                        {
+                            <div class="mb-4">
+                                <h6 class="mb-0">ID:</h6>
+                                <div class="w-24 h-2 bg-slate-300 rounded"></div>
+                            </div>
+                        }
                     </div>
 
                 }
@@ -70,10 +72,13 @@
                             <div><small>Issuer: @user.Issuer</small></div>
                             <div><small>Issuer Assigned ID: @user.IssuerAssignedId</small></div>
                         </div>
-                        <div class="mb-4">
-                            <h6 class="mb-0">ID:</h6>
-                            <small>@user.Id</small>
-                        </div>
+                        @if (user.UserTypeCustom is null)
+                        {
+                            <div class="mb-4">
+                                <h6 class="mb-0">ID:</h6>
+                                <small>@user.Id</small>
+                            </div>
+                        }
                     </div>
                 } 
             </div>

@@ -88,6 +88,9 @@ public static class RegisterServices
         builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<IArchivedFormData, ArchivedFormData>();
 
+
+        builder.Services.AddScoped<IFaceDetectionService, FaceDetectionService>();
+
         builder.Services.AddScoped<FormSelectionService>(); // each client
         builder.Services.AddScoped<DefaultListService>(); // each client
 
@@ -103,6 +106,10 @@ public static class RegisterServices
         builder.Services.Configure<FormOptions>(x => x.MultipartBodyLengthLimit = 524288000);
 
         builder.Services.AddScoped<FetchSasUri>();
+
+        //builder.Services.AddSingleton<IEmailService, EmailService>();
+
+        builder.Services.AddSingleton<CallFireService>();
 
     }
 }

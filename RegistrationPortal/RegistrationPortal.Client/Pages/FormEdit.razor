@@ -2,8 +2,10 @@
 
 @using System.Text.Json
 @using System.Net.Http.Headers
+@using Syncfusion.Blazor.Popups
 
 @inject DefaultListService DefaultList
+@inject IFaceDetectionService FaceDetection
 @inject IHttpClientFactory HttpClientFactory
 @inject IUserService UserService
 @inject IFormService FormService
@@ -53,7 +55,19 @@
                         {
                             <button type="button" class="p-1"></button>
                             <InputFile OnChange="LoadIDFile" accept=".png,.jpeg,.jpg,.pdf" class="block w-full rounded-md border-0 text-sm text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 file:cursor-pointer cursor-pointer file:border-0 file:py-2 file:px-4 file:mr-4 file:bg-gray-500 file:hover:bg-gray-600 file:text-white focus:ring-1 focus:ring-inset sm:leading-6" />
-                            <p class="text-xs text-gray-500 mt-2">PNG, JPEG, JPG, and PDF are Allowed.</p>
+                            <SfTooltip Position="Position.BottomCenter" Target="#id-info" WindowCollision="true">
+                            <ContentTemplate>
+                                <p>Acceptable forms of identification for the competitor include a passport, driver's license, or any state-issued ID, each must feature the competitor's photo, name, and date of birth.</p>
+                            </ContentTemplate>
+                            </SfTooltip>
+                            <p class="text-xs text-gray-500 flex items-center">
+                                PNG, JPEG, JPG, and PDF are Allowed. See Instructions: 
+                                <span id="id-info" class="inline-flex items-center ml-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-cyan-700">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 a9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                                    </svg>
+                                </span>
+                            </p>
                             <ValidationMessage For="() => form.FileUploadInfo.IDFileName" />
                         }
                         else
@@ -72,7 +86,19 @@
                         {
                             <button type="button" class="p-1"></button>
                             <InputFile OnChange="LoadPhotoFile" accept=".png,.jpeg,.jpg" class="block w-full rounded-md border-0 text-sm text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 file:cursor-pointer cursor-pointer file:border-0 file:py-2 file:px-4 file:mr-4 file:bg-gray-500 file:hover:bg-gray-600 file:text-white focus:ring-1 focus:ring-inset sm:leading-6" />
-                            <p class="text-xs text-gray-500 mt-2">PNG, JPEG, and JPG are Allowed.</p>
+                            <SfTooltip Position="Position.BottomCenter" Target="#photo-info" WindowCollision="true">
+                                <ContentTemplate>
+                                    <p>A high-quality, passport-style photograph is required. The background should be bright and uncluttered, free from objects, trees, or similar distractions. It is essential that the image captures only the face, clearly visible in a well-lit setting. Please note, the photo must be a standalone image and not part of an identification document. This photograph will be displayed during the competition.</p>
+                                </ContentTemplate>
+                            </SfTooltip>
+                            <p class="text-xs text-gray-500 flex items-center">
+                                PNG, JPEG, and JPG are Allowed. See Instructions:
+                                <span id="photo-info" class="inline-flex items-center ml-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-cyan-700">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 a9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                                    </svg>
+                                </span>
+                            </p>
                             <ValidationMessage For="() => form.FileUploadInfo.PhotoFileName" />
                         }
                         else
@@ -133,6 +159,7 @@
         </div>
 
         <span class="text-red-600">@exceptionMessage</span>
+        <span class="text-green-600">@successMessage</span>
 
         <div class="mt-3 flex items-center justify-end gap-x-6">
             <button type="submit" disabled="@isSubmitting" class="inline-flex items-center px-3 py-2 font-semibold leading-6 text-sm shadow rounded-md text-white bg-cyan-700 hover:bg-cyan-600 transition ease-in-out duration-150">
@@ -179,6 +206,7 @@
     // Miscellaneous Fields
     private bool isSubmitting = false;
     private string exceptionMessage;
+    private string successMessage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -194,6 +222,7 @@
 
     private async Task OnValidSubmit()
     {
+        successMessage = null;
         showNotification = false;
         isSubmitting = true;
 
@@ -228,11 +257,27 @@
             if (isChangingID)
             {
                 form.FileUploadInfo.ReplacedFiles.Add(historicalFiles.IDFileName);
+                // Handles the scenario where a resubmit action is triggered but no file is uploaded.
+                // The filename does not reset, which prevents client-side validation from triggering.
+                if (IDFile is null) 
+                {
+                    isSubmitting = false;
+                    exceptionMessage = "Please upload an ID";
+                    return;
+                }
                 SetFileInfo(IDFile, "id");
             }
             if (isChangingPhoto)
             {
                 form.FileUploadInfo.ReplacedFiles.Add(historicalFiles.PhotoFileName);
+                // Handles the scenario where a resubmit action is triggered but no file is uploaded.
+                // The filename does not reset, which prevents client-side validation from triggering.
+                if (PhotoFile is null) 
+                {
+                    isSubmitting = false;
+                    exceptionMessage = "Please upload a Photo";
+                    return;
+                }
                 SetFileInfo(PhotoFile, "photo");
             }
             if (isChangingVideo)
@@ -302,7 +347,8 @@
 
                 default:
                     // Placeholder for handling unexpected errors. Important: Remove this section before deploying to production.
-                    exceptionMessage = "An unexpected error occured.";
+                    Console.WriteLine($"An unexpected error occurred. {ex}");
+                    exceptionMessage = $"An unexpected error occurred. Error [4]";
                     break;
             }
 
@@ -334,8 +380,8 @@
         tracking.PerformedById = user.Id;
         tracking.FullName = user.GetFullName();
         tracking.DisplayName = user.DisplayName;
-        tracking.UserRole = user.Role;
-        tracking.TrackingAction = "edited the form";
+        tracking.UserType = user.UserType;
+        tracking.TrackingAction = "Form Edit";
         tracking.Descriptions = await TrackChanges();
         form.FormHistory.Add(tracking);
     }
@@ -346,7 +392,7 @@
 
         exceptionMessage = null;
 
-        var maxAllowedSize = 1024 * 1024 * 2; // 2 MB
+        var maxAllowedSize = 1024 * 1024 * 5; // 5 MB
         var file = e.File; // IBrowserFile
 
         if (file is not null)
@@ -377,11 +423,12 @@
         }
     }
 
-    private void LoadPhotoFile(InputFileChangeEventArgs e)
+    private async Task LoadPhotoFile(InputFileChangeEventArgs e)
     {
         Console.WriteLine("Photo File loading initiated!");
 
         exceptionMessage = null;
+        successMessage = null;
 
         var maxAllowedSize = 1024 * 1024 * 5; // 5 MB
         var file = e.File; // IBrowserFile
@@ -403,10 +450,40 @@
                 return;
             }
 
+            // Open the file stream
+            var stream = file.OpenReadStream(maxAllowedSize: 1024 * 1024 * 5); //5 MB limit
+
+            // Call the service
+            bool isFaceDetected = await FaceDetection.DetectFaceAsync(stream);
+
+            Console.WriteLine($"Face Detected: {isFaceDetected}");
+
+            if (isFaceDetected is false)
+            {
+                exceptionMessage = "Please upload a photo that meets our validation criteria.";
+                // Reset any previously accepted file to maintain pending client-side photo upload validation.
+                // This ensures that the client-side validation of photo upload remains pending.
+                PhotoFile = null;
+                form.FileUploadInfo.PhotoFileName = null;
+                return;
+            }
+            else
+            {
+                successMessage = "Photo processed. Continue with form submission.";
+            }
+
             PhotoFile = file;
 
-            // Skip assigning a temporary filename since this is an edit form where the variable already holds a value,
-            // fulfilling client-side form validation requirements.
+            // Although the existing file already has a FileName,
+            // this step is crucial to handle scenarios where facial detection initially fails
+            // (resulting in the FileName being set to null, as seen in this method)
+            // but a subsequent resubmission occurs.
+            // It assigns a temporary filename to meet client-side form validation requirements.
+            form.FileUploadInfo.PhotoFileName = file.Name;
+
+            // Important Note: Unlike other fields, the form validation for uploads depends on the fileName.
+            // Since the fileName is not part of the form, it is only verified on form submission.
+            // Therefore, any validation error persists until the form is submitted.
         }
     }
 
@@ -546,6 +623,9 @@
             return changes;
         }
 
+        var description = $"Form was edited by {user.DisplayName} ({user.UserType}).";
+        changes.Add(description);
+
         // Compare properties and append changes to the StringBuilder
         if (form.PersonalInfo.FirstName != existingMForm.PersonalInfo.FirstName)
         {
@@ -639,17 +719,17 @@
 
         if (form.FileUploadInfo.IDFileName != existingMForm.FileUploadInfo.IDFileName)
         {
-            changes.Add($"Changed Portion from {existingMForm.FileUploadInfo.IDFileName} to {form.FileUploadInfo.IDFileName}.");
+            changes.Add($"Changed ID File from {existingMForm.FileUploadInfo.IDFileName} to {form.FileUploadInfo.IDFileName}.");
         }
 
         if (form.FileUploadInfo.PhotoFileName != existingMForm.FileUploadInfo.PhotoFileName)
         {
-            changes.Add($"Changed Portion from {existingMForm.FileUploadInfo.PhotoFileName} to {form.FileUploadInfo.PhotoFileName}.");
+            changes.Add($"Changed Photo File from {existingMForm.FileUploadInfo.PhotoFileName} to {form.FileUploadInfo.PhotoFileName}.");
         }
 
         if (form.FileUploadInfo.VideoFileName != existingMForm.FileUploadInfo.VideoFileName)
         {
-            changes.Add($"Changed Portion from {existingMForm.FileUploadInfo.VideoFileName} to {form.FileUploadInfo.VideoFileName}.");
+            changes.Add($"Changed Video File from {existingMForm.FileUploadInfo.VideoFileName} to {form.FileUploadInfo.VideoFileName}.");
         }
 
         if (changes.Count == 0)

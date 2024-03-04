@@ -11,7 +11,7 @@ public class FormData : IFormData
         await _forms.Find(_ => true).ToListAsync();
 
     public async Task<List<Form>> GetFormsByCreator(string id) =>
-        await _forms.Find(f => f.Creator == id).ToListAsync(); 
+        await _forms.Find(f => f.Creator == id && f.StatusInfo.Status != "Withdrawn" && f.StatusInfo.Status != "Disqualified").ToListAsync(); 
 
     public async Task<Form> GetForm(string id) =>
         await _forms.Find(c => c.Id == id).FirstOrDefaultAsync();

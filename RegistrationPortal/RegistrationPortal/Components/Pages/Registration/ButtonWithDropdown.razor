@@ -1,4 +1,7 @@
 ﻿@inject IFormData FormData
+@inject IUserData UserData
+
+@inject AuthenticationStateProvider AuthState
 
 <div class="inline-flex rounded-md shadow-sm">
     <button type="button" class="relative inline-flex items-center rounded-l-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-10">
@@ -22,14 +25,25 @@
                     <!-- Menu items here -->
                     <a href="details/@Form.Id" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100">Details</a>
                     <a href="edit/@Form.CompetitionInfo.Division/@Form.Id" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100">Edit</a>
-                    <a @onclick="() => isAlertVisible = !isAlertVisible" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer">Delete</a>
+                    @if (Form.StatusInfo.Status != "Withdrawn") 
+                    {
+                        <a @onclick="() => isWithdrawAlertVisible = !isWithdrawAlertVisible" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer">Withdraw</a>
+                    }
+                    
+                    @if (IsAdmin)
+                    {
+
+                        <a href="track-changes/@Form.Id" target="_blank" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer">Tracking</a>
+                        <a href="form-review/@Form.Id" target="_blank" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer">Review Form</a>
+                        <a @onclick="() => isDeleteAlertVisible = !isDeleteAlertVisible" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer">Delete</a>
+                    }
                 </div>
             </div>
         }
     </div>
 </div>
 
-@if (isAlertVisible)
+@if (isDeleteAlertVisible && IsAdmin)
 {
     <div class="relative z-10" aria-labelledby="modal-title" role="dialog" aria-modal="true">
 
@@ -46,7 +60,7 @@
                             </svg>
                         </div>
                         <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-                            <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">Delete form | @Form.PersonalInfo.GetFullName()</h3>
+                            <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">Delete form for [@Form.PersonalInfo.GetFullName()]</h3>
                             <div class="mt-2">
                                 <p class="text-sm text-gray-500">Are you sure you want to delete this form? All of your data will be permanently removed from the database forever This action cannot be undone.</p>
                             </div>
@@ -54,8 +68,51 @@
                     </div>
                     <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
                         <button @onclick="(() => OnDelete(Form.Id))" type="button" class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto">Delete</button>
-                        <button @onclick="(() =>ToggleAlert())" type="button" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Cancel</button>
+                        <button @onclick="(() =>ToggleAlert('d'))" type="button" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Cancel</button>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (isWithdrawAlertVisible)
+{
+    <div class="relative z-10" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+
+        <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
+
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+
+                <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+
+                    <EditForm Model="withdrawComment" OnValidSubmit="OnWithdraw">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <svg class="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                                </svg>
+                            </div>
+                            <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                                <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">Withdraw Form for [@Form.PersonalInfo.GetFullName()]</h3>
+                                <div class="mt-2">
+                                    <p class="text-sm text-gray-500">Are you sure you want to withdraw this form? Once withdrawn, this form will no longer be visible, and duplication will not be possible. For assistance, please contact us at contact@imamshatibi.org.</p>
+                                </div>
+                                    <ValidationSummary />
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700">Comment</label>
+                                        <InputTextArea class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 sm:text-sm" rows="3" @bind-Value="@withdrawComment.Comment" required></InputTextArea>
+                                        <ValidationMessage For="@(() => withdrawComment.Comment)" />
+                                    </div>
+                            </div>
+                        </div>
+                        <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                            <button type="submit" class="inline-flex w-full justify-center rounded-md bg-amber-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-amber-500 sm:ml-3 sm:w-auto">Withdraw</button>
+                            <button @onclick="(() =>ToggleAlert('w'))" type="button" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Cancel</button>
+                        </div>
+                    </EditForm>
+                   
                 </div>
             </div>
         </div>
@@ -68,6 +125,13 @@
     [Parameter] public Action<string> SetActiveDropdown { get; set; }
     [Parameter] public string ActiveDropdownId { get; set; }
 
+    [Parameter] public bool IsAdmin { get; set; } = false;
+
+    private WithdrawalModel withdrawComment;
+
+    private User user;
+
+    protected override void OnInitialized() => withdrawComment ??= new();
 
     private void ToggleMenu()
     {
@@ -82,11 +146,20 @@
         SetActiveDropdown(null);
     }
 
-    private bool isAlertVisible = false;
+    private bool isDeleteAlertVisible = false;
+    private bool isWithdrawAlertVisible = false;
 
-    private void ToggleAlert()
+    private void ToggleAlert(char alertType)
     {
-        isAlertVisible = !isAlertVisible;
+        if (alertType == 'w')    
+        {
+            isWithdrawAlertVisible = !isWithdrawAlertVisible;
+        }
+        else if(alertType == 'd')
+        {
+            isDeleteAlertVisible = !isDeleteAlertVisible;
+        }
+
         CloseDropdown();
     }
 
@@ -95,10 +168,45 @@
 
     private async Task OnDelete(string id)
     {
+        // TODO: Delete Files in Blob Storage
         await FormData.DeleteForm(id);
-        isAlertVisible = false;
+        isDeleteAlertVisible = false;
         CloseDropdown();
         await OnItemDeleted.InvokeAsync();
     }
 
+
+
+    private async Task OnWithdraw()
+    {
+        Form.StatusInfo.Status = "Withdrawn";
+        Form.StatusInfo.WithdrawComment = withdrawComment.Comment;
+
+        user = await AuthState.GetUserFromAuth(UserData);
+
+        UpdateTrackingInfo();
+
+        await FormData.UpdateForm(Form);
+        isWithdrawAlertVisible = false;
+        CloseDropdown();
+        await OnItemDeleted.InvokeAsync();
+    }
+
+    private void UpdateTrackingInfo()
+    {
+        Tracking tracking = new();
+        tracking.PerformedById = user.Id;
+        tracking.FullName = user.GetFullName();
+        tracking.DisplayName = user.DisplayName;
+        tracking.UserType = user.UserType;
+        tracking.TrackingAction = "Status Changed: Withdrawn";
+
+        // Enhancing the description to include more context
+        var description = $"Form status changed to 'Withdrawn' by {user.DisplayName} ({user.UserType}).";
+        tracking.Descriptions.Add(description);
+        tracking.Descriptions.Add($"Withdraw Reason: {withdrawComment.Comment}");
+
+        // Assuming 'form.FormHistory' is a List<Tracking> or similar
+        Form.FormHistory.Add(tracking);
+    }
 }

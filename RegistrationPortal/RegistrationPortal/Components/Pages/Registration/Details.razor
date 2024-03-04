@@ -1,11 +1,12 @@
 ﻿@page "/details/{Id}"
+
 @inject FetchSasUri FetchSasUri
 @inject IFormData FormData
 @inject NavigationManager NavManager
 
-<PageTitle>Register</PageTitle>
-
 @rendermode InteractiveServer
+
+<PageTitle>Register</PageTitle>
 
 @if (showError is true)
 {
@@ -19,7 +20,7 @@ else
     <div class="sm:flex sm:items-center">
         <div class="sm:flex-auto">
             <h1 class="text-2xl font-bold mb-3" tabindex="-1">Form Submission Details</h1>
-            <p class="mt-2 text-gray-700">This page serves as a complete record of the participant's personal information, division, category, status, and any messages or notes associated with their account."</p>
+            <p class="mt-2 text-gray-700">This page serves as a complete record of the participant's personal information, parent and teacher information, competition division and category, and files uploaded.</p>
         </div>
     </div>
 
@@ -151,15 +152,37 @@ else
         </div>
     </div>
 
-    <!-- Dialog Component -->
     @if (dialogImageUrl != null)
     {
         <div @onclick="CloseDialog" class="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50">
-            <div class="relative max-w-3xl max-h-[90vh] p-4">
-                <img src="@dialogImageUrl" alt="Dialog Image" class="max-w-full max-h-full" />
+            <div class="relative max-w-3xl max-h-[90vh] p-4 @(isScaled ? "border border-gray-800" : "")">
+                <img src="@dialogImageUrl" alt="Dialog Image" class="max-w-full max-h-[720px] @(rotationClass) @(scaleClass)" />
                 <button class="absolute top-0 right-0 p-2 bg-black bg-opacity-70 rounded-full text-gray-100 hover:text-gray-300" @onclick="CloseDialog">
+                    <!-- Close Icon -->
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+                <button class="absolute top-0 right-12 p-2 bg-black bg-opacity-70 rounded-full text-gray-100 hover:text-gray-300" @onclick="ScaleImage" @onclick:stopPropagation>
+                    @if (isScaled)
+                    {
+                        <!-- Scale Out Icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 16 16" stroke="currentColor">
+                            <path fill-rule="evenodd" d="M5.828 10.172a.5.5 0 0 0-.707 0l-4.096 4.096V11.5a.5.5 0 0 0-1 0v3.975a.5.5 0 0 0 .5.5H4.5a.5.5 0 0 0 0-1H1.732l4.096-4.096a.5.5 0 0 0 0-.707m4.344-4.344a.5.5 0 0 0 .707 0l4.096-4.096V4.5a.5.5 0 1 0 1 0V.525a.5.5 0 0 0-.5-.5H11.5a.5.5 0 0 0 0 1h2.768l-4.096 4.096a.5.5 0 0 0 0 .707" />
+                        </svg>
+                    }
+                    else
+                    {
+                        <!-- Scale In Icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 16 16" stroke="currentColor">
+                            <path fill-rule="evenodd" d="M.172 15.828a.5.5 0 0 0 .707 0l4.096-4.096V14.5a.5.5 0 1 0 1 0v-3.975a.5.5 0 0 0-.5-.5H1.5a.5.5 0 0 0 0 1h2.768L.172 15.121a.5.5 0 0 0 0 .707M15.828.172a.5.5 0 0 0-.707 0l-4.096 4.096V1.5a.5.5 0 1 0-1 0v3.975a.5.5 0 0 0 .5.5H14.5a.5.5 0 0 0 0-1h-2.768L15.828.879a.5.5 0 0 0 0-.707" />
+                        </svg>
+                    }
+                </button>
+                <button class="absolute top-0 right-24 p-2 bg-black bg-opacity-70 rounded-full text-gray-100 hover:text-gray-300" @onclick="RotateImage" @onclick:stopPropagation>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 16 16" stroke="currentColor">
+                        <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2z" />
+                        <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466" />
                     </svg>
                 </button>
             </div>
@@ -250,6 +273,9 @@ else
     }
 
     private string dialogImageUrl;
+    private string rotationClass = "";
+    private string scaleClass = "";
+    private bool isScaled = false;
 
     private void OpenDialog(string imageUrl)
     {
@@ -259,5 +285,22 @@ else
     private void CloseDialog()
     {
         dialogImageUrl = null;
+        rotationClass = "";
+        scaleClass = "";
+    }
+
+    void RotateImage()
+    {
+        // Cycle through predefined rotation classes
+        var rotations = new[] { "", "-rotate-90", "rotate-180", "rotate-90" };
+        var currentIndex = Array.IndexOf(rotations, rotationClass);
+        rotationClass = rotations[(currentIndex + 1) % rotations.Length];
+    }
+
+    void ScaleImage()
+    {
+        isScaled = !isScaled; // Toggle the scale state
+        // Toggle between scale classes
+        scaleClass = scaleClass == "" ? "scale-75" : ""; // Example: Toggle between no scale and 75%
     }
 }

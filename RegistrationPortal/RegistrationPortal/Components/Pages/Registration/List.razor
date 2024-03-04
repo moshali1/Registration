@@ -61,15 +61,15 @@ else
 
     if (activeTab == 'M')
     {
-        <FormTable Forms="@mForms" ShowTable="@(mForms?.Any() ?? false)" OnItemDeleted="ReloadForms"/>
+        <FormTable Forms="@mForms" ShowTable="@(mForms?.Any() ?? false)" OnItemDeleted="ReloadForms" IsAdmin="IsAdmin"/>
     }
     else if (activeTab == 'T')
     {
-        <FormTable Forms="@tForms" ShowTable="@(tForms?.Any() ?? false)" OnItemDeleted="ReloadForms" />
+        <FormTable Forms="@tForms" ShowTable="@(tForms?.Any() ?? false)" OnItemDeleted="ReloadForms" IsAdmin="IsAdmin" />
     }
     else if (activeTab == 'B')
     {
-        <FormTable Forms="@bForms" ShowTable="@(bForms?.Any() ?? false)" OnItemDeleted="ReloadForms" />
+        <FormTable Forms="@bForms" ShowTable="@(bForms?.Any() ?? false)" OnItemDeleted="ReloadForms" IsAdmin="IsAdmin" />
     }
 }
 
@@ -77,7 +77,7 @@ else
     private bool showNotification = false;
 
     private User loggedInUser;
-    private bool IsAdmin { get; set; }
+    private bool IsAdmin = false;
 
     private List<Form> forms;
 
