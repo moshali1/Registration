@@ -1,7 +1,7 @@
-﻿//using SendGrid;
+﻿using SendGrid;
 
-//namespace RegistrationPortal.Services;
-//public interface IEmailService
-//{
-//    Task<Response> SendEmailAsync(string toEmail, string subject, string messageBody);
-//}
+namespace RegistrationPortal.Services;
+public interface IEmailService
+{
+    Task<Response> SendEmailAsync(string toEmail, string displayName, string subject, string plainTextContent, string htmlContent);
+}

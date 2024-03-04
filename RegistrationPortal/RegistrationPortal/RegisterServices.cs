@@ -107,7 +107,7 @@ public static class RegisterServices
 
         builder.Services.AddScoped<FetchSasUri>();
 
-        //builder.Services.AddSingleton<IEmailService, EmailService>();
+        builder.Services.AddSingleton<IEmailService, EmailService>();
 
         builder.Services.AddSingleton<CallFireService>();
 

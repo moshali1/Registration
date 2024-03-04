@@ -6,6 +6,7 @@
 @inject CallFireService CallFire
 @inject AuthenticationStateProvider AuthState
 @inject FetchSasUri FetchSasUri
+@inject IEmailService EmailService
 @inject NavigationManager NavManager
 
 @rendermode InteractiveServer
@@ -23,8 +24,20 @@
                 @if (CurrentForm is not null)
                 {
                     <!-- Navigation Buttons -->
-                    <div class="flex justify-end">
-                        <button @onclick="LoadNextForm" class="inline-flex justify-center py-1 px-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-cyan-950">Next Form</button>
+                    <div class="flex justify-between">
+                        <button @onclick="LoadPreviousForm" class="inline-flex justify-center py-1 px-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-cyan-950">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 mx-2">
+                                <path fill-rule="evenodd" d="M7.793 2.232a.75.75 0 0 1-.025 1.06L3.622 7.25h10.003a5.375 5.375 0 0 1 0 10.75H10.75a.75.75 0 0 1 0-1.5h2.875a3.875 3.875 0 0 0 0-7.75H3.622l4.146 3.957a.75.75 0 0 1-1.036 1.085l-5.5-5.25a.75.75 0 0 1 0-1.085l5.5-5.25a.75.75 0 0 1 1.06.025Z" clip-rule="evenodd" />
+                            </svg>
+                            Previous Form
+                        </button>
+                        <span class="py-1 px-2 text-sm font-medium text-white">@($"Form {currentIndex + 1} of {Forms.Count}")</span>
+                        <button @onclick="LoadNextForm" class="inline-flex justify-center py-1 px-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-cyan-950">
+                            Next Form
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 mx-2">
+                                <path fill-rule="evenodd" d="M12.207 2.232a.75.75 0 0 0 .025 1.06l4.146 3.958H6.375a5.375 5.375 0 0 0 0 10.75H9.25a.75.75 0 0 0 0-1.5H6.375a3.875 3.875 0 0 1 0-7.75h10.003l-4.146 3.957a.75.75 0 0 0 1.036 1.085l5.5-5.25a.75.75 0 0 0 0-1.085l-5.5-5.25a.75.75 0 0 0-1.06.025Z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
                     </div>
                 }
             </div>
@@ -183,6 +196,9 @@
                             </tr>
                             <tr>
                                 <td @onclick="() => LoadComment('c')" class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 hover:bg-gray-100 cursor-pointer"><span class="underline decoration-teal-500 font-semibold">Invalid Photo:</span> Please edit form and upload a clear, standalone photo image.</td>
+                            </tr>
+                            <tr>
+                                <td @onclick="() => LoadComment('f')" class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 hover:bg-gray-100 cursor-pointer"><span class="underline decoration-teal-500 font-semibold">Invalid Photo:</span> Please edit form and upload a non-cropped, non-blury photo. See photo requirements.</td>
                             </tr>
                             <tr>
                                 <td @onclick="() => LoadComment('d')" class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 hover:bg-gray-100 cursor-pointer"><span class="underline decoration-fuchsia-500 font-semibold">Missing Video:</span> Please edit form and upload a video.</td>
@@ -356,6 +372,30 @@
         }
     }
 
+    private void LoadPreviousForm()
+    {
+        successText = null;
+        SelectedStatus = null;
+        StatusComment = null;
+        idPdf = false;
+
+        if (Forms.Count > 0)
+        {
+            // Adjust currentIndex to move to the previous form, wrapping around to the last form if necessary
+            currentIndex = (currentIndex - 1 + Forms.Count) % Forms.Count;
+            CurrentForm = Forms[currentIndex];
+            messageText = ""; // Clear the message when a form is successfully loaded
+
+            LoadSasUrl();
+        }
+        else
+        {
+            CurrentForm = null; // No form is loaded if the list is empty
+                                // Update the message only if it's not already set by OnDivisionSelection
+            messageText = string.IsNullOrEmpty(messageText) ? "No forms to display." : messageText;
+        }
+    }
+
     private void OnStatusSelect(ChangeEventArgs e)
     {
         errorText = null;
@@ -397,8 +437,10 @@
 
         // Enhancing the description to include more context
         // Hard coding Admin because Admin is not a UserType
-        var description = $"Form status changed to '{SelectedStatus}' by {user.DisplayName} (Admin).";
-        tracking.Descriptions.Add(description);
+        var description1 = $"Form status changed to '{SelectedStatus}' by {user.DisplayName} (Admin).";
+        var description2 = $"Email Notification of Pending Status Sent to Registrant.";
+        tracking.Descriptions.Add(description1);
+        tracking.Descriptions.Add(description2);
         tracking.Descriptions.Add($"Status Comment: {StatusComment}");
 
         // Assuming 'form.FormHistory' is a List<Tracking> or similar
@@ -426,7 +468,8 @@
             // await HandlePendingEmailSubmit();
             if (SelectedStatus == "Pending")
             {
-                await SendPendingStatusNotificaiton();
+                // await SendPendingStatusSmsNotificaiton();
+                await SendPendingStatusEmailNotification();
             }
 
             SelectedStatus = null;
@@ -532,7 +575,7 @@
     //     }
     // }
 
-    private async Task SendPendingStatusNotificaiton()
+    private async Task SendPendingStatusSmsNotificaiton()
     {
         var creatorUser = await UserData.GetUser(CurrentForm.Creator);
         var creatorUserType = creatorUser.UserType;
@@ -570,6 +613,10 @@
                 SelectedStatus = "Pending";
                 StatusComment = "Invalid Photo: Please edit form and upload a clear, standalone photo image.";
                 break;
+            case 'f':
+                SelectedStatus = "Pending";
+                StatusComment = "Invalid Photo: Please edit form and upload a non-cropped, non-blury photo. See photo requirements.";
+                break;
             case 'd':
                 SelectedStatus = "Pending";
                 StatusComment = "Missing Video: Please edit form and upload a video.";
@@ -582,5 +629,49 @@
                 StatusComment = "";
                 break;
         }
+    }
+
+    private async Task SendPendingStatusEmailNotification()
+    {
+        var creatorUser = await UserData.GetUser(CurrentForm.Creator);
+        var creatorEmail = creatorUser.EmailAddress;
+        var creatorDisplayName = creatorUser.DisplayName;
+
+        var subject = $"Imam Shatibi Registration {DateTime.Today.Year.ToString()}: {SelectedStatus} Form Status";
+
+        var plainText = $"Assalamu Alaikum {creatorDisplayName},\n\n" +
+                        $"We are writing to inform you that your submission for the Imam Al-Shatibi Quran Competition Registration {DateTime.Now.Year}, in the \"{SelectedDivision}\" division, for student {CurrentForm.PersonalInfo.GetFirstMiddleLastName()}, is currently marked as pending.\n\n" +
+                        $"Status Comment: {StatusComment}\n\n" +
+                        $"To ensure your participation, please address the noted issue(s) as soon as possible before the registration closes on 3/17/2024. Should you have any questions or require further assistance, do not hesitate to get in touch.\n\n" +
+                        $"Thank you for your attention to this matter.\n\n" +
+                        $"If you need to contact us, please reply to this email or call us at (612) 800-4435 from 8 AM to 8 PM CT.\n\n" +
+                        $"To edit your form, please visit: https://register.imamshatibi.org\n\n" +
+                        $"JazakAllahu Khairan,\n" +
+                        $"Imam Al-Shatibi Quran Competition";
+
+
+
+        var htmlContent = $@"
+                        <div style='font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px;'>
+                            <div style='margin-top: 20px;'>
+                                <p>Assalamu Alaikum {creatorDisplayName},</p>
+                                <p>We are writing to inform you that your submission for the Imam Al-Shatibi Quran Competition Registration {DateTime.Now.Year}, in the &quot;{SelectedDivision}&quot; division, for student <strong>{CurrentForm.PersonalInfo.GetFirstMiddleLastName()}</strong>, is currently marked as pending.</p>
+                                <p>Status Comment: <strong>{StatusComment}</strong></p>
+                                <p>To ensure your participation, please address the noted issue(s) as soon as possible before the registration closes on 3/17/2024. Should you have any questions or require further assistance, do not hesitate to get in touch.</p>
+                                <p>Thank you for your attention to this matter.</p>
+                            </div>
+                            <div style='margin-top: 20px;'>
+                                <p>If you need to contact us, please reply to this email or call us at (612) 800-4435 from 8 AM to 8 PM CT.</p>
+                                <p>To edit your form, please visit: <a href='https://register.imamshatibi.org' target='_blank'>https://register.imamshatibi.org</a></p>
+                            </div>
+                            <div style='margin-top: 20px; font-size: 0.9em; text-align: center; color: #555;'>
+                                JazakAllahu Khairan,<br>
+                                Imam Al-Shatibi Quran Competition
+                            </div>
+                        </div>";
+
+        await EmailService.SendEmailAsync(creatorEmail, creatorDisplayName, subject, plainText, htmlContent);
+
+        successText = "Email sent successfully!";
     }
 }
