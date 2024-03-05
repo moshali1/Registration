@@ -35,11 +35,6 @@
                                                         <h2 class="text-sm font-semibold">Status</h2>
                                                         <span class="inline-flex items-center rounded-md px-2 py-1 my-2 font-medium text-800-700 ring-1 ring-inset ring-gray-600/20 @GetStatusSpanCssClass(Form.StatusInfo.Status)">@Form.StatusInfo.Status</span>
                                                     </div>
-                                                    <div class="sec-col-main pt-1 whitespace-nowrap">
-                                                        <span class="text-sm font-semibold">Actions:</span>
-                                                        <a href="edit/@Form.CompetitionInfo.Division/@Form.Id" class="text-cyan-700 hover:text-cyan-900">Edit</a> |
-                                                        <a href="details/@Form.Id" class="text-cyan-700 hover:text-cyan-900">Details</a>
-                                                    </div>
                                                 </div>
                                             </div>
                                         </td>
@@ -50,6 +45,9 @@
                                             <div class="text-gray-900">
                                                 <h2 class="py-2 text-sm font-semibold sec-col-main">Message</h2>
                                                 <span class="sec-col-main py-2">None</span>
+                                            </div>
+                                            <div class="sec-col-main pt-1 whitespace-nowrap">
+                                                <ButtonWithDropdown Form="@Form" SetActiveDropdown="SetActiveDropdown" ActiveDropdownId="@activeDropdownId" OnItemDeleted="OnItemDeleted" IsAdmin="IsAdmin" />
                                             </div>
                                         </td>
                                         <td class="whitespace-normal px-3 py-3 text-gray-500 sec-col">

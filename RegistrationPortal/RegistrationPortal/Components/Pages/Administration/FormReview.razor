@@ -437,11 +437,10 @@
 
         // Enhancing the description to include more context
         // Hard coding Admin because Admin is not a UserType
-        var description1 = $"Form status changed to '{SelectedStatus}' by {user.DisplayName} (Admin).";
-        var description2 = $"Email Notification of Pending Status Sent to Registrant.";
-        tracking.Descriptions.Add(description1);
-        tracking.Descriptions.Add(description2);
+        var description = $"Form status changed to '{SelectedStatus}' by {user.DisplayName} (Admin).";
+        tracking.Descriptions.Add(description);
         tracking.Descriptions.Add($"Status Comment: {StatusComment}");
+        tracking.Descriptions.Add("Email Notification of Pending Status Sent to Registrant.");
 
         // Assuming 'form.FormHistory' is a List<Tracking> or similar
         CurrentForm.FormHistory.Add(tracking);
