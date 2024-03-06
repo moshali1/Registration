@@ -19,7 +19,7 @@ public class PersistingRevalidatingAuthenticationStateProvider : RevalidatingSer
 
     private readonly PersistingComponentStateSubscription _subscription;
 
-    private Task<AuthenticationState>? _authenticationStateTask;
+    private Task<AuthenticationState> _authenticationStateTask;
 
     public PersistingRevalidatingAuthenticationStateProvider(
         ILoggerFactory loggerFactory,
