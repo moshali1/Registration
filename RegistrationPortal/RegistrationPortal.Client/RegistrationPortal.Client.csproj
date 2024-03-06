@@ -22,4 +22,8 @@
     <ProjectReference Include="..\..\RegistrationPortal.Shared\RegistrationPortal.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Pages\" />
+  </ItemGroup>
+
 </Project>

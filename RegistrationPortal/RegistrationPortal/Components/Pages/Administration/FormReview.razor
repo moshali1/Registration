@@ -3,7 +3,6 @@
 
 @inject IFormData FormData
 @inject IUserData UserData
-@inject CallFireService CallFire
 @inject AuthenticationStateProvider AuthState
 @inject FetchSasUri FetchSasUri
 @inject IEmailService EmailService
@@ -544,57 +543,6 @@
         NavManager.NavigateTo(sasUri);
     }
 
-    // private async Task HandlePendingEmailSubmit()
-    // {
-    //     // Assuming you collect the necessary information from the form
-    //     var creatorUser = await UserData.GetUser(CurrentForm.Creator);
-    //     var creatorEmail = creatorUser.EmailAddress;
-
-    //     string userEmail = creatorEmail; // The user's email address
-    //     string subject = "Action Required: Pending Submission";
-    //     // string messageBody = @"
-    //     //     <div style='font-family: Arial, sans-serif;'>
-    //     //         <h1 style='color: #333;'>Your Submission is Pending</h1>
-    //     //         <p>Your recently submitted form is pending and requires immediate attention. Please log into your account and make the necessary changes before the registration period ends.</p>
-    //     //         <p><strong>Deadline:</strong> 03/17/2024 11:59 CT</p>
-    //     //         <p><a href='https://register.imamshatibi.org' style='background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; display: inline-block;'>Log in to your account</a></p>
-    //     //     </div>
-    //     // ";
-    //     string messageBody = "This is a test email from Imam Al-Shatibi Quran Competition";
-
-    //     var result = await EmailService.SendEmailAsync(userEmail, subject, messageBody);
-
-    //     if (result.IsSuccessStatusCode) // Assuming IsSuccessStatusCode indicates success
-    //     {
-    //         successText = "Email sent successfully!";
-    //     }
-    //     else
-    //     {
-    //         Console.WriteLine(result.StatusCode.ToString());
-    //     }
-    // }
-
-    private async Task SendPendingStatusSmsNotificaiton()
-    {
-        var creatorUser = await UserData.GetUser(CurrentForm.Creator);
-        var creatorUserType = creatorUser.UserType;
-
-        string userPhoneNumber;
-        if (creatorUserType == "Teacher")   
-        {
-            userPhoneNumber = CurrentForm.TeacherInfo.TeacherPhoneNumber;
-        }
-        else
-        {
-            userPhoneNumber = CurrentForm.ParentInfo.ParentPhoneNumber;
-        }
-
-        string message = "Hello from Blazor via Twilio!";
-
-        CallFire.SendSms(userPhoneNumber, message);
-
-        successText = "Email sent successfully!";
-    }
 
     private void LoadComment(char comment)
     {

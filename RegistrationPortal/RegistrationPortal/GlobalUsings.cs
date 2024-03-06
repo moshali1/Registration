@@ -7,4 +7,3 @@ global using RegistrationPortal.Services;
 global using RegistrationPortal.Shared.Helpers;
 global using RegistrationPortal.Shared.InputSelectionOptions;
 global using RegistrationPortal.Shared.Models;
-global using RegistrationPortal.Client.Pages;

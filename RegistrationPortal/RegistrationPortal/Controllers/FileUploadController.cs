@@ -23,6 +23,12 @@ public class FileUploadController : ControllerBase
     [HttpPost("[action]")]
     public async Task<ActionResult> Save(IFormFile uploadFile, [FromForm] string containerInfoJson)
     {
+        if (string.IsNullOrWhiteSpace(containerInfoJson))
+        {
+            Console.WriteLine("ContainerInfoJson is null or empty.");
+            return BadRequest("Container info JSON is required.");
+        }
+
         try
         {
             var containerInfo = JsonSerializer.Deserialize<ContainerInfo>(containerInfoJson);

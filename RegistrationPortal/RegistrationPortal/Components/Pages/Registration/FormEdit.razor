@@ -2,6 +2,7 @@
 
 @using System.Text.Json
 @using System.Net.Http.Headers
+@using Syncfusion.Blazor.Inputs
 @using Syncfusion.Blazor.Popups
 
 @inject DefaultListService DefaultList
@@ -53,7 +54,7 @@
                         <label class="block text-sm font-medium leading-6 text-gray-900 mb-1">ID Upload</label>
                         @if (isChangingID)
                         {
-                            <button type="button" class="p-1"></button>
+                            <button type="button" class="p-1"></button> @*Spacing*@
                             <InputFile OnChange="LoadIDFile" accept=".png,.jpeg,.jpg,.pdf" class="block w-full rounded-md border-0 text-sm text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 file:cursor-pointer cursor-pointer file:border-0 file:py-2 file:px-4 file:mr-4 file:bg-gray-500 file:hover:bg-gray-600 file:text-white focus:ring-1 focus:ring-inset sm:leading-6" />
                             <SfTooltip Position="Position.BottomCenter" Target="#id-info" WindowCollision="true">
                             <ContentTemplate>
@@ -84,7 +85,7 @@
                         <label class="block text-sm font-medium leading-6 text-gray-900 mb-1">Photo Upload</label>
                         @if (isChangingPhoto)
                         {
-                            <button type="button" class="p-1"></button>
+                            <button type="button" class="p-1"></button> @*Spacing*@
                             <InputFile OnChange="LoadPhotoFile" accept=".png,.jpeg,.jpg" class="block w-full rounded-md border-0 text-sm text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 file:cursor-pointer cursor-pointer file:border-0 file:py-2 file:px-4 file:mr-4 file:bg-gray-500 file:hover:bg-gray-600 file:text-white focus:ring-1 focus:ring-inset sm:leading-6" />
                             <SfTooltip Position="Position.BottomCenter" Target="#photo-info" WindowCollision="true">
                                 <ContentTemplate>
@@ -123,10 +124,13 @@
                         
                             @if (isChangingVideo)
                             {
-                                <SfUploader @ref="UploadObj1" ID="uploadFile" AutoUpload="false" AllowMultiple="false" AllowedExtensions=".mp4, .avi, .mov, .wmv, .flv, .mkv, .mpeg" MaxFileSize=524288000>
+                                <button type="button" class="p-1"></button> @*Spacing*@
+                                <InputFile OnChange="LoadVideoFile" accept=".mp4,.avi,.mov,.wmv,.flv,.mkv,.mpeg" class="block w-full rounded-md border-0 text-sm text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 file:cursor-pointer cursor-pointer file:border-0 file:py-2 file:px-4 file:mr-4 file:bg-gray-500 file:hover:bg-gray-600 file:text-white focus:ring-1 focus:ring-inset sm:leading-6" />
+
+                                @* <SfUploader @ref="UploadObj1" ID="uploadFile" AutoUpload="false" AllowMultiple="false" AllowedExtensions=".mp4, .avi, .mov, .wmv, .flv, .mkv, .mpeg" MaxFileSize=524288000>
                                     <UploaderAsyncSettings SaveUrl="api/FileUpload/Save" RemoveUrl="api/FileUpload/Remove"></UploaderAsyncSettings>
                                     <UploaderEvents OnRemove="OnVideoFileRemove" FileSelected="OnVideoFileSelect"></UploaderEvents>
-                                </SfUploader>
+                                </SfUploader> *@
                                 <ValidationMessage For="() => form.FileUploadInfo.VideoFileName" />
                             }
                             else
@@ -192,6 +196,7 @@
 
     private IBrowserFile IDFile;
     private IBrowserFile PhotoFile;
+    private IBrowserFile VideoFile;
     SfUploader UploadObj1;
 
     private bool isChangingID = false;
@@ -283,6 +288,16 @@
                 if (Division == "Best Voice")
                 {
                     form.FileUploadInfo.ReplacedFiles.Add(historicalFiles.VideoFileName);
+
+                    // Handles the scenario where a resubmit action is triggered but no file is uploaded.
+                    // The filename does not reset, which prevents client-side validation from triggering.
+                    if (VideoFile is null)
+                    {
+                        isSubmitting = false;
+                        exceptionMessage = "Please upload a Video";
+                        return;
+                    }
+                    SetFileInfo(VideoFile, "video");
                 }
             }
 
@@ -306,7 +321,11 @@
             {
                 if (Division == "Best Voice")
                 {
-                    await UploadObj1.UploadAsync();
+                    // await UploadObj1.UploadAsync();
+
+                    // Fire and Forget Method - Not Awaiting
+                    // Simple but offers less control over task completion and error handling.
+                    UploadFile(VideoFile, "video", form.FileUploadInfo.VideoFileName);
 
                 }
             }
@@ -406,7 +425,7 @@
             if (file.Size > maxAllowedSize)
             {
                 Console.WriteLine("File size exceeds the allowed limit.");
-                exceptionMessage = "File size exceeds 2 MB";
+                exceptionMessage = "File size exceeds 5 MB";
                 return;
             }
 
@@ -485,6 +504,45 @@
         }
     }
 
+    private void LoadVideoFile(InputFileChangeEventArgs e)
+    {
+        Console.WriteLine("VideoFile loading initiated!");
+
+        exceptionMessage = null;
+
+        var maxAllowedSize = 1024 * 1024 * 500; // 500 MB
+        var file = e.File; // IBrowserFile
+
+        if (file is not null)
+        {
+            var allowedExtIDFile = new[] { ".mp4", ".avi", ".mov", ".wmv", "flv", "mkv", "mpeg" }; 
+            Console.WriteLine(Path.GetExtension(file.Name));
+
+            // Use StringComparison.OrdinalIgnoreCase for a case-insensitive comparison
+            if (!allowedExtIDFile.Any(ext => string.Equals(ext, Path.GetExtension(file.Name), StringComparison.OrdinalIgnoreCase)))
+            {
+                exceptionMessage = "Video file extension not allowed.";
+                return;
+            }
+
+            if (file.Size > maxAllowedSize)
+            {
+                Console.WriteLine("File size exceeds the allowed limit.");
+                exceptionMessage = "File size exceeds 500 MB";
+                return;
+            }
+
+            VideoFile = file;
+
+            // Skip assigning a temporary filename since this is an edit form where the variable already holds a value,
+            // fulfilling client-side form validation requirements.
+        }
+        else
+        {
+            Console.WriteLine("VideoFile null!");
+        }
+    }
+
     private async Task UploadFile(IBrowserFile file, string fileType, string uniqueFileName)
     {
         if (file is null)
@@ -496,6 +554,11 @@
         // The default limit for OpenReadStream is set to 500KB.
         // Adjust the maximum allowed file size based on the specific file requirements later.
         var maxAllowedSize = 5 * 1024 * 1024; // 5 MB
+
+        if (fileType == "video")    
+        {
+            maxAllowedSize = 500 * 1024 * 1024; // 500 MB
+        }
 
         using var content = new MultipartFormDataContent();
         using var fileContent = new StreamContent(file.OpenReadStream(maxAllowedSize));
@@ -530,11 +593,47 @@
         }
     }
 
+
+
+    // private void OnVideoFileSelect(SelectedEventArgs args)
+    // {
+    //     exceptionMessage = null;
+
+    //     var uniqueFileName = GetUniqueFileName(args.FilesData[0].Name, "video");
+
+    //     // Consider updating file information after form submission to accommodate scenarios where the user modifies their DOB
+    //     // but does not update the video file.
+    //     form.FileUploadInfo.VideoFileName = uniqueFileName;
+    //     form.FileUploadInfo.VideoFileSize = args.FilesData[0].Size;
+    //     form.FileUploadInfo.VideoFileExtension = Path.GetExtension(args.FilesData[0].Name);
+
+    //     ContainerInfo containerInfo = new()
+    //     {
+    //         UniqueFileName = uniqueFileName,
+    //         Year = DateTime.Now.Year.ToString(),
+    //         Division = form.CompetitionInfo.Division,
+    //         UploadType = "video"
+    //     };
+
+    //     var containerInfoJson = JsonSerializer.Serialize(containerInfo);
+
+    //     args.CustomFormData = new List<object> { new { containerInfoJson = containerInfoJson } };
+    // }
+
     private void OnVideoFileSelect(SelectedEventArgs args)
     {
+        Console.WriteLine("OnVideoFileSelect invoked.");
+
+        if (args == null || args.FilesData == null || args.FilesData.Count == 0)
+        {
+            Console.WriteLine("No files detected in the selection.");
+            return;
+        }
+
         exceptionMessage = null;
 
         var uniqueFileName = GetUniqueFileName(args.FilesData[0].Name, "video");
+        Console.WriteLine($"Generated unique file name: {uniqueFileName}");
 
         // Consider updating file information after form submission to accommodate scenarios where the user modifies their DOB
         // but does not update the video file.
@@ -542,18 +641,29 @@
         form.FileUploadInfo.VideoFileSize = args.FilesData[0].Size;
         form.FileUploadInfo.VideoFileExtension = Path.GetExtension(args.FilesData[0].Name);
 
+        Console.WriteLine($"Video File Info - Name: {form.FileUploadInfo.VideoFileName}, Size: {form.FileUploadInfo.VideoFileSize}, Extension: {form.FileUploadInfo.VideoFileExtension}");
+
         ContainerInfo containerInfo = new()
+            {
+                UniqueFileName = uniqueFileName,
+                Year = DateTime.Now.Year.ToString(),
+                Division = form.CompetitionInfo.Division,
+                UploadType = "video"
+            };
+
+        try
         {
-            UniqueFileName = uniqueFileName,
-            Year = DateTime.Now.Year.ToString(),
-            Division = form.CompetitionInfo.Division,
-            UploadType = "video"
-        };
+            var containerInfoJson = JsonSerializer.Serialize(containerInfo);
+            Console.WriteLine($"Serialized ContainerInfo JSON: {containerInfoJson}");
 
-        var containerInfoJson = JsonSerializer.Serialize(containerInfo);
-
-        args.CustomFormData = new List<object> { new { containerInfoJson = containerInfoJson } };
+            args.CustomFormData = new List<object> { new object[] { containerInfoJson, containerInfoJson } };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error serializing ContainerInfo: {ex.Message}");
+        }
     }
+
 
     // Code to revert changes when a video file is deselected
     private void OnVideoFileRemove()
@@ -579,6 +689,13 @@
             form.FileUploadInfo.PhotoFileName = uniqueFileName;
             form.FileUploadInfo.PhotoFileSize = file.Size;
             form.FileUploadInfo.PhotoFileExtension = Path.GetExtension(file.Name);
+        }
+
+        else if (fileType == "video")
+        {
+            form.FileUploadInfo.VideoFileName = uniqueFileName;
+            form.FileUploadInfo.VideoFileSize = file.Size;
+            form.FileUploadInfo.VideoFileExtension = Path.GetExtension(file.Name);
         }
 
     }

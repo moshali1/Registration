@@ -1,11 +1,11 @@
 @using System.Web
 @using Microsoft.AspNetCore.Authorization
-@* @attribute [AllowAnonymous] THE BANE OF EXISTENCE FOR THE PAST FEW WEEKS*@
+
 @inject NavigationManager NavigationManager
 
 @code 
 {
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         var returnUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
         if (string.IsNullOrEmpty(returnUrl))

@@ -19,9 +19,9 @@
 </div>
 
 <ul role="list" class="list-none grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-    <DashboardCard1 ArchivedForms="archivedForms" @rendermode="InteractiveServer" />
-    <DashboardCard2 />
-    <DashboardCard3 UserId="@userId" @rendermode="InteractiveServer" />
+    <ArchivedFormsCard ArchivedForms="archivedForms" @rendermode="InteractiveServer" />
+    <CountdownCard @rendermode="InteractiveServer" />
+    <CurrentFormsCard UserId="@userId" @rendermode="InteractiveServer" />
 </ul>
 
 @code {

@@ -73,6 +73,10 @@ public static class FormatData
 
     public static string RemoveLeadingAndTrailingSpaces(string inputString)
     {
+        if (string.IsNullOrEmpty(inputString))
+        {
+            return inputString;
+        }
         return inputString.Trim();
     }
 }
