@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using Microsoft.Graph.Models;
+using System.Text.RegularExpressions;
 
 /// <summary>
 /// The FormatData class provides utility methods for formatting various pieces of form-related data.
@@ -10,6 +11,10 @@ public static class FormatData
 {
     public static void FormatFormData(Form form)
     {
+        form.PersonalInfo.FirstName = RemoveLeadingAndTrailingSpaces(form.PersonalInfo.FirstName);
+        form.PersonalInfo.MiddleName = RemoveLeadingAndTrailingSpaces(form.PersonalInfo.MiddleName);
+        form.PersonalInfo.LastName = RemoveLeadingAndTrailingSpaces(form.PersonalInfo.LastName);
+
         form.PersonalInfo.FirstName = CapitalizeFirstLetterOnly(form.PersonalInfo.FirstName);
         form.PersonalInfo.MiddleName = CapitalizeFirstLetterOnly(form.PersonalInfo.MiddleName);
         form.PersonalInfo.LastName = CapitalizeFirstLetterOnly(form.PersonalInfo.LastName);
@@ -64,5 +69,10 @@ public static class FormatData
             }
         }
         return formattedNumber;
+    }
+
+    public static string RemoveLeadingAndTrailingSpaces(string inputString)
+    {
+        return inputString.Trim();
     }
 }

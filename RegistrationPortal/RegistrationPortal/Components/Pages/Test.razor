@@ -1,4 +1,4 @@
-﻿@page "/test"
+﻿@* @page "/test"
 @inject IUserData UserData
 @rendermode InteractiveServer
 
@@ -34,3 +34,4 @@
         await UserData.CreateUser(user);
     }
 }
+ *@

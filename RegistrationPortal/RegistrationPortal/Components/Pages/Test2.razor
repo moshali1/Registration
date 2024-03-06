@@ -1,0 +1,52 @@
+﻿@* @page "/test2"
+
+@inject IFormData FormData
+
+@rendermode InteractiveServer
+
+@attribute [Authorize(Roles = "Admin")]
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <p>@message</p>
+}
+
+@code {
+    private List<Form> forms;
+
+    private string message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        forms = await FormData.GetForms();
+        int totalForms = forms.Count;
+        for (int i = 0; i < totalForms; i++)
+        {
+            var form = forms[i];
+
+            // Only trim fields if they are not null
+            if (form.PersonalInfo.FirstName != null)
+            {
+                form.PersonalInfo.FirstName = form.PersonalInfo.FirstName.Trim();
+            }
+
+            if (form.PersonalInfo.MiddleName != null)
+            {
+                form.PersonalInfo.MiddleName = form.PersonalInfo.MiddleName.Trim();
+            }
+
+            if (form.PersonalInfo.LastName != null)
+            {
+                form.PersonalInfo.LastName = form.PersonalInfo.LastName.Trim();
+            }
+
+            await FormData.UpdateForm(form);
+
+            // Update progress message
+            message = $"Successfully trimmed form {i + 1} of {totalForms}.";
+        }
+
+        message = $"All {totalForms} forms successfully trimmed!";
+    }
+}
+ *@

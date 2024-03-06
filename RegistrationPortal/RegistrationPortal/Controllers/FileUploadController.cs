@@ -1,6 +1,8 @@
-﻿using Azure.Storage.Blobs;
+﻿using Azure;
+using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Specialized;
 using Microsoft.AspNetCore.Authorization;
+using System.IO.IsolatedStorage;
 using System.Text;
 using System.Text.Json;
 
@@ -39,6 +41,7 @@ public class FileUploadController : ControllerBase
             }
             else if (containerInfo.UploadType == "video")
             {
+                Console.WriteLine("Video Upload to Azure Start");
                 BlockBlobClient blockBlobClient = new BlockBlobClient(connectionString, containerName, blobName);
 
                 List<string> blockList = new List<string>();
@@ -55,9 +58,15 @@ public class FileUploadController : ControllerBase
                     blockList.Add(base64BlockId);
                 }
                 await blockBlobClient.CommitBlockListAsync(blockList);
+                Console.WriteLine("Video Upload to Azure End");
             }
 
             return Ok("File uploaded successfully.");
+        }
+        catch (RequestFailedException e)
+        {
+            Console.WriteLine(e.Message);
+            return StatusCode(500, $"Request Failed {e}");
         }
         catch (Exception e)
         {

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.AzureAppServices;
 using RegistrationPortal.Components;
 using RegistrationPortal.Identity;
 
@@ -5,7 +6,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.ConfigureServices();
 
+// Logging in Azure
+builder.Logging.AddAzureWebAppDiagnostics();
+builder.Services.Configure<AzureFileLoggerOptions>(options =>
+{
+    options.FileName = "diagnostics-";
+    options.FileSizeLimit = 50 * 1024; // 50 MB
+    options.RetainedFileCountLimit = 5;
+});
+
 var app = builder.Build();
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
