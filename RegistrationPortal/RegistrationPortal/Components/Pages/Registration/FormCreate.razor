@@ -101,8 +101,8 @@
                     <div class="flex flex-row flex-nowrap min-w-max">
                         <label class="block text-sm font-medium leading-6 text-gray-900 mb-1">Video Upload</label>
                         <SfUploader @ref="UploadObj1" ID="uploadFile" AutoUpload="false" AllowMultiple="false" AllowedExtensions=".mp4, .avi, .mov, .wmv, .flv, .mkv, .mpeg" MaxFileSize=524288000>
-                            <UploaderAsyncSettings SaveUrl="api/FileUpload/Save" RemoveUrl="api/FileUpload/Remove"></UploaderAsyncSettings>
-                            <UploaderEvents OnRemove="OnVideoFileRemove" FileSelected="OnVideoFileSelect"></UploaderEvents>
+                            <UploaderAsyncSettings SaveUrl="api/FileUpload/SaveVideo" RemoveUrl="api/FileUpload/Remove" ChunkSize="50000000"></UploaderAsyncSettings>
+                            <UploaderEvents OnRemove="OnVideoFileRemove" FileSelected="OnVideoFileSelect" OnChunkSuccess="OnChunkSuccessHandler"></UploaderEvents>
                         </SfUploader>
                         <ValidationMessage For="() => form.FileUploadInfo.VideoFileName" />
                     </div>
@@ -268,12 +268,10 @@
                 await UploadObj1.UploadAsync();
             }
 
-            isSubmitting = false;
-
-            form = new();
-            DefaultList.SetShowDialog(true);
-            DefaultList.LastTab(Division[0]);
-            NavManager.NavigateTo("/list");
+            if (Division != "Best Voice")
+            {
+                RedirectUser();
+            }
         }
         catch (Exception ex)
         {
@@ -314,6 +312,16 @@
                 form.FormHistory.RemoveAt(form.FormHistory.Count - 1);
             }
         }
+    }
+
+    private void RedirectUser()
+    {
+        isSubmitting = false;
+
+        form = new();
+        DefaultList.SetShowDialog(true);
+        DefaultList.LastTab(Division[0]);
+        NavManager.NavigateTo("/list");
     }
 
     private bool CheckAgeEligibility()
@@ -556,5 +564,28 @@
         + "_"
         + Guid.NewGuid().ToString().Substring(0, 4).ToUpper()
         + Path.GetExtension(fileName); // fileName is just for the extension
+    }
+
+    private void OnChunkSuccessHandler(SuccessEventArgs args)
+    {
+        // Convert chunkIndex and totalChunk to integers for comparison
+        // Assuming chunk indices and total are whole numbers
+        int chunkIndex = Convert.ToInt32(args.ChunkIndex);
+        int totalChunk = Convert.ToInt32(args.TotalChunk);
+
+        Console.WriteLine(chunkIndex);
+        Console.WriteLine(totalChunk);
+
+        // Check if the current chunk is the last one
+        if (chunkIndex >= totalChunk - 2)
+        {
+            // This is the last chunk
+            // Perform actions such as redirecting the user
+            RedirectUser();
+        }
+        else
+        {
+            // Not the last chunk, optionally perform other actions
+        }
     }
 }

@@ -4,6 +4,7 @@
 @using System.Net.Http.Headers
 @using Syncfusion.Blazor.Inputs
 @using Syncfusion.Blazor.Popups
+@using System.Text
 
 @inject DefaultListService DefaultList
 @inject IFaceDetectionService FaceDetection
@@ -127,9 +128,10 @@
                                 @* <button type="button" class="p-1"></button> *@ @*Spacing*@
                                 @* <InputFile OnChange="LoadVideoFile" accept=".mp4,.avi,.mov,.wmv,.flv,.mkv,.mpeg" class="block w-full rounded-md border-0 text-sm text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 file:cursor-pointer cursor-pointer file:border-0 file:py-2 file:px-4 file:mr-4 file:bg-gray-500 file:hover:bg-gray-600 file:text-white focus:ring-1 focus:ring-inset sm:leading-6" />  *@
 
+                                @*In 50 MB Chuncks*@
                                 <SfUploader @ref="UploadObj1" ID="uploadFile" AutoUpload="false" AllowMultiple="false" AllowedExtensions=".mp4, .avi, .mov, .wmv, .flv, .mkv, .mpeg" MaxFileSize=524288000>
-                                    <UploaderAsyncSettings SaveUrl="api/FileUpload/Save" RemoveUrl="api/FileUpload/Remove"></UploaderAsyncSettings>
-                                    <UploaderEvents OnRemove="OnVideoFileRemove" FileSelected="OnVideoFileSelect"></UploaderEvents>
+                                    <UploaderAsyncSettings SaveUrl="api/FileUpload/SaveVideo" RemoveUrl="api/FileUpload/Remove" ChunkSize="50000000"></UploaderAsyncSettings>
+                                    <UploaderEvents OnRemove="OnVideoFileRemove" FileSelected="OnVideoFileSelect" OnChunkSuccess="OnChunkSuccessHandler"></UploaderEvents>
                                 </SfUploader>
                                 <ValidationMessage For="() => form.FileUploadInfo.VideoFileName" />
                             }
@@ -196,7 +198,6 @@
 
     private IBrowserFile IDFile;
     private IBrowserFile PhotoFile;
-    // private IBrowserFile VideoFile;
     SfUploader UploadObj1;
 
     private bool isChangingID = false;
@@ -288,16 +289,6 @@
                 if (Division == "Best Voice")
                 {
                     form.FileUploadInfo.ReplacedFiles.Add(historicalFiles.VideoFileName);
-
-                    // // Handles the scenario where a resubmit action is triggered but no file is uploaded.
-                    // // The filename does not reset, which prevents client-side validation from triggering.
-                    // if (VideoFile is null)
-                    // {
-                    //     isSubmitting = false;
-                    //     exceptionMessage = "Please upload a Video";
-                    //     return;
-                    // }
-                    // SetFileInfo(VideoFile, "video");
                 }
             }
 
@@ -322,20 +313,13 @@
                 if (Division == "Best Voice")
                 {
                     await UploadObj1.UploadAsync();
-
-                    // Fire and Forget Method - Not Awaiting
-                    // Simple but offers less control over task completion and error handling.
-                    // UploadFile(VideoFile, "video", form.FileUploadInfo.VideoFileName);
-
                 }
             }
 
-            isSubmitting = false;
-
-            form = new();
-            DefaultList.SetShowDialog(true);
-            DefaultList.LastTab(Division[0]);
-            NavManager.NavigateTo("/list");
+            if (Division != "Best Voice")
+            {
+                RedirectUser();
+            }
         }
         catch (Exception ex)
         {
@@ -376,6 +360,16 @@
                 form.FormHistory.RemoveAt(form.FormHistory.Count - 1);
             }
         }
+    }
+
+    private void RedirectUser()
+    {
+        isSubmitting = false;
+
+        form = new();
+        DefaultList.SetShowDialog(true);
+        DefaultList.LastTab(Division[0]);
+        NavManager.NavigateTo("/list");
     }
 
     private bool CheckAgeEligibility()
@@ -504,45 +498,6 @@
         }
     }
 
-    // private void LoadVideoFile(InputFileChangeEventArgs e)
-    // {
-    //     Console.WriteLine("VideoFile loading initiated!");
-
-    //     exceptionMessage = null;
-
-    //     var maxAllowedSize = 1024 * 1024 * 500; // 500 MB
-    //     var file = e.File; // IBrowserFile
-
-    //     if (file is not null)
-    //     {
-    //         var allowedExtIDFile = new[] { ".mp4", ".avi", ".mov", ".wmv", "flv", "mkv", "mpeg" }; 
-    //         Console.WriteLine(Path.GetExtension(file.Name));
-
-    //         // Use StringComparison.OrdinalIgnoreCase for a case-insensitive comparison
-    //         if (!allowedExtIDFile.Any(ext => string.Equals(ext, Path.GetExtension(file.Name), StringComparison.OrdinalIgnoreCase)))
-    //         {
-    //             exceptionMessage = "Video file extension not allowed.";
-    //             return;
-    //         }
-
-    //         if (file.Size > maxAllowedSize)
-    //         {
-    //             Console.WriteLine("File size exceeds the allowed limit.");
-    //             exceptionMessage = "File size exceeds 500 MB";
-    //             return;
-    //         }
-
-    //         VideoFile = file;
-
-    //         // Skip assigning a temporary filename since this is an edit form where the variable already holds a value,
-    //         // fulfilling client-side form validation requirements.
-    //     }
-    //     else
-    //     {
-    //         Console.WriteLine("VideoFile null!");
-    //     }
-    // }
-
     private async Task UploadFile(IBrowserFile file, string fileType, string uniqueFileName)
     {
         if (file is null)
@@ -554,11 +509,6 @@
         // The default limit for OpenReadStream is set to 500KB.
         // Adjust the maximum allowed file size based on the specific file requirements later.
         var maxAllowedSize = 5 * 1024 * 1024; // 5 MB
-
-        if (fileType == "video")    
-        {
-            maxAllowedSize = 500 * 1024 * 1024; // 500 MB
-        }
 
         using var content = new MultipartFormDataContent();
         using var fileContent = new StreamContent(file.OpenReadStream(maxAllowedSize));
@@ -592,33 +542,6 @@
             Console.WriteLine($"Failed to upload file. Status code: {response.StatusCode}");
         }
     }
-
-
-
-    // private void OnVideoFileSelect(SelectedEventArgs args)
-    // {
-    //     exceptionMessage = null;
-
-    //     var uniqueFileName = GetUniqueFileName(args.FilesData[0].Name, "video");
-
-    //     // Consider updating file information after form submission to accommodate scenarios where the user modifies their DOB
-    //     // but does not update the video file.
-    //     form.FileUploadInfo.VideoFileName = uniqueFileName;
-    //     form.FileUploadInfo.VideoFileSize = args.FilesData[0].Size;
-    //     form.FileUploadInfo.VideoFileExtension = Path.GetExtension(args.FilesData[0].Name);
-
-    //     ContainerInfo containerInfo = new()
-    //     {
-    //         UniqueFileName = uniqueFileName,
-    //         Year = DateTime.Now.Year.ToString(),
-    //         Division = form.CompetitionInfo.Division,
-    //         UploadType = "video"
-    //     };
-
-    //     var containerInfoJson = JsonSerializer.Serialize(containerInfo);
-
-    //     args.CustomFormData = new List<object> { new { containerInfoJson = containerInfoJson } };
-    // }
 
     private void OnVideoFileSelect(SelectedEventArgs args)
     {
@@ -664,7 +587,6 @@
         }
     }
 
-
     // Code to revert changes when a video file is deselected
     private void OnVideoFileRemove()
     {
@@ -690,14 +612,6 @@
             form.FileUploadInfo.PhotoFileSize = file.Size;
             form.FileUploadInfo.PhotoFileExtension = Path.GetExtension(file.Name);
         }
-
-        // else if (fileType == "video")
-        // {
-        //     form.FileUploadInfo.VideoFileName = uniqueFileName;
-        //     form.FileUploadInfo.VideoFileSize = file.Size;
-        //     form.FileUploadInfo.VideoFileExtension = Path.GetExtension(file.Name);
-        // }
-
     }
 
     private string GetUniqueFileName(string fileName, string fileType)
@@ -853,5 +767,28 @@
         }
 
         return changes;
+    }
+
+    private void OnChunkSuccessHandler(SuccessEventArgs args)
+    {
+        // Convert chunkIndex and totalChunk to integers for comparison
+        // Assuming chunk indices and total are whole numbers
+        int chunkIndex = Convert.ToInt32(args.ChunkIndex);
+        int totalChunk = Convert.ToInt32(args.TotalChunk);
+
+        Console.WriteLine(chunkIndex);
+        Console.WriteLine(totalChunk);
+
+        // Check if the current chunk is the last one
+        if (chunkIndex >= totalChunk - 2)
+        {
+            // This is the last chunk
+            // Perform actions such as redirecting the user
+            RedirectUser();
+        }
+        else
+        {
+            // Not the last chunk, optionally perform other actions
+        }
     }
 }
