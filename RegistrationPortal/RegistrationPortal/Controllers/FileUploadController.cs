@@ -25,7 +25,7 @@ public class FileUploadController : ControllerBase
     }
 
     [HttpPost("[action]")]
-    public async Task<ActionResult> Save(IFormFile uploadFile, [FromBody] string containerInfoJson)
+    public async Task<ActionResult> Save(IFormFile uploadFile, [FromForm] string containerInfoJson)
     {
         if (string.IsNullOrWhiteSpace(containerInfoJson))
         {

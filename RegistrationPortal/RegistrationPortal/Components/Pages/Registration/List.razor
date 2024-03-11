@@ -7,8 +7,8 @@
 @inject DefaultListService DefaultList
 @attribute [Authorize]
 
-@rendermode InteractiveServer
-
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@* @rendermode InteractiveServer *@
 
 <PageTitle>Forms List</PageTitle>
 
@@ -97,6 +97,7 @@ else
             // After showing the dialog, reset the state to prevent the dialog from showing again on refresh
             DefaultList.SetShowDialog(false);
         }
+
         loggedInUser = await AuthState.GetUserFromAuth(UserData);
 
         var authState = await AuthState.GetAuthenticationStateAsync();
