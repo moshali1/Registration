@@ -1,10 +1,13 @@
 ﻿@page "/"
+
 @using RegistrationPortal.Components.Layout
-@inject AuthenticationStateProvider authProvider
+
 @inject IUserData UserData
 @inject IArchivedFormData ArchivedFormData
+@inject AuthenticationStateProvider AuthProvider
 
 @attribute [Authorize]
+
 <PageTitle>Home</PageTitle>
 
 <div class="text-center">
@@ -21,7 +24,7 @@
 <ul role="list" class="py-2 list-none grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
     <ArchivedFormsCard ArchivedForms="archivedForms" @rendermode="InteractiveServer" />
     <CountdownCard @rendermode="InteractiveServer" />
-    <CurrentFormsCard UserId="@userId" @rendermode="InteractiveServer" />
+    <CurrentFormsCard UserId="@currentUser?.Id" @rendermode="InteractiveServer" />
 </ul>
 
 <ul role="list" class="py-2 list-none grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -29,88 +32,111 @@
 </ul>
 
 @code {
-    private User loggedInUser;
-
-    private string userId = "";
-
+    private AuthenticationState authState;
+    private User currentUser;
     private List<Form> archivedForms;
 
     protected async override Task OnInitializedAsync()
     {
-        await LoadAndVerifyUser();
-
-        var authState = await authProvider.GetAuthenticationStateAsync();
-        string objectId = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("objectidentifier"))?.Value;
-        string email = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("preferred_username"))?.Value;
-
-        if (email is not null)  
-        {
-            // NOT A PERMANENT SOLUTION - NEED A WAY TO CACHE OR AN EASIER RETRIEVAL
-            archivedForms = await ArchivedFormData.GetFormsAsync(email);
-        }
-
-        userId = loggedInUser.Id;
-    }
-
-    private async Task LoadAndVerifyUser()
-    {
-        loggedInUser = await authProvider.GetUserFromAuth(UserData);
-
-        var authState = await authProvider.GetAuthenticationStateAsync();
-        string objectId = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("objectidentifier"))?.Value;
-
+        // Fetches the current authentication state and logs each claim for debugging purposes.
+        authState = await AuthProvider.GetAuthenticationStateAsync();
         foreach (var claim in authState.User.Claims)
         {
             Console.WriteLine($"Claim Type: {claim.Type}, Claim Value: {claim.Value}");
         }
 
+        // Loads user data based on the current authentication state and updates the user record if necessary.
+        await LoadAndVerifyUser();
+
+        // Retrieve archived forms for the user if their email is available.
+        string email = GetClaimValue(authState, "email");
+        if (email is not null)  
+        {
+            archivedForms = await ArchivedFormData.GetFormsAsync(email);
+        }
+    }
+
+    private async Task LoadAndVerifyUser()
+    {
+        currentUser = await AuthProvider.GetUserFromAuth(UserData);
+        
+        string objectId = GetClaimValue(authState, "objectId");
+
         if (string.IsNullOrWhiteSpace(objectId) == false)
         {
-            loggedInUser = await UserData.GetUserFromAuthentication(objectId) ?? new();
+            currentUser = await UserData.GetUserFromAuthentication(objectId) ?? new();
 
-            string displayName = authState.User.Claims.FirstOrDefault(c => c.Type.Equals("name"))?.Value;
-            string email = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("preferred_username"))?.Value;
-            string userType = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("user_type"))?.Value;
-            string role = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("roles"))?.Value;
+            string displayName = GetClaimValue(authState, "displayName");
+            string email = GetClaimValue(authState, "email");
+            string userType = GetClaimValue(authState, "userType");
+            string role = GetClaimValue(authState, "role");
 
             bool isDirty = false;
 
-            if (objectId.Equals(loggedInUser.ObjectIdentifier) == false)
+            if (objectId.Equals(currentUser.ObjectIdentifier) == false)
             {
                 isDirty = true;
-                loggedInUser.ObjectIdentifier = objectId;
+                currentUser.ObjectIdentifier = objectId;
             }
-            if (displayName.Equals(loggedInUser.DisplayName) == false)
+            if (displayName.Equals(currentUser.DisplayName) == false)
             {
                 isDirty = true;
-                loggedInUser.DisplayName = displayName;
+                currentUser.DisplayName = displayName;
             }
-            if (email.Equals(loggedInUser.EmailAddress) == false)
+            if (email.Equals(currentUser.EmailAddress) == false)
             {
                 isDirty = true;
-                loggedInUser.EmailAddress = email;
+                currentUser.EmailAddress = email;
             }
-            if (userType?.Equals(loggedInUser.UserType) == false)
+            if (userType?.Equals(currentUser.UserType) == false)
             {
                 isDirty = true;
-                loggedInUser.UserType = userType;
+                currentUser.UserType = userType;
             }
-            if (role?.Equals(loggedInUser.Role) == false)
+            if (role?.Equals(currentUser.Role) == false)
             {
                 isDirty = true;
-                loggedInUser.Role = role;
+                currentUser.Role = role;
             }
             if (isDirty)
             {
-                if (string.IsNullOrWhiteSpace(loggedInUser.Id))
+                if (string.IsNullOrWhiteSpace(currentUser.Id))
                 {
-                    await UserData.CreateUser(loggedInUser);
+                    await UserData.CreateUser(currentUser);
                 }
                 else
                 {
-                    await UserData.UpdateUser(loggedInUser);
+                    await UserData.UpdateUser(currentUser);
                 }
             }
         }
+    }
+
+    private string GetClaimValue(AuthenticationState authState, string claimType)
+    {
+        string claimValue = null;
+
+        switch (claimType)
+        {
+            case "objectId":
+                claimValue = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("objectidentifier"))?.Value;
+                break;
+            case "displayName":
+                claimValue = authState.User.Claims.FirstOrDefault(c => c.Type.Equals("name"))?.Value;
+                break;
+            case "email":
+                claimValue = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("preferred_username"))?.Value;
+                break;
+            case "userType":
+                claimValue = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("user_type"))?.Value;
+                break;
+            case "role":
+                claimValue = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("roles"))?.Value;
+                break;
+            default:
+                break;
+        }
+
+        return claimValue;
     }
 }

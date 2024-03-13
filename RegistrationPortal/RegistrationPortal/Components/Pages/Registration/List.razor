@@ -2,18 +2,17 @@
 
 @inject IFormData FormData
 @inject IUserData UserData
-@inject NavigationManager NavManager
-@inject AuthenticationStateProvider AuthState 
 @inject DefaultListService DefaultList
-@attribute [Authorize]
+@inject AuthenticationStateProvider AuthState
+@inject NavigationManager NavManager
 
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
-@* @rendermode InteractiveServer *@
 
-<PageTitle>Forms List</PageTitle>
+@attribute [Authorize]
+
+<PageTitle>List</PageTitle>
 
 <SuccessNotification ShowSuccessNotification="@showNotification" OnCloseNotification="HandleCloseNotification" />
-
 
 <div class="sm:flex sm:items-center">
     <div class="sm:flex-auto">
@@ -76,7 +75,7 @@ else
 @code {
     private bool showNotification = false;
 
-    private User loggedInUser;
+    private User currentUser;
     private bool IsAdmin = false;
 
     private List<Form> forms;
@@ -86,7 +85,6 @@ else
     private List<Form> bForms;
 
     private char activeTab;
-
 
     protected override async Task OnInitializedAsync()
     {
@@ -98,7 +96,7 @@ else
             DefaultList.SetShowDialog(false);
         }
 
-        loggedInUser = await AuthState.GetUserFromAuth(UserData);
+        currentUser = await AuthState.GetUserFromAuth(UserData);
 
         var authState = await AuthState.GetAuthenticationStateAsync();
         var user = authState.User;
@@ -118,7 +116,7 @@ else
         }
         else
         {
-            forms = await FormData.GetFormsByCreator(loggedInUser.Id);
+            forms = await FormData.GetFormsByCreator(currentUser.Id);
         }
 
         mForms = forms.Where(f => f.CompetitionInfo.Division == DivisionConstants.Memorization).ToList();
