@@ -7,6 +7,7 @@
 @using System.Text
 
 @inject DefaultListService DefaultList
+@inject ITextDetectionService TextDetection
 @inject IFaceDetectionService FaceDetection
 @inject IHttpClientFactory HttpClientFactory
 @inject IUserService UserService
@@ -164,11 +165,18 @@
             </div>
         </div>
 
-        <span class="text-red-600">@exceptionMessage</span>
-        <span class="text-green-600">@successMessage</span>
+        @* Only one message shows at a time *@
+        <div>
+            <span class="text-red-600">@exceptionMessage</span>
+        </div>
+        <div>
+            <span class="text-green-600">@successMessage</span>
+        </div>
+
+        <ValidationSummary />
 
         <div class="mt-3 flex items-center justify-end gap-x-6">
-            <button type="submit" disabled="@isSubmitting" class="inline-flex items-center px-3 py-2 font-semibold leading-6 text-sm shadow rounded-md text-white bg-cyan-700 hover:bg-cyan-600 transition ease-in-out duration-150">
+            <button type="submit" disabled="@(isSubmitting || isBusy)" class="inline-flex items-center px-3 py-2 font-semibold leading-6 text-sm shadow rounded-md text-white bg-cyan-700 hover:bg-cyan-600 transition ease-in-out duration-150">
                 @if (isSubmitting is false)
                 {
                     <span>Submit</span>
@@ -211,6 +219,7 @@
 
     // Miscellaneous Fields
     private bool isSubmitting = false;
+    private bool isBusy = false;
     private string exceptionMessage;
     private string successMessage;
 
@@ -316,7 +325,7 @@
                 }
             }
 
-            if (Division != "Best Voice")
+            if (Division != "Best Voice" || isChangingVideo is false)
             {
                 RedirectUser();
             }
@@ -397,11 +406,13 @@
         form.FormHistory.Add(tracking);
     }
 
-    private void LoadIDFile(InputFileChangeEventArgs e)
+    private async Task LoadIDFile(InputFileChangeEventArgs e)
     {
         Console.WriteLine("IDFile loading initiated!");
 
         exceptionMessage = null;
+        successMessage = null;
+        isBusy = true;
 
         var maxAllowedSize = 1024 * 1024 * 5; // 5 MB
         var file = e.File; // IBrowserFile
@@ -423,6 +434,20 @@
                 return;
             }
 
+            var isTextDetected = await IsTextDetected(file);
+            if (!isTextDetected)
+            {
+                // isBusy is still true which is good although its justa client side disabled html feature
+                // IF NOT THOUGH WOULD IT STILL LET YOU UPLOAD?
+                exceptionMessage = "Please upload an ID that meets our validation criteria.";
+                return;
+            }
+            else
+            {
+                // Not accounting for PDF
+                successMessage = "ID processed.";
+            }
+
             IDFile = file;
 
             // Skip assigning a temporary filename since this is an edit form where the variable already holds a value, 
@@ -432,6 +457,35 @@
         {
             Console.WriteLine("IDFile null!");
         }
+        isBusy = false;
+    }
+
+    private async Task<bool> IsTextDetected(IBrowserFile file)
+    {
+        var allowedExtIDFileForAI = new[] { ".png", ".jpeg", ".jpg" };
+
+        if (allowedExtIDFileForAI.Contains(Path.GetExtension(file.Name)))
+        {
+
+            // Call the service
+            bool isTextDetected = await TextDetection.DetectTextAsync(file);
+
+            Console.WriteLine($"Text Detected: {isTextDetected}");
+
+            if (!isTextDetected)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+        else
+        {
+            Console.WriteLine("File type not supported for image analysis..");
+            return true;
+        }
     }
 
     private async Task LoadPhotoFile(InputFileChangeEventArgs e)
@@ -440,6 +494,7 @@
 
         exceptionMessage = null;
         successMessage = null;
+        isBusy = true;
 
         var maxAllowedSize = 1024 * 1024 * 5; // 5 MB
         var file = e.File; // IBrowserFile
@@ -458,6 +513,16 @@
             {
                 Console.WriteLine("File size exceeds the allowed limit.");
                 exceptionMessage = "File size exceeds 5 MB";
+                return;
+            }
+
+            var isTextDetected = await IsTextDetected(file);
+            // here don't want ID related texts or any texts
+            if (isTextDetected)
+            {
+                // isBusy is still true which is good although its justa client side disabled html feature
+                // IF NOT THOUGH WOULD IT STILL LET YOU UPLOAD?
+                exceptionMessage = "Please upload an a standalone photo. See photo requirements for more info";
                 return;
             }
 
@@ -496,6 +561,7 @@
             // Since the fileName is not part of the form, it is only verified on form submission.
             // Therefore, any validation error persists until the form is submitted.
         }
+        isBusy = false;
     }
 
     private async Task UploadFile(IBrowserFile file, string fileType, string uniqueFileName)

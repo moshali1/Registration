@@ -23,8 +23,8 @@
             <div class="absolute right-0 z-10 -mr-1 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                 <div class="py-1">
                     <!-- Menu items here -->
-                    <a href="details/@Form.Id" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100">Details</a>
-                    <a href="edit/@Form.CompetitionInfo.Division/@Form.Id" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100">Edit</a>
+                    <a href="details/@Form.Id" target="_blank" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100">Details</a>
+                    <a href="edit/@Form.CompetitionInfo.Division/@Form.Id" target="_blank" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100">Edit</a>
                     @if (Form.StatusInfo.Status != "Withdrawn") 
                     {
                         <a @onclick="() => isWithdrawAlertVisible = !isWithdrawAlertVisible" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer">Withdraw</a>

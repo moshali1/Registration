@@ -1,15 +1,15 @@
-<div class="nav-item pr-4">
+<div class="nav h-12">
     <AuthorizeView>
         <Authorized>
             <form action="/Account/Logout" method="post">
                 <AntiforgeryToken />
-                <button type="submit" class="nav-link">
-                    <span class="bi bi-logout-badge-nav-menu" aria-hidden="true"></span> Logout
+                <button type="submit" class="nav">
+                    <span class="inline-block relative w-6 h-6 bg-cover top-[-1px] bi bi-logout-badge-nav-menu" aria-hidden="true"></span> Logout
                 </button>
             </form>
         </Authorized>
         <NotAuthorized>
-            <a class="nav-link" href="/Account/Login" data-enhance-nav="false">
+            <a class="nav" href="/Account/Login" data-enhance-nav="false">
                 <span class="bi bi-login-badge-nav-menu" aria-hidden="true"></span> Login
             </a>
         </NotAuthorized>

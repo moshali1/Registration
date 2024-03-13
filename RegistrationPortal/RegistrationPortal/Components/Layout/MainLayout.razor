@@ -1,23 +1,23 @@
 ﻿@inherits LayoutComponentBase
-@inject NavigationManager NavigationManager
+@inject NavigationManager NavManager
 @inject BaseUrlProvider BaseUrlProvider
 
 <div id="app">
-    <!--Wide Screen Sidebar-->
+    <!--Wide Screen Sidebar & NavMenu-->
     <div class="sidebar">
         <div class="overlay bg-black fixed top-0 bottom-0 left-0 right-0 z-10" onclick="closeSidebar()"></div>
         <nav class="fixed flex flex-col h-screen bg-gradient-to-r from-cyan-800 to-cyan-950 text-white w-64 overflow-y-auto z-10 drop-shadow-2xl">
             <div class="h-16 flex items-center px-6 text-lg bg-cyan-950 flex-shrink-0">
-                <span class="font-bold">Registration</span>
-                &nbsp;Portal
-
+                <span class="font-medium">Registration</span>
+                <span class="mx-1">|</span>
+                <span>Portal</span>
             </div>
             <NavMenu />
         </nav>
     </div>
     
     <div class="md:ml-64 mt-16 md:mt-0 flex-shrink flex-grow z-0">
-        <!--Small Screen Sidebar-->
+        <!--Small Screen Top Sidebar-->
         <div class="bg-cyan-950 top-0 fixed w-full md:hidden h-16 flex items-center justify-between px-4 text-white text-lg z-10">
             <div class="flex items-center">
                 <button title="Show navigation menu" class="hamburger mr-2 p-2 -m-3" onclick="toggleSidebar()">
@@ -29,19 +29,21 @@
                         </div>
                     </div>
                 </button>
-                <span class="font-bold">Registration</span>
-                &nbsp;| Portal
-
+                <span class="font-medium">Registration</span>
+                <span class="mx-1">|</span>
+                <span>Portal</span>
             </div>
 
             <div>
-                <LogInOrOut2 />
+                <LogInOrOut />
             </div>
         </div>
-        <!--Wide Screen Right Section-->
+
+        <!--Right Section Content-->
         <div>
+            <!--Wide Screen Top Row-->
             <div class="top-row">
-                <LogInOrOut1 />
+                <LogInOrOut />
             </div>
             <div class="page">
                 @Body
@@ -53,7 +55,7 @@
 @code {
     protected override Task OnInitializedAsync()
     {
-        BaseUrlProvider.SetBaseUrl(NavigationManager.BaseUri);
+        BaseUrlProvider.SetBaseUrl(NavManager.BaseUri);
         return base.OnInitializedAsync();
     }
 }

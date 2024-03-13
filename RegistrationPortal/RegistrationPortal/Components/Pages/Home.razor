@@ -18,10 +18,14 @@
     <p class="text-md">We've made it simpler for you to get started again by prefilling your registration form with last year's information. If you would like to use the submitted information from the same account, please choose the <b>autofill</b> option below. Otherwise, if you prefer to start fresh, select the <b>new form</b> option.</p>
 </div>
 
-<ul role="list" class="list-none grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+<ul role="list" class="py-2 list-none grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
     <ArchivedFormsCard ArchivedForms="archivedForms" @rendermode="InteractiveServer" />
     <CountdownCard @rendermode="InteractiveServer" />
     <CurrentFormsCard UserId="@userId" @rendermode="InteractiveServer" />
+</ul>
+
+<ul role="list" class="py-2 list-none grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <FaqCard @rendermode="InteractiveServer" />
 </ul>
 
 @code {

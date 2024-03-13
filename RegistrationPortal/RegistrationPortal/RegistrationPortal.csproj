@@ -11,6 +11,7 @@
     <ProjectReference Include="..\..\RegistrationPortal.Shared\RegistrationPortal.Shared.csproj" />
     <ProjectReference Include="..\RegistrationPortal.Client\RegistrationPortal.Client.csproj" />
     <PackageReference Include="AutoMapper" Version="13.0.1" />
+    <PackageReference Include="Azure.AI.Vision.ImageAnalysis" Version="1.0.0-beta.2" />
     <PackageReference Include="Azure.Identity" Version="1.11.0-beta.1" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.19.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.0" />

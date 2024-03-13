@@ -5,7 +5,6 @@
 
 
 @using Microsoft.AspNetCore.Http
-@* @using Microsoft.AspNetCore.Http.Internal *@
 @using System.Net.Http.Headers
 @using System.Text.Json
 @using Syncfusion.Blazor.Inputs
@@ -13,6 +12,7 @@
 
 @inject DefaultListService DefaultList
 @inject FormSelectionService FormSelection
+@inject ITextDetectionService TextDetection
 @inject IFaceDetectionService FaceDetection
 @inject IHttpClientFactory HttpClientFactory
 @inject IFormService FormService
@@ -124,11 +124,19 @@
             </div>
         </div>
 
-        <span class="text-red-600">@exceptionMessage</span>
-        <span class="text-green-600">@successMessage</span>
+        @* Only one message shows at a time *@
+        <div>
+            <span class="text-red-600">@exceptionMessage</span>
+        </div>
+        <div>
+            <span class="text-green-600">@successMessage</span>
+        </div>
+
+
+        <ValidationSummary />
 
         <div class="mt-3 flex items-center justify-end gap-x-6">
-            <button type="submit" disabled="@isSubmitting" class="inline-flex items-center px-3 py-2 font-semibold leading-6 text-sm shadow rounded-md text-white bg-cyan-700 hover:bg-cyan-600 transition ease-in-out duration-150">
+            <button type="submit" disabled="@(isSubmitting || isBusy)" class="inline-flex items-center px-3 py-2 font-semibold leading-6 text-sm shadow rounded-md text-white bg-cyan-700 hover:bg-cyan-600 transition ease-in-out duration-150">
                 @if (isSubmitting is false)
                 {
                     <span>Submit</span>
@@ -167,6 +175,7 @@
 
     // Miscellaneous Fields
     private bool isSubmitting = false;
+    private bool isBusy = false;
     private string exceptionMessage;
     private string successMessage;
 
@@ -346,7 +355,7 @@
         tracking.UserType = user.UserType;
         tracking.TrackingAction = "Form Submission";
 
-    // Enhancing the description to include more context
+        // Enhancing the description to include more context
         var description = $"Form was created by {user.DisplayName} ({user.UserType}).";
         tracking.Descriptions.Add(description);
 
@@ -354,11 +363,13 @@
         form.FormHistory.Add(tracking);
     }
 
-    private void LoadIDFile(InputFileChangeEventArgs e)
+    private async Task LoadIDFile(InputFileChangeEventArgs e)
     {
         Console.WriteLine("IDFile loading initiated!");
 
         exceptionMessage = null;
+        successMessage = null;
+        isBusy = true;
 
         var maxAllowedSize = 1024 * 1024 * 5; // 5 MB
         var file = e.File; // IBrowserFile 
@@ -380,6 +391,20 @@
                 return;
             }
 
+            var isTextDetected = await IsTextDetected(file);
+            if (!isTextDetected)    
+            {
+                // isBusy is still true which is good although its justa client side disabled html feature
+                // IF NOT THOUGH WOULD IT STILL LET YOU UPLOAD?
+                exceptionMessage = "Please upload an ID that meets our validation criteria.";
+                return;
+            }
+            else
+            {
+                // Not accounting for PDF
+                successMessage = "ID processed. Continue with form submission.";
+            }
+
             IDFile = file;
 
             // Assign a temporary filename to pass client-side form validation requirements.
@@ -389,6 +414,35 @@
         {
             Console.WriteLine("IDFile null!");
         }
+        isBusy = false;
+    }
+
+    private async Task<bool> IsTextDetected(IBrowserFile file)
+    {
+        var allowedExtIDFileForAI = new[] { ".png", ".jpeg", ".jpg" };
+
+        if (allowedExtIDFileForAI.Contains(Path.GetExtension(file.Name)))
+        {
+
+            // Call the service
+            bool isTextDetected = await TextDetection.DetectTextAsync(file);
+
+            Console.WriteLine($"Text Detected: {isTextDetected}");
+
+            if (!isTextDetected)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+        else
+        {
+            Console.WriteLine("File type not supported for image analysis..");
+            return true;
+        }
     }
 
     private async Task LoadPhotoFile(InputFileChangeEventArgs e)
@@ -397,6 +451,7 @@
 
         exceptionMessage = null;
         successMessage = null;
+        isBusy = true;
 
         var maxAllowedSize = 1024 * 1024 * 5; // 5 MB
         var file = e.File; // IBrowserFile
@@ -418,29 +473,44 @@
                 return;
             }
 
-            // Open the file stream
-            var stream = file.OpenReadStream(maxAllowedSize: 1024 * 1024 * 5); //5 MB limit
-
-            // Call the service
-            bool isFaceDetected = await FaceDetection.DetectFaceAsync(stream);
-
-            Console.WriteLine($"Face Detected: {isFaceDetected}");
-
-            if (isFaceDetected is false && niqabCompetitor is false)    
+            var isTextDetected = await IsTextDetected(file);
+            // here don't want ID related texts or any texts
+            if (isTextDetected)
             {
-                exceptionMessage = "Please upload a photo that meets our validation criteria.";
+                // isBusy is still true which is good although its justa client side disabled html feature
+                // IF NOT THOUGH WOULD IT STILL LET YOU UPLOAD?
+                exceptionMessage = "Please upload an a standalone photo. See photo requirements for more info";
                 return;
             }
-            else
+
+            // Use a `using` block for streams to automatically close and free resources, 
+            // preventing memory leaks and ensuring efficient resource use.
+
+            // Open the file stream within a using block
+            using (var stream = file.OpenReadStream(maxAllowedSize: 1024 * 1024 * 5)) //5 MB limit
             {
-                successMessage = "Photo processed. Continue with form submission.";
-            }
+                // Call the service
+                bool isFaceDetected = await FaceDetection.DetectFaceAsync(stream);
+
+                Console.WriteLine($"Face Detected: {isFaceDetected}");
+
+                if (!isFaceDetected && niqabCompetitor is false)
+                {
+                    exceptionMessage = "Please upload a photo that meets our validation criteria.";
+                    return;
+                }
+                else
+                {
+                    successMessage = "Photo processed. Continue with form submission.";
+                }
+            } // The stream is automatically closed and disposed of here
 
             PhotoFile = file;
 
             // Assign a temporary filename to pass client-side form validation requirements.
             form.FileUploadInfo.PhotoFileName = file.Name;
         }
+        isBusy = false;
     }
 
     private async Task UploadFile(IBrowserFile file, string fileType, string uniqueFileName)
