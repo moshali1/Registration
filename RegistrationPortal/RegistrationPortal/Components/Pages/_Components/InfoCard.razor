@@ -1,0 +1,57 @@
+<li class="col-span-1 divide-y divide-gray-200 rounded-lg bg-white shadow">
+    <div class="flex w-full items-center justify-between space-x-6 p-5">
+        <div class="flex-1">
+            <div class="flex items-center space-x-3">
+                <h3 class="truncate text-sm font-medium text-gray-900">@((activeTab == 'I') ? "Registration Info" : "Next Steps")</h3>
+                <span class="hidden lg:block inline-flex flex-shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Info</span>
+            </div>
+            @if (activeTab == 'I')
+            {
+                <ul class="pl-4 list-disc mt-1 text-wrap text-sm text-gray-600 font-medium">
+                    <li>Registration is <span class="font-bold text-red-700">closed for the Memorization and Best Voice Divisions</span>.</li>
+                    <li>Once final revisions are completed, a confirmation email will be sent out to all verified forms.</li>
+                    <li>The <span class="font-bold">Ten Qira'at Division</span> is still open until the deadline of <span class="font-bold">May 10th, 2024.</span></li>
+                </ul>
+            }
+            else if (activeTab == 'P')
+            {
+                <ul class="pl-4 list-disc mt-1 text-wrap text-sm text-gray-600 font-medium">
+                    <li>Once <span class="font-bold">Best Voice videos</span> are prepared, they will be sent to the judges for grading and selecting the top 10 for each category and will be announced on <a href="https://imamshatibi.org" class="text-blue-600 hover:text-blue-800">imamshatibi.org</a> and the registration site.</li>
+                    <li>The <span class="font-bold">preliminary competition</span> for the Memorization and Ten Qira'at divisions will take place from <span class="font-bold">May 16 to 19, 2024,</span> via Zoom.</li>
+                    <li><span class="font-bold">Scheduled date and time</span> for the competition will be communicated.</li>
+                </ul>
+            }
+        </div>
+    </div>
+    <div>
+        <div class="-mt-px flex divide-x divide-gray-200">
+            <div class="flex w-0 flex-1">
+                <button @onclick="() => SetActiveTab('I')" class="-mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm text-gray-900 @((activeTab == 'I') ? "font-bold" : "")">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="h-5 w-5 text-gray-400" width="16" height="16">
+                        <path fill-rule="evenodd" d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0ZM9 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM6.75 8a.75.75 0 0 0 0 1.5h.75v1.75a.75.75 0 0 0 1.5 0v-2.5A.75.75 0 0 0 8.25 8h-1.5Z" clip-rule="evenodd" />
+                    </svg>
+
+                    Registration Info
+                </button>
+            </div>
+            <div class="-ml-px flex w-0 flex-1">
+                <button @onclick="() => SetActiveTab('P')" class="inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm text-gray-900 @((activeTab == 'P') ? "font-bold" : "")">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="h-5 w-5 text-gray-400" width="16" height="16">
+                        <path d="M2.53 3.956A1 1 0 0 0 1 4.804v6.392a1 1 0 0 0 1.53.848l5.113-3.196c.16-.1.279-.233.357-.383v2.73a1 1 0 0 0 1.53.849l5.113-3.196a1 1 0 0 0 0-1.696L9.53 3.956A1 1 0 0 0 8 4.804v2.731a.992.992 0 0 0-.357-.383L2.53 3.956Z" />
+                    </svg>
+
+                    Next Steps
+                </button>
+            </div>
+        </div>
+    </div>
+</li>
+
+@code {
+    private char activeTab = 'I'; // Default to ID Requirements
+
+    private void SetActiveTab(char tab)
+    {
+        activeTab = tab;
+    }
+}

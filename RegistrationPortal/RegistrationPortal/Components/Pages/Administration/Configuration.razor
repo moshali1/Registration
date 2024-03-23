@@ -1,0 +1,211 @@
+﻿@page "/configuration"
+
+@inject ISettingsData SettingsData
+
+@attribute [Authorize(Roles = "Admin")]
+
+@rendermode InteractiveServer
+
+@if (settings != null)
+{
+    <div class="flex flex-col mx-auto max-w-7xl px-4 sm:px-4 lg:px-8 space-y-4">
+        <div class="overflow-hidden rounded-lg bg-white shadow">
+            <div class="bg-cyan-950 px-4 py-3 sm:px-6">
+                <h1 class="text-lg font-semibold leading-6 text-white">Settings Configuration</h1>
+                <p class="text-sm text-white">Toggle the settings for form creation, updates, and withdrawals.</p>
+            </div>
+            <div class="px-4 py-5 sm:p-6">
+                <!-- Settings Toggles -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Memorization Form Toggle -->
+                    <div class="flex items-center cursor-pointer">
+                        <label class="toggle-switch">
+                            <input type="checkbox" @bind="settings.CanCreateMemorization">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="ml-3 text-gray-700 font-medium">Create Memorization</span>
+                    </div>
+
+                    <div class="flex items-center cursor-pointer">
+                        <label class="toggle-switch">
+                            <input type="checkbox" @bind="settings.CanUpdateMemorization">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="ml-3 text-gray-700 font-medium">Update Memorization</span>
+                    </div>
+
+                    <div class="flex items-center cursor-pointer">
+                        <label class="toggle-switch">
+                            <input type="checkbox" @bind="settings.CanWithdrawMemorization">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="ml-3 text-gray-700 font-medium">Memorization Withdrawal</span>
+                    </div>
+                </div>
+
+                <div class="py-2" />
+
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Memorization Form Toggle -->
+                    <div class="flex items-center cursor-pointer">
+                        <label class="toggle-switch">
+                            <input type="checkbox" @bind="settings.CanCreateTenQiraat">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="ml-3 text-gray-700 font-medium">Create Ten Qira'at</span>
+                    </div>
+
+                    <div class="flex items-center cursor-pointer">
+                        <label class="toggle-switch">
+                            <input type="checkbox" @bind="settings.CanUpdateTenQiraat">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="ml-3 text-gray-700 font-medium">Update Ten Qira'at</span>
+                    </div>
+
+                    <div class="flex items-center cursor-pointer">
+                        <label class="toggle-switch">
+                            <input type="checkbox" @bind="settings.CanWithdrawTenQiraat">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="ml-3 text-gray-700 font-medium">Ten Qira'at Withdrawal</span>
+                    </div>
+                </div>
+
+                <div class="py-2" />
+
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Memorization Form Toggle -->
+                    <div class="flex items-center cursor-pointer">
+                        <label class="toggle-switch">
+                            <input type="checkbox" @bind="settings.CanCreateBestVoice">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="ml-3 text-gray-700 font-medium">Create Best Voice</span>
+                    </div>
+
+                    <div class="flex items-center cursor-pointer">
+                        <label class="toggle-switch">
+                            <input type="checkbox" @bind="settings.CanUpdateBestVoice">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="ml-3 text-gray-700 font-medium">Update Best Voice</span>
+                    </div>
+
+                    <div class="flex items-center cursor-pointer">
+                        <label class="toggle-switch">
+                            <input type="checkbox" @bind="settings.CanWithdrawBestVoice">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="ml-3 text-gray-700 font-medium">Best Voice Withdrawal</span>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <button @onclick="UpdateSettings" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-cyan-600 hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500">
+                        Save Changes
+                    </button>
+                    @if (showSuccessMessage)
+                    {
+                        <p class="text-sm text-green-700 mt-2">Successfully updated settings.</p>
+                    }
+                </div>
+                <!-- Admin Note Regarding Withdrawal Toggle -->
+                <div class="mt-4 p-2 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700">
+                    <p class="font-semibold">Note for Admin:</p>
+                    <p>Currently, the withdrawal toggle will not take effect for users already on the page because the visibility of the withdrawal button won't change in real-time. The only workaround, for now, is to restart the web app when the deadline is reached to force a page refresh for all users.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+     
+
+@code {
+    private Settings settings;
+    private bool showSuccessMessage = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        settings = await SettingsData.GetSettings();
+
+    }
+
+    private async Task UpdateSettings()
+    {
+        await SettingsData.UpdateSettings(settings);
+
+        // Show success message
+        showSuccessMessage = true;
+        StateHasChanged(); // Ensure the UI updates
+
+        // Set up a timer to hide the message after 5 seconds
+        var timer = new System.Timers.Timer(3000); // 3000 milliseconds = 5 seconds
+        timer.Elapsed += (sender, e) =>
+        {
+            showSuccessMessage = false;
+            InvokeAsync(() =>
+            {
+                StateHasChanged(); // Re-invoke state change on the component
+            });
+            timer.Stop(); // Stop the timer
+        };
+        timer.Start();
+    }
+
+    private string ToggleSwitchCss(bool isEnabled)
+    {
+        return isEnabled ? "relative inline-flex items-center h-6 rounded-full w-11 bg-green-500" : "relative inline-flex items-center h-6 rounded-full w-11 bg-gray-200";
+    }
+}
+
+<style>
+    /* Container for the switch */
+    .toggle-switch {
+        display: inline-block;
+        height: 34px;
+        position: relative;
+        width: 60px;
+    }
+
+        /* The slider */
+        .toggle-switch .slider {
+            background-color: #ccc;
+            bottom: 0;
+            cursor: pointer;
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .toggle-switch input {
+            display: none; /* Hide the default checkbox */
+        }
+
+    /* The circle inside the slider */
+    .slider:before {
+        background-color: white;
+        bottom: 4px;
+        content: "";
+        height: 26px;
+        left: 4px;
+        position: absolute;
+        transition: .4s;
+        width: 26px;
+        border-radius: 50%;
+    }
+
+    /* Toggle "on" state styles */
+    input:checked + .slider {
+        background-color: #2196F3; /* Blue background for "on" state */
+    }
+
+        input:checked + .slider:before {
+            transform: translateX(26px); /* Move the circle to the right on "on" state */
+        }
+</style>

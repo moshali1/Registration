@@ -1,0 +1,130 @@
+﻿@page "/stats"
+
+@inject IFormData FormData 
+
+@attribute [Authorize(Roles = "Admin")]
+
+@attribute [StreamRendering]
+
+<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-5xl">
+        <div class="overflow-hidden rounded-lg bg-white shadow">
+            <div class="bg-cyan-950 px-4 py-5 sm:px-6">
+                <h1 class="text-base font-semibold leading-6 text-white">Competition Divisions</h1>
+                <p class="text-sm text-white">Summary of competitors in each division and category, including total counts by gender for the Memorization division.</p>
+            </div>
+            <div class="px-4 py-5 sm:p-6">
+                <div class="mt-2">
+                    <h2 class="text-lg font-semibold text-gray-900">Memorization Division</h2>
+                    <div class="mt-2 flow-root">
+                        <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                            <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                                <table class="min-w-full divide-y divide-gray-300">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col" class="px-3 py-3 text-left text-sm font-semibold text-gray-900">Category</th>
+                                            <th scope="col" class="px-3 py-3 text-left text-sm font-semibold text-gray-900">Male</th>
+                                            <th scope="col" class="px-3 py-3 text-left text-sm font-semibold text-gray-900">Female</th>
+                                            <th scope="col" class="px-3 py-3 text-left text-sm font-semibold text-gray-900">MN</th>
+                                            <th scope="col" class="px-3 py-3 text-left text-sm font-semibold text-gray-900">Non-MN</th>
+                                            <th scope="col" class="px-3 py-3 text-left text-sm font-semibold text-gray-900">Total Competitors</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        @foreach (var item in memorizationStats)
+                                        {
+                                            <tr>
+                                                <td class="px-3 py-3 text-sm text-gray-900">@item.Key</td>
+                                                <td class="px-3 py-3 text-sm text-gray-500">@item.Value.Male</td>
+                                                <td class="px-3 py-3 text-sm text-gray-500">@item.Value.Female</td>
+                                                <td class="px-3 py-3 text-sm text-gray-500">@item.Value.MN</td>
+                                                <td class="px-3 py-3 text-sm text-gray-500">@item.Value.NonMN</td>
+                                                <td class="px-3 py-3 text-sm text-gray-500">@(@item.Value.Male + @item.Value.Female)</td>
+                                            </tr>
+                                        }
+                                        <tr class="bg-gray-100">
+                                            <td class="px-3 py-3 text-sm font-semibold text-gray-900">Total</td>
+                                            <td class="px-3 py-3 text-sm text-gray-500">@totals.TotalMale</td>
+                                            <td class="px-3 py-3 text-sm text-gray-500">@totals.TotalFemale</td>
+                                            <td class="px-3 py-3 text-sm text-gray-500">@totals.TotalMN</td>
+                                            <td class="px-3 py-3 text-sm text-gray-500">@totals.TotalNonMN</td>
+                                            <td class="px-3 py-3 text-sm text-gray-500">@totals.GrandTotal</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Form> forms;
+
+    private Dictionary<string, (int Male, int Female, int MN, int NonMN)> memorizationStats = new()
+    {
+        {"1 Juz", (0, 0, 0, 0)},
+        {"5 Juz", (0, 0, 0, 0)},
+        {"10 Juz", (0, 0, 0, 0)},
+        {"15 Juz", (0, 0, 0, 0)},
+        {"20 Juz", (0, 0, 0, 0)},
+        {"30 Juz", (0, 0, 0, 0)}
+    };
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadForms();
+        CalculateTotals();
+    }
+
+    private async Task LoadForms()
+    {
+        forms = await FormData.GetForms(); // Fetch the forms
+
+        foreach (var form in forms)
+        {
+            if (form.CompetitionInfo.Division == "Memorization")
+            {
+                var category = form.CompetitionInfo.Category;
+                var isMN = form.AddressInfo.StateProvince == "MN";
+                var gender = form.PersonalInfo.Gender == Data.Models.Gender.Male ? "Male" : "Female";
+
+                if (memorizationStats.ContainsKey(category))
+                {
+                    var current = memorizationStats[category];
+                    if (gender == "Male") current.Male++;
+                    else current.Female++;
+
+                    if (isMN) current.MN++;
+                    else current.NonMN++;
+
+                    memorizationStats[category] = current;
+                }
+            }
+        }
+    }
+
+    private (int TotalMale, int TotalFemale, int TotalMN, int TotalNonMN, int GrandTotal) totals;
+
+    // This method aggregates total counts across all categories in the memorizationStats dictionary.
+    // It calculates the totals for male and female participants, participants from Minnesota (MN),
+    // participants not from Minnesota (Non-MN), and the grand total of participants.
+    // The aggregation iterates over each category's counts, summing them up to produce overall totals.
+    private void CalculateTotals()
+    {
+        totals = memorizationStats.Values.Aggregate(
+            (0, 0, 0, 0, 0),
+            (acc, next) => (
+                acc.Item1 + next.Male,
+                acc.Item2 + next.Female, 
+                acc.Item3 + next.MN, 
+                acc.Item4 + next.NonMN, 
+                acc.Item5 + next.Male + next.Female 
+            )
+        );
+    }
+}

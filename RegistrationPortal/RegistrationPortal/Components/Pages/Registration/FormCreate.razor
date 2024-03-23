@@ -15,6 +15,8 @@
 @inject IHttpClientFactory HttpClientFactory
 @inject IFormService FormService
 @inject IUserService UserService
+@inject ISettingsData SettingsData
+@inject AuthenticationStateProvider AuthState
 @inject NavigationManager NavManager
 
 @rendermode InteractiveServer
@@ -95,11 +97,12 @@
             </div>
             @if (Division == "Best Voice")  
             {
+                <div><p class="text-semibold text-sm underline decoration-fuchsia-500">Please ensure you remain on this page until the video upload has fully completed, following form submission.</p></div>
                 <div class="border-b border-gray-900/10 pb-3">
                     <div class="flex flex-row flex-nowrap min-w-max">
                         <label class="block text-sm font-medium leading-6 text-gray-900 mb-1">Video Upload</label>
                         <SfUploader @ref="UploadObj1" ID="uploadFile" AutoUpload="false" AllowMultiple="false" AllowedExtensions=".mp4, .avi, .mov, .wmv, .flv, .mkv, .mpeg" MaxFileSize=524288000>
-                            <UploaderAsyncSettings SaveUrl="api/FileUpload/SaveVideo" RemoveUrl="api/FileUpload/Remove" ChunkSize="50000000"></UploaderAsyncSettings>
+                            <UploaderAsyncSettings SaveUrl="api/FileUpload/SaveVideo" RemoveUrl="api/FileUpload/Remove" ChunkSize="20000000"></UploaderAsyncSettings>
                             <UploaderEvents OnRemove="OnVideoFileRemove" FileSelected="OnVideoFileSelect" OnChunkSuccess="OnChunkSuccessHandler"></UploaderEvents>
                         </SfUploader>
                         <ValidationMessage For="() => form.FileUploadInfo.VideoFileName" />
@@ -179,7 +182,10 @@
 
     private bool niqabCompetitor = false;
 
-    protected override Task OnInitializedAsync()
+    private Settings settings;
+    private bool IsAdmin = false;
+
+    protected override async Task OnInitializedAsync()
     {
         switch (Division)
         {
@@ -211,11 +217,51 @@
         // Lazy initialization of form
         form ??= new();
 
-        return Task.CompletedTask;
+        var authState = await AuthState.GetAuthenticationStateAsync();
+        var user = authState.User;
+        IsAdmin = user.IsInRole("Admin");
+
+        if (IsAdmin is false)   
+        {
+            // Load settings to check permissions.
+            settings = await SettingsData.GetSettings();
+            // Redirect if creating forms is disabled.
+            if (Division == DivisionConstants.Memorization && !settings.CanCreateMemorization)
+            {
+                NavManager.NavigateTo("/", forceLoad: true);
+            }
+            else if (Division == DivisionConstants.TenQiraat && !settings.CanCreateTenQiraat)
+            {
+                NavManager.NavigateTo("/", forceLoad: true);
+            }
+            else if (Division == DivisionConstants.BestVoice && !settings.CanCreateBestVoice)
+            {
+                NavManager.NavigateTo("/", forceLoad: true);
+            }
+        }
     }
+
 
     private async Task OnValidSubmit()
     {
+        if (IsAdmin is false)
+        {
+            // Prevent form submission if settings disallow it.
+            if (Division == DivisionConstants.Memorization && !settings.CanCreateMemorization)
+            {
+                NavManager.NavigateTo("/", forceLoad: true);
+                return; // Stop processing the submission.
+            }
+            else if (Division == DivisionConstants.TenQiraat && !settings.CanCreateTenQiraat)
+            {
+                NavManager.NavigateTo("/", forceLoad: true);
+            }
+            else if (Division == DivisionConstants.BestVoice && !settings.CanCreateBestVoice)
+            {
+                NavManager.NavigateTo("/", forceLoad: true);
+            }
+        }
+        
         successMessage = null;
         showNotification = false;
         isSubmitting = true;
@@ -400,7 +446,7 @@
             else
             {
                 // Not accounting for PDF
-                successMessage = "ID processed. Continue with form submission.";
+                successMessage = "ID processed.";
             }
 
             IDFile = file;

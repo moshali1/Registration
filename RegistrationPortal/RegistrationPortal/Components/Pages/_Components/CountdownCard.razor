@@ -43,11 +43,14 @@
     private string title = "Registration Closes In";
     private string activeTab = "Reg";
 
-    private DateTime regCloseDate = new DateTime(2024, 3, 17, 23, 59, 0);
-    private DateTime prelimStartDate = new DateTime(2024, 5, 15, 23, 59, 0);
+    // Dates are in UTC
+    private DateTime regCloseDateUtc = new DateTime(2024, 3, 17, 23, 59, 0, DateTimeKind.Utc);
+    private DateTime prelimStartDateUtc = new DateTime(2024, 5, 15, 23, 59, 0, DateTimeKind.Utc);
     private TimeSpan regCountdown;
     private TimeSpan prelimCountdown;
     private Timer timer;
+    private TimeZoneInfo centralTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time");
+
 
     protected override void OnInitialized()
     {
@@ -66,14 +69,21 @@
 
     private void UpdateCountdowns()
     {
-        var now = DateTime.Now;
-        regCountdown = regCloseDate - now;
-        prelimCountdown = prelimStartDate - now;
+        var nowUtc = DateTime.UtcNow; // Current time in UTC
+        var nowCt = TimeZoneInfo.ConvertTimeFromUtc(nowUtc, centralTimeZone); // Convert UTC to Central Time
+
+        // No need to convert these dates to Central Time, only adjust the current time to CT
+        regCountdown = regCloseDateUtc - nowCt;
+        prelimCountdown = prelimStartDateUtc - nowCt;
     }
 
     private string DisplayCountdownText()
     {
         var countdown = activeTab == "Reg" ? regCountdown : prelimCountdown;
+        if (countdown.TotalSeconds < 0)
+        {
+            return "0d 0h 0m 0s";
+        }
         return $"{countdown.Days}d {countdown.Hours}h {countdown.Minutes}m {countdown.Seconds}s";
     }
 

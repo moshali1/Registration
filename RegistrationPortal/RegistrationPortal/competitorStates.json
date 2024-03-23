@@ -1,0 +1,117 @@
+[
+  {
+    "Country": "United States",
+    "StatesOrProvinces": [
+      {
+        "StateProvince": "MD",
+        "CompetitorCount": 2
+      },
+      {
+        "StateProvince": "MN",
+        "CompetitorCount": 440
+      },
+      {
+        "StateProvince": "OH",
+        "CompetitorCount": 2
+      },
+      {
+        "StateProvince": "CA",
+        "CompetitorCount": 7
+      },
+      {
+        "StateProvince": "TX",
+        "CompetitorCount": 65
+      },
+      {
+        "StateProvince": "PA",
+        "CompetitorCount": 15
+      },
+      {
+        "StateProvince": "NY",
+        "CompetitorCount": 24
+      },
+      {
+        "StateProvince": "GA",
+        "CompetitorCount": 20
+      },
+      {
+        "StateProvince": "MO",
+        "CompetitorCount": 4
+      },
+      {
+        "StateProvince": "VA",
+        "CompetitorCount": 9
+      },
+      {
+        "StateProvince": "IL",
+        "CompetitorCount": 6
+      },
+      {
+        "StateProvince": "TN",
+        "CompetitorCount": 52
+      },
+      {
+        "StateProvince": "NC",
+        "CompetitorCount": 9
+      },
+      {
+        "StateProvince": "MA",
+        "CompetitorCount": 6
+      },
+      {
+        "StateProvince": "FL",
+        "CompetitorCount": 3
+      },
+      {
+        "StateProvince": "WA",
+        "CompetitorCount": 9
+      },
+      {
+        "StateProvince": "MI",
+        "CompetitorCount": 2
+      },
+      {
+        "StateProvince": "IN",
+        "CompetitorCount": 1
+      },
+      {
+        "StateProvince": "NJ",
+        "CompetitorCount": 7
+      }
+    ]
+  },
+  {
+    "Country": "Canada",
+    "StatesOrProvinces": [
+      {
+        "StateProvince": "Ontario",
+        "CompetitorCount": 8
+      },
+      {
+        "StateProvince": "Ontario ",
+        "CompetitorCount": 5
+      },
+      {
+        "StateProvince": "ON",
+        "CompetitorCount": 2
+      },
+      {
+        "StateProvince": "NA",
+        "CompetitorCount": 1
+      },
+      {
+        "StateProvince": "ALBERTA",
+        "CompetitorCount": 1
+      }
+    ]
+  },
+  {
+    "Country": "Mexico",
+    "StatesOrProvinces": [
+      {
+        "StateProvince": "NA",
+        "CompetitorCount": 1
+      }
+    ]
+  }
+]

@@ -12,6 +12,8 @@
 @inject IHttpClientFactory HttpClientFactory
 @inject IUserService UserService
 @inject IFormService FormService
+@inject ISettingsData SettingsData
+@inject AuthenticationStateProvider AuthState
 @inject NavigationManager NavManager
 
 @rendermode InteractiveServer
@@ -131,7 +133,7 @@
 
                                 @*In 50 MB Chuncks*@
                                 <SfUploader @ref="UploadObj1" ID="uploadFile" AutoUpload="false" AllowMultiple="false" AllowedExtensions=".mp4, .avi, .mov, .wmv, .flv, .mkv, .mpeg" MaxFileSize=524288000>
-                                    <UploaderAsyncSettings SaveUrl="api/FileUpload/SaveVideo" RemoveUrl="api/FileUpload/Remove" ChunkSize="50000000"></UploaderAsyncSettings>
+                                    <UploaderAsyncSettings SaveUrl="api/FileUpload/SaveVideo" RemoveUrl="api/FileUpload/Remove" ChunkSize="20000000"></UploaderAsyncSettings>
                                     <UploaderEvents OnRemove="OnVideoFileRemove" FileSelected="OnVideoFileSelect" OnChunkSuccess="OnChunkSuccessHandler"></UploaderEvents>
                                 </SfUploader>
                                 <ValidationMessage For="() => form.FileUploadInfo.VideoFileName" />
@@ -223,9 +225,11 @@
     private string exceptionMessage;
     private string successMessage;
 
+    private Settings settings;
+    private bool IsAdmin = false;
+
     protected override async Task OnInitializedAsync()
     {
-
         if (Id is not null)
         {
             form = await FormService.GetForm(Id);
@@ -233,10 +237,50 @@
             // Store current files in historicalFiles before they are overwritten by new uploads in form.FileUploadInfo.
             historicalFiles = form.FileUploadInfo;
         }
+
+        var authState = await AuthState.GetAuthenticationStateAsync();
+        var user = authState.User;
+        IsAdmin = user.IsInRole("Admin");
+
+        if (IsAdmin is false)
+        {
+            // Load settings to check permissions.
+            settings = await SettingsData.GetSettings();
+            // Redirect if creating forms is disabled.
+            if (Division == DivisionConstants.Memorization && !settings.CanUpdateMemorization && form.StatusInfo.Status != "Pending")
+            {
+                NavManager.NavigateTo("/", forceLoad: true);
+            }
+            else if (Division == DivisionConstants.TenQiraat && !settings.CanUpdateTenQiraat && form.StatusInfo.Status != "Pending")
+            {
+                NavManager.NavigateTo("/", forceLoad: true);
+            }
+            else if (Division == DivisionConstants.BestVoice && !settings.CanUpdateBestVoice && form.StatusInfo.Status != "Pending")
+            {
+                NavManager.NavigateTo("/", forceLoad: true);
+            }
+        }
     }
 
     private async Task OnValidSubmit()
     {
+        if (IsAdmin is false)   
+        {
+            // Prevent form submission if settings disallow it.
+            if (Division == DivisionConstants.Memorization && !settings.CanUpdateMemorization && form.StatusInfo.Status != "Pending")
+            {
+                NavManager.NavigateTo("/", forceLoad: true);
+            }
+            else if (Division == DivisionConstants.TenQiraat && !settings.CanUpdateTenQiraat && form.StatusInfo.Status != "Pending")
+            {
+                NavManager.NavigateTo("/", forceLoad: true);
+            }
+            else if (Division == DivisionConstants.BestVoice && !settings.CanUpdateBestVoice && form.StatusInfo.Status != "Pending")
+            {
+                NavManager.NavigateTo("/", forceLoad: true);
+            }
+        }
+
         successMessage = null;
         showNotification = false;
         isSubmitting = true;

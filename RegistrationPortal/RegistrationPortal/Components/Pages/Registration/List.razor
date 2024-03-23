@@ -6,7 +6,7 @@
 @inject AuthenticationStateProvider AuthState
 @inject NavigationManager NavManager
 
-@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@rendermode InteractiveServer
 
 @attribute [Authorize]
 
@@ -60,15 +60,15 @@ else
 
     if (activeTab == 'M')
     {
-        <FormTable Forms="@mForms" ShowTable="@(mForms?.Any() ?? false)" OnItemDeleted="ReloadForms" IsAdmin="IsAdmin"/>
+        <FormTable Forms="@mForms" Type="@(mForms?.Any() ?? false)" OnItemDeleted="ReloadForms" IsAdmin="IsAdmin"/>
     }
     else if (activeTab == 'T')
     {
-        <FormTable Forms="@tForms" ShowTable="@(tForms?.Any() ?? false)" OnItemDeleted="ReloadForms" IsAdmin="IsAdmin" />
+        <FormTable Forms="@tForms" Type="@(tForms?.Any() ?? false)" OnItemDeleted="ReloadForms" IsAdmin="IsAdmin" />
     }
     else if (activeTab == 'B')
     {
-        <FormTable Forms="@bForms" ShowTable="@(bForms?.Any() ?? false)" OnItemDeleted="ReloadForms" IsAdmin="IsAdmin" />
+        <FormTable Forms="@bForms" Type="@(bForms?.Any() ?? false)" OnItemDeleted="ReloadForms" IsAdmin="IsAdmin" />
     }
 }
 
@@ -106,6 +106,7 @@ else
         activeTab = DefaultList.ActiveTab;
 
         await LoadForms();
+        StateHasChanged();
     }
 
     private async Task LoadForms()

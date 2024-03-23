@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 using RegistrationPortal.Identity;
@@ -83,6 +84,7 @@ public static class RegisterServices
 
         builder.Services.AddScoped<IFormData, FormData>();
         builder.Services.AddScoped<IUserData, UserData>();
+        builder.Services.AddScoped<ISettingsData, SettingsData>();
 
         builder.Services.AddScoped<IFormService, FormService>();
         builder.Services.AddScoped<IUserService, UserService>();
@@ -109,5 +111,7 @@ public static class RegisterServices
         builder.Services.AddScoped<FetchSasUri>();
 
         builder.Services.AddSingleton<IEmailService, EmailService>();
+
+        builder.Services.AddMemoryCache();
     }
 }

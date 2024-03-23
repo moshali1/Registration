@@ -1,9 +1,378 @@
 ﻿@page "/analytics"
 
-@attribute [Authorize]
+@using ApexCharts
+@using System.Text.Json
 
-<div class="text-center">
-    <h1 class="text-xl mb-3 font-bold">Analytics</h1>
+@inject IFormData FormData
 
-    <p>This page is for displaying graphs of registration data. Comming soon.</p>
+@attribute [Authorize(Roles = "Admin")]
+
+@rendermode InteractiveServer
+
+<h1 class="text-xl mb-3 font-bold text-center">Memorization Division Analytics</h1>
+
+<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-5xl">
+        <div class="overflow-hidden rounded-lg bg-white shadow">
+            <div class="bg-cyan-950 px-4 py-5 sm:px-6">
+                <h1 class="text-base font-semibold leading-6 text-white">Competition Divisions</h1>
+                <p class="text-sm text-white">Summary of competitors in each division and category, including total counts by gender for the Memorization division.</p>
+            </div>
+            <div class="px-4 py-5 sm:p-6">
+                <div class="mt-2">
+                    <h2 class="text-lg font-semibold text-gray-900">Memorization Division</h2>
+                    <div class="mt-2 flow-root">
+                        <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                            <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                                <div class="flex flex-row">
+                                    <div class="basis-1/2">
+                                        <ApexChart TItem="MyData"
+                                                   Title="Category Gender Data"
+                                                   Options="@ChartOptions1">
+
+                                            <ApexPointSeries TItem="MyData"
+                                                             Items="Data"
+                                                             Name="Male"
+                                                             SeriesType="SeriesType.Bar"
+                                                             XValue="e => e.Category"
+                                                             YValue="e=> e.Male" 
+                                                             ShowDataLabels
+                                                             Color="#68976b" />
+
+                                            <ApexPointSeries TItem="MyData"
+                                                             Items="Data"
+                                                             Name="Female"
+                                                             SeriesType="SeriesType.Bar"
+                                                             XValue="e => e.Category"
+                                                             YValue="e=> e.Female" 
+                                                             ShowDataLabels
+                                                             Color="#976b68" />
+                                        </ApexChart>
+                                    </div>
+                                    <div class="basis-1/2">
+                                        <ApexChart TItem="MyData"
+                                                   Title="Category Location Data"
+                                                   Options="@ChartOptions2">
+
+                                            <ApexPointSeries TItem="MyData"
+                                                             Items="Data"
+                                                             Name="MN"
+                                                             SeriesType="SeriesType.Bar"
+                                                             XValue="e => e.Category"
+                                                             YValue="e=> e.MN" 
+                                                             ShowDataLabels
+                                                             Color="#aa558b" />
+
+                                            <ApexPointSeries TItem="MyData"
+                                                             Items="Data"
+                                                             Name="Non-MN"
+                                                             SeriesType="SeriesType.Bar"
+                                                             XValue="e => e.Category"
+                                                             YValue="e=> e.NonMN" 
+                                                             ShowDataLabels
+                                                             Color="#558baa" />
+                                        </ApexChart>
+                                    </div>
+                                </div>
+                                <div class="flex flex-row">
+                                    <div class="basis-full">
+                                        <ApexChart TItem="RegistrationEntry"
+                                                   Title="Registration Entries Over Time (Memorization)"
+                                                   Height="225" 
+                                                   Options="@ChartOptions3">
+
+                                            <ApexPointSeries TItem="RegistrationEntry"
+                                                             Items="RegistrationEntriesPerDay"
+                                                             Name="Registrations"
+                                                             SeriesType="SeriesType.Line"
+                                                             ShowDataLabels
+                                                             XValue="e => e.Date.ToString(dateOfWeek)"
+                                                             YValue="e => e.Count" />
+                                        </ApexChart>
+                                    </div>
+                                </div>
+                                <div class="flex flex-row">
+                                    <div class="basis-1/2">
+                                        <ApexChart TItem="CountryCompetitorData"
+                                                   Title="Competitors | Countries"
+                                                    Height="400"
+                                                    Options="@ChartOptions4">
+
+                                            <ApexPointSeries TItem="CountryCompetitorData"
+                                                                Items="CountryCompetitorDataList"
+                                                                Name=""
+                                                                SeriesType="SeriesType.Donut"
+                                                                ShowDataLabels
+                                                                XValue="e => e.Country"
+                                                                YValue="e => e.StatesOrProvinces.Sum(sp => sp.CompetitorCount)" />
+                                        </ApexChart>
+                                    </div>
+                                    <div class="basis-1/2">
+                                        <ApexChart TItem="StateProvinceCompetitorData"
+                                                    Title="Competitors | States in the United States"
+                                                    Height="400"
+                                                    Options="@ChartOptions5">
+
+                                            <ApexPointSeries TItem="StateProvinceCompetitorData"
+                                                                Items="flatData"
+                                                                Name="States/Provinces"
+                                                                SeriesType="SeriesType.Donut"
+                                                                ShowDataLabels
+                                                                XValue="e => e.StateProvince"
+                                                                YValue="e => e.CompetitorCount" />
+                                        </ApexChart>
+                                    </div>
+                                </div>
+                                <div class="mt-4 p-4 border rounded shadow">
+                                    <div class="flex flex-row">
+                                        <div class="basis-1/2">
+                                            @if (OthersDetails.Any())
+                                            {
+                                                <h3 class="font-semibold">Entries per Country</h3>
+                                                <ul>
+                                                    @foreach (var countryCompetitorData in CountryCompetitorDataList)
+                                                    {
+                                                        <li>@countryCompetitorData.Country: @countryCompetitorData.StatesOrProvinces.Sum(sp => sp.CompetitorCount)</li>
+                                                    }
+                                                </ul>
+                                            }
+                                        </div>
+                                        <div class="basis-1/2">
+                                            @if (OthersDetails.Any())
+                                            {
+                                                <h3 class="font-semibold"><b>Others</b> includes the following:</h3>
+                                                <div class="grid grid-cols-2">
+                                                    @foreach (var detail in OthersDetails)
+                                                    {
+                                                        <ul class="col-span-1">
+                                                            <li>@detail.StateProvince: @detail.CompetitorCount</li>
+                                                        </ul>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+@code {
+    private List<MyData> Data { get; set; } = new();
+
+    private List<DateTime> RegistrationEntries = new();
+    private List<RegistrationEntry> RegistrationEntriesPerDay = new();
+
+    private List<CountryCompetitorData> CountryCompetitorDataList = new();
+
+    private string dateOfWeek = "M/d";
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Call to populate static form data (if needed)
+        StaticFormData();
+
+        // Define the path to your JSON file
+        var path = "registrationEntriesPerDay.json";
+        var path2 = "competitorStates.json";
+
+        try
+        {
+            // Read the JSON string from the file
+            var jsonString = await File.ReadAllTextAsync(path);
+            var jsonString2 = await File.ReadAllTextAsync(path2);
+
+            // Deserialize the JSON string into your List<RegistrationEntry>
+            RegistrationEntriesPerDay = JsonSerializer.Deserialize<List<RegistrationEntry>>(jsonString);
+
+            CountryCompetitorDataList = JsonSerializer.Deserialize<List<CountryCompetitorData>>(jsonString2);
+
+            PrepareChartData();
+
+        }
+        catch (Exception ex)
+        {
+            // Handle exceptions (e.g., file not found, deserialization issues)
+            Console.WriteLine($"An error occurred: {ex.Message}");
+            // Optionally, initialize RegistrationEntriesPerDay to prevent null reference issues
+            RegistrationEntriesPerDay = new List<RegistrationEntry>();
+            CountryCompetitorDataList = new List<CountryCompetitorData>();
+        }
+
+        // StaticFormData();
+        // var forms = await FormData.GetForms();
+        // var memorizationForms = forms.Where(f => f.CompetitionInfo.Division == "Memorization");
+        // foreach (var form in memorizationForms)
+        // {
+        //     foreach (var history in form.FormHistory)
+        //     {
+        //         if (history.TrackingAction == "Form Submission")
+        //         {
+        //             TimeZoneInfo cstZone = TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time");
+
+        //             DateTime cstDate = TimeZoneInfo.ConvertTimeFromUtc(history.ActionDateTime, cstZone);
+
+        //             RegistrationEntries.Add(cstDate);
+        //         }
+        //     }
+        // }
+
+        // // Aggregate entries per day
+        // RegistrationEntriesPerDay = RegistrationEntries
+        //     .GroupBy(entry => entry.Date.Date)
+        //     .Select(group => new RegistrationEntry
+        //         {
+        //             Date = group.Key,
+        //             Count = group.Count()
+        //         })
+        //     .OrderBy(entry => entry.Date)
+        //     .ToList();
+
+        // // Serialize to JSON
+        // var jsonString = JsonSerializer.Serialize(RegistrationEntriesPerDay, new JsonSerializerOptions { WriteIndented = true });
+
+        // // Define the path for the JSON file
+        // // Make sure the path exists and your application has write permissions
+        // var path = "registrationEntriesPerDay.json";
+
+        // // Save the JSON string to a file
+        // await File.WriteAllTextAsync(path, jsonString);
+    }
+
+    private void StaticFormData()
+    {
+        Data.Add(new MyData { Category = "1 Juz", Male = 42, Female = 38, MN = 61, NonMN = 19 });
+        Data.Add(new MyData { Category = "5 Juz", Male = 88, Female = 59, MN = 94, NonMN = 53 });
+        Data.Add(new MyData { Category = "10 Juz", Male = 75, Female = 55, MN = 81, NonMN = 49 });
+        Data.Add(new MyData { Category = "15 Juz", Male = 65, Female = 43, MN = 65, NonMN = 43 });
+        Data.Add(new MyData { Category = "20 Juz", Male = 44, Female = 31, MN = 46, NonMN = 29 });
+        Data.Add(new MyData { Category = "30 Juz", Male = 105, Female = 56, MN = 93, NonMN = 68 });
+    }
+
+    public class MyData
+    {
+        public string Category { get; set; }
+        public int Male { get; set; }
+        public int Female { get; set; }
+        public int MN { get; set; }
+        public int NonMN { get; set; }
+    }
+
+    public class RegistrationEntry
+    {
+        public DateTime Date { get; set; }
+        public int Count { get; set; }
+    }
+
+    public class CountryCompetitorData
+    {
+        public string Country { get; set; }
+        public List<StateProvinceCompetitorData> StatesOrProvinces { get; set; }
+    }
+
+    public class StateProvinceCompetitorData
+    {
+        public string StateProvince { get; set; }
+        public int CompetitorCount { get; set; }
+    }
+
+
+    private ApexChartOptions<MyData> ChartOptions1 = new()
+    {
+        Chart = new Chart { Toolbar = new Toolbar{ Show = false } }
+    };
+
+    private ApexChartOptions<MyData> ChartOptions2 = new()
+    {
+        Chart = new Chart { Toolbar = new Toolbar { Show = false } }
+    };
+
+    private ApexChartOptions<RegistrationEntry> ChartOptions3 = new()
+    {
+        Chart = new Chart { Toolbar = new Toolbar { Show = false } }
+    };
+
+    private ApexChartOptions<CountryCompetitorData> ChartOptions4 = new()
+    {
+        Chart = new Chart { Toolbar = new Toolbar { Show = false } },
+        PlotOptions = new PlotOptions
+        {
+            Pie = new PlotOptionsPie
+            {
+                CustomScale = 1.0
+            }
+        }
+    };
+
+
+    private ApexChartOptions<StateProvinceCompetitorData> ChartOptions5 = new()
+    {
+        Chart = new Chart
+        {
+            Toolbar = new Toolbar { Show = false },
+        },
+        PlotOptions = new PlotOptions
+        {
+            Pie = new PlotOptionsPie
+            {
+                // Corrected: Instantiate a new PlotOptionsDonut object
+                Donut = new PlotOptionsDonut
+                {
+                    Labels = new DonutLabels
+                    {
+                        Show = true
+                    }
+                }
+            }
+        }
+    };
+
+    private List<StateProvinceCompetitorData> flatData = new();
+
+    private List<StateProvinceCompetitorData> OthersDetails = new();
+
+    public void PrepareChartData()
+    {
+        var othersCount = 0;
+        var adjustedData = new List<StateProvinceCompetitorData>();
+        OthersDetails.Clear(); // Reset for each call
+
+        foreach (var country in CountryCompetitorDataList)
+        {
+            if (country.Country == "United States")
+            {
+                foreach (var state in country.StatesOrProvinces)
+                {
+                    if (state.CompetitorCount <= 5)
+                    {
+                        othersCount += state.CompetitorCount;
+                        // Instead of adding the count, now add the state to OthersDetails
+                        OthersDetails.Add(state);
+                    }
+                    else
+                    {
+                        adjustedData.Add(state);
+                    }
+                }
+
+                if (othersCount > 0)
+                {
+                    adjustedData.Add(new StateProvinceCompetitorData
+                        {
+                            StateProvince = "Others",
+                            CompetitorCount = othersCount
+                        });
+                }
+            }
+        }
+
+        // Now adjustedData is prepared for charting, and OthersDetails has the detailed breakdown
+        flatData = adjustedData;
+    }
+}
+
