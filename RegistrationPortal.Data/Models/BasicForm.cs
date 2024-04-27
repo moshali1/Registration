@@ -1,11 +1,28 @@
 ﻿namespace RegistrationPortal.Data.Models;
-public class PersonalInfo
+public class BasicForm
 {
+    public string Id { get; set; }
+
     public string FirstName { get; set; }
     public string MiddleName { get; set; }
     public string LastName { get; set; }
     public Gender Gender { get; set; }
-    public DateOnly DOB { get; set; }
+    public DateOnly? DOB { get; set; }
+
+    public string Country { get; set; }
+    public string StateProvince { get; set; }
+    public string City { get; set; }
+
+    public string Category { get; set; }
+    public string Portion { get; set; }
+    public string Division { get; set; }
+
+    public string Status { get; set; }
+
+    public string GetRegionalAddress()
+    {
+        return $"{City}, {StateProvince}, {Country}";
+    }
 
     public string GetFullName()
     {
@@ -24,10 +41,4 @@ public class PersonalInfo
         }
 
     }
-}
-
-public enum Gender
-{
-    Male,
-    Female
 }

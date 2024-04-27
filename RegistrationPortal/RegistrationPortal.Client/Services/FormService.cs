@@ -12,6 +12,11 @@ public class FormService : IFormService
         _httpClient = httpClient;
     }
 
+    //public async Task<List<FormDto>> GetForms()
+    //{
+    //    return await _httpClient.GetFromJsonAsync<List<FormDto>>($"api/form");
+    //}
+
     public async Task<FormDto> GetForm(string id)
     {
         return await _httpClient.GetFromJsonAsync<FormDto>($"api/form/{id}");

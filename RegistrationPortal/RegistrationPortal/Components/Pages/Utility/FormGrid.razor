@@ -1,0 +1,78 @@
+﻿@page "/form-grid"
+
+@using Syncfusion.Blazor.Grids
+
+@inject IFormData FormData
+
+@attribute [Authorize(Roles = "Admin")]
+
+@rendermode InteractiveServer
+
+<SfGrid ID="Grid" @ref="List" DataSource="Forms" AllowPaging="true"
+    AllowSorting="true"
+    AllowFiltering="true"
+    AllowGrouping="true"
+    AllowResizing="true"
+    AllowExcelExport="true"
+    Toolbar="@(new List<string>() { "ExcelExport" })"
+    AllowSelection="true">
+    <GridEvents OnToolbarClick="OnToolbarClick" TValue="Form"></GridEvents>
+    <GridPageSettings PageSize="50"></GridPageSettings>
+    <GridSelectionSettings Type="SelectionType.Multiple"></GridSelectionSettings>
+    <GridColumns>
+        <GridColumn Field="@nameof(Form.PersonalInfo.GetFirstMiddleLastName)"
+                    Width="175">
+        </GridColumn>
+        <GridColumn Field="@nameof(Form.PersonalInfo.Gender)"
+                    TextAlign="TextAlign.Center"
+                    Width="100">
+        </GridColumn>
+        <GridColumn Field="@nameof(Form.PersonalInfo.DOB)"
+                    Width="125">
+        </GridColumn>
+        <GridColumn Field="@nameof(Form.TeacherInfo.GetTeacherFullName)"
+                    TextAlign="TextAlign.Center"
+                    Width="150">
+        </GridColumn>
+        <GridColumn Field="@nameof(Form.TeacherInfo.Institution)"
+                    TextAlign="TextAlign.Center"
+                    HeaderText="Qur'an Institution"
+                    Width="150">
+        </GridColumn>
+        <GridColumn Field="@nameof(Form.CompetitionInfo.Division)"
+                    TextAlign="TextAlign.Center"
+                    Width="100">
+        </GridColumn>
+        <GridColumn Field="@nameof(Form.CompetitionInfo.Category)"
+                    Width="175">
+        </GridColumn>
+        <GridColumn Field="@nameof(Form.StatusInfo.Status)"
+                    TextAlign="TextAlign.Center"
+                    HeaderText="Status" 
+                    Width="100">
+        </GridColumn>
+     </GridColumns>
+</SfGrid>
+
+
+@code {
+    private SfGrid<Form> List;
+
+    public List<Form> Forms { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        Forms = await FormData.GetForms();
+    }
+
+    private async Task OnToolbarClick(Syncfusion.Blazor.Navigations.ClickEventArgs args)
+    {
+        //if (args.Item.Id == "sfgrid5cysb1h35cd_excelexport") // Id is combination of Grid's ID and itemname.
+        if (args.Item.Id == "Grid_excelexport")
+        {
+            ExcelExportProperties ExportProperties = new ExcelExportProperties();
+            ExportProperties.ExportType = ExportType.CurrentPage;
+            await this.List.ExportToExcelAsync(ExportProperties);
+        }
+    }
+}

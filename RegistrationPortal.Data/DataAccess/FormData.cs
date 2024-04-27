@@ -1,14 +1,82 @@
-﻿namespace RegistrationPortal.Data.DataAccess;
+﻿using Microsoft.Extensions.Caching.Memory;
+using RegistrationPortal.Data.Models;
+
+namespace RegistrationPortal.Data.DataAccess;
 
 public class FormData : IFormData
 {
     private readonly IMongoCollection<Form> _forms;
+    private readonly IMemoryCache _cache;
+    private const string CacheName = "FormData";
+    private const string CacheNameBasic = "BasicFormData";
 
-    public FormData(IDbConnection db) =>
+    public FormData(IDbConnection db, IMemoryCache cache)
+    {
+        _cache = cache;
         _forms = db.FormCollection;
+    }
 
-    public async Task<List<Form>> GetForms() => 
+    public async Task<List<Form>> GetForms() =>
         await _forms.Find(_ => true).ToListAsync();
+
+
+    public async Task<List<Form>> GetCachedForms()
+    {
+        var output = _cache.Get<List<Form>>(CacheName);
+        if (output is null)
+        {
+            var results = await _forms.Find(_ => true).ToListAsync();
+            output = results;
+
+            _cache.Set((CacheName), output, TimeSpan.FromDays(1));
+        }
+        return output;
+    }
+        
+
+    public async Task<List<BasicForm>> GetFormsSummary(bool useCache = true)
+    {
+        if (useCache)
+        {
+            var output = _cache.Get<List<BasicForm>>(CacheNameBasic);
+            if (output != null)
+            {
+                return output;
+            }
+        }
+
+        // If not using cache or cache miss occurs, fetch from database
+        // Adjust this projection part according to your database access method
+        var results = await _forms.Find(_ => true)
+            .Project(form => new BasicForm
+            {
+                Id = form.Id,
+                FirstName = form.PersonalInfo.FirstName,
+                MiddleName = form.PersonalInfo.MiddleName,
+                LastName = form.PersonalInfo.LastName,
+                Gender = form.PersonalInfo.Gender,
+                DOB = form.PersonalInfo.DOB,
+                Country = form.AddressInfo.Country,
+                StateProvince = form.AddressInfo.StateProvince,
+                City = form.AddressInfo.City,
+                Category = form.CompetitionInfo.Category,
+                Portion = form.CompetitionInfo.Portion,
+                Division = form.CompetitionInfo.Division,
+                Status = form.StatusInfo.Status,
+            })
+            .ToListAsync();
+
+        // Only set cache if useCache is true
+        if (useCache)
+        {
+            _cache.Set(CacheName, results, TimeSpan.FromDays(1));
+        }
+
+        return results;
+    }
+
+    public async Task<List<Form>> GetPendingForms() =>
+        await _forms.Find(f => f.StatusInfo.Status == "Pending").ToListAsync();
 
     public async Task<List<Form>> GetFormsByCreator(string id) =>
         await _forms.Find(f => f.Creator == id && f.StatusInfo.Status != "Withdrawn" && f.StatusInfo.Status != "Disqualified").ToListAsync(); 

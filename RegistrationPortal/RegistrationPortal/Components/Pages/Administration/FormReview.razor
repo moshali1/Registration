@@ -169,48 +169,52 @@
             </div>
         </div>
     </div>
-    <!-- New Table to the Right -->
-    <div class="flex-initial w-full md:w-1/4 px-2 sm:px-6 lg:px-4">
-        <div class="sm:flex sm:items-center">
-            <div class="sm:flex-auto">
-                <h1 class="text-xl font-semibold leading-6 text-gray-900">Pending Comments</h1>
-                <p class="mt-2 text-sm text-gray-700">A list of the most common pending status comments.</p>
+    @if (SelectedDivision is not null)  
+    {
+        <!-- New Table to the Right -->
+        <div class="flex-initial w-full md:w-1/4 px-2 sm:px-6 lg:px-4">
+            <div class="sm:flex sm:items-center">
+                <div class="sm:flex-auto">
+                    <h1 class="text-xl font-semibold leading-6 text-gray-900">Pending Comments</h1>
+                    <p class="mt-2 text-sm text-gray-700">A list of the most common pending status comments.</p>
+                </div>
             </div>
-        </div>
-        <div class="flow-root">
-            <div class="py-2 align-middle">
-                <div class="overflow-hidden shadow sm:rounded-lg">
-                    <table class="min-w-full divide-y divide-gray-300">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Status Comments</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white">
-                            <tr>
-                                <td @onclick="() => LoadComment('a')" class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 hover:bg-gray-100 cursor-pointer"><span class="underline decoration-sky-500 font-semibold">Invalid ID:</span> Please edit form and upload an ID of the competitor.</td>
-                            </tr>
-                            <tr>
-                                <td @onclick="() => LoadComment('b')" class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 hover:bg-gray-100 cursor-pointer"><span class="underline decoration-sky-500 font-semibold">Invalid ID:</span> Please edit form and upload an Identification Document (ID).</td>
-                            </tr>
-                            <tr>
-                                <td @onclick="() => LoadComment('c')" class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 hover:bg-gray-100 cursor-pointer"><span class="underline decoration-teal-500 font-semibold">Invalid Photo:</span> Please edit form and upload a clear, standalone photo image.</td>
-                            </tr>
-                            <tr>
-                                <td @onclick="() => LoadComment('f')" class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 hover:bg-gray-100 cursor-pointer"><span class="underline decoration-teal-500 font-semibold">Invalid Photo:</span> Please edit form and upload a non-cropped, non-blury photo. See photo requirements.</td>
-                            </tr>
-                            <tr>
-                                <td @onclick="() => LoadComment('d')" class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 hover:bg-gray-100 cursor-pointer"><span class="underline decoration-fuchsia-500 font-semibold">Missing Video:</span> Please edit form and upload a video.</td>
-                            </tr>
-                            <tr>
-                                <td @onclick="() => LoadComment('e')" class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 hover:bg-gray-100 cursor-pointer"><span class="underline decoration-fuchsia-500 font-semibold">Invalid Video:</span> Please edit form and upload a video of the assigned Ayat.</td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <div class="flow-root">
+                <div class="py-2 align-middle">
+                    <div class="overflow-hidden shadow sm:rounded-lg">
+                        <table class="min-w-full divide-y divide-gray-300">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Status Comments</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 bg-white">
+                                <tr>
+                                    <td @onclick="() => LoadComment('a')" class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 hover:bg-gray-100 cursor-pointer"><span class="underline decoration-sky-500 font-semibold">Invalid ID:</span> Please edit form and upload an ID of the competitor.</td>
+                                </tr>
+                                <tr>
+                                    <td @onclick="() => LoadComment('b')" class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 hover:bg-gray-100 cursor-pointer"><span class="underline decoration-sky-500 font-semibold">Invalid ID:</span> Please edit form and upload an Identification Document (ID).</td>
+                                </tr>
+                                <tr>
+                                    <td @onclick="() => LoadComment('c')" class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 hover:bg-gray-100 cursor-pointer"><span class="underline decoration-teal-500 font-semibold">Invalid Photo:</span> Please edit form and upload a clear, standalone photo image.</td>
+                                </tr>
+                                <tr>
+                                    <td @onclick="() => LoadComment('f')" class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 hover:bg-gray-100 cursor-pointer"><span class="underline decoration-teal-500 font-semibold">Invalid Photo:</span> Please edit form and upload a non-cropped, non-blury photo. See photo requirements.</td>
+                                </tr>
+                                <tr>
+                                    <td @onclick="() => LoadComment('d')" class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 hover:bg-gray-100 cursor-pointer"><span class="underline decoration-fuchsia-500 font-semibold">Missing Video:</span> Please edit form and upload a video.</td>
+                                </tr>
+                                <tr>
+                                    <td @onclick="() => LoadComment('e')" class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 hover:bg-gray-100 cursor-pointer"><span class="underline decoration-fuchsia-500 font-semibold">Invalid Video:</span> Please edit form and upload a video of the assigned Ayat.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    }
+    
 </div>
 
 <!-- Dialog Component -->
@@ -277,7 +281,9 @@
     {
         user = await AuthState.GetUserFromAuth(UserData);
 
-        AllForms = await FormData.GetForms(); // Fetch all forms once and store them
+        // Perhaps add a setting to show ALL, Pending, Reviewed, Verified etc. 
+        // AllForms = await FormData.GetForms(); // Fetch all forms once and store them
+        AllForms = await FormData.GetPendingForms(); 
 
         if (!string.IsNullOrWhiteSpace(Id))
         {

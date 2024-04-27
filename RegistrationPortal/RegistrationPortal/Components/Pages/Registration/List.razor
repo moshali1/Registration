@@ -6,7 +6,7 @@
 @inject AuthenticationStateProvider AuthState
 @inject NavigationManager NavManager
 
-@rendermode InteractiveServer
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 @attribute [Authorize]
 
@@ -21,7 +21,7 @@
     </div>
 </div>
 
-@if (forms is null | mForms is null || tForms is null || bForms is null)
+@if (forms is null || mForms is null || tForms is null || bForms is null)
 {
     <p><em>Loading list...</em></p>
 }
@@ -60,7 +60,7 @@ else
 
     if (activeTab == 'M')
     {
-        <FormTable Forms="@mForms" Type="@(mForms?.Any() ?? false)" OnItemDeleted="ReloadForms" IsAdmin="IsAdmin"/>
+        <FormTable Forms="@mForms" Type="@(mForms?.Any() ?? false)" OnItemDeleted="ReloadForms" IsAdmin="IsAdmin" />
     }
     else if (activeTab == 'T')
     {
@@ -70,6 +70,7 @@ else
     {
         <FormTable Forms="@bForms" Type="@(bForms?.Any() ?? false)" OnItemDeleted="ReloadForms" IsAdmin="IsAdmin" />
     }
+
 }
 
 @code {
@@ -78,6 +79,7 @@ else
     private User currentUser;
     private bool IsAdmin = false;
 
+    // not null for now
     private List<Form> forms;
 
     private List<Form> mForms;
@@ -106,7 +108,6 @@ else
         activeTab = DefaultList.ActiveTab;
 
         await LoadForms();
-        StateHasChanged();
     }
 
     private async Task LoadForms()

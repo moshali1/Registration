@@ -2,6 +2,9 @@
 public interface IFormData
 {
     Task<List<Form>> GetForms();
+    Task<List<Form>> GetCachedForms();
+    Task<List<Form>> GetPendingForms();
+    Task<List<BasicForm>> GetFormsSummary(bool useCache = true);
     Task<List<Form>> GetFormsByCreator(string id);
     Task<Form> GetForm(string id);
     Task CreateForm(Form form);

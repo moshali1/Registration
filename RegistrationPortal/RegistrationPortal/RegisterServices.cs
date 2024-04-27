@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http.Features;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 using RegistrationPortal.Identity;
@@ -75,7 +74,6 @@ public static class RegisterServices
             //options.Filters.Add(new AuthorizeFilter(policy));
         }).AddMicrosoftIdentityUI();
 
-
         builder.Services.AddSwaggerGen();
 
         builder.Services.AddSingleton<IDbConnection, DbConnection>();
@@ -103,6 +101,10 @@ public static class RegisterServices
 
         Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(
         "Ngo9BigBOggjHTQxAR8/V1NAaF1cXmhIfEx1RHxQdld5ZFRHallYTnNWUj0eQnxTdEFjW31acXxVQWJcV0R+Xg==");
+
+        Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(
+        "Ngo9BigBOggjHTQxAR8/V1NBaF5cXmZCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdnWXxcdHRXQmleUU1+WkI=");
+
 
         // Increases the maximum allowed multipart body length for file uploads to 500 MB,
         // enabling large file uploads in the application.

@@ -1,0 +1,93 @@
+﻿.grid {
+    overflow-y: auto;
+}
+
+::deep table {
+    min-width: 100%;
+}
+
+/* Sticky header while scrolling */
+::deep thead {
+    position: sticky;
+    top: 0;
+    /*background-color: #d8d8d8;*/
+    /*outline: 1px solid gray;*/
+}
+
+
+::deep th {
+    text-align: left;
+    font-weight: 600;
+    /*color: #1F2937;*/
+}
+
+::deep tbody {
+    border-top: 1px solid;
+    border-color: #E5E7EB;
+}
+
+
+::deep td {
+    white-space: normal;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+
+/* For virtualized grids, it's essential that all rows have the same known height */
+::deep tr {
+    height: 75px;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+
+
+::deep tbody td {
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 0;
+    text-overflow: ellipsis;
+    border-top: 0.5px solid silver;
+}
+
+/* Subtle stripe effect */
+/*::deep tr:nth-child(even) {
+    background: #E7E7E7;
+}*/
+
+/* Adjust the width of the first column (Full Name) */
+::deep tbody td:nth-child(1),
+::deep th:nth-child(1) {
+    width: 200px;  Adjust the width as per your requirement 
+}
+
+/* Adjust the width of the second column (Date of Birth) */
+::deep tbody td:nth-child(2),
+::deep th:nth-child(2) {
+    width: 150px;  Adjust the width as per your requirement 
+}
+
+/* Adjust the width of the third column (Category) */
+::deep tbody td:nth-child(3),
+::deep th:nth-child(3) {
+    width: 200px;  Adjust the width as per your requirement 
+}
+
+/* Adjust the width of the fourth column (Date) */
+::deep tbody td:nth-child(4),
+::deep th:nth-child(4) {
+    width: 125px;  Adjust the width as per your requirement 
+}
+
+/* Adjust the width of the fifth column (Time) */
+::deep tbody td:nth-child(5),
+::deep th:nth-child(5) {
+    width: 125px;  Adjust the width as per your requirement 
+}
+
+/* Adjust the width of the sixth column (Check in) */
+::deep tbody td:nth-child(6),
+::deep th:nth-child(6) {
+    width: 125px;  Adjust the width as per your requirement 
+}

@@ -1,0 +1,161 @@
+﻿@inject ISettingsData SettingsData
+@inject NavigationManager NavManager
+
+<p class="text-sm"><strong>Number of Records</strong>: @Forms?.Count()</p>
+
+@if (Type is true)
+{
+    <div class="box-border border-4 border-cyan-800/50 rounded-lg p-4 bg-white">
+        <div class="mt-1 flow-root">
+            <div class="-mx-4 -my-2 sm:-mx-6 lg:-mx-8">
+                <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                    <table class="min-w-full divide-y divide-gray-300">
+                        <thead>
+                            <tr class="divide-x divide-gray-200">
+                                <th scope="col" class="py-3.5 pl-4 pr-3 text-left font-semibold text-gray-900 sm:pl-0">Personal Info</th>
+                                <th scope="col" class="px-3 py-3.5 text-left font-semibold text-gray-900">Division / Category</th>
+                                <th scope="col" class="px-3 py-3.5 text-left font-semibold text-gray-900 sec-col">Region</th>
+                                <th scope="col" class="px-3 py-3.5 text-left font-semibold text-gray-900 sec-col">Status</th>
+                                <th scope="col" class="px-3 py-3.5 text-left font-semibold text-gray-900 sec-col">Message</th>
+                                <th scope="col" class="py-3.5 pl-3 pr-4 sm:pr-0 sec-col">
+                                    <span class="sr-only">Action</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            @if (Forms is not null)
+                            {
+                                @foreach (var Form in Forms)
+                                {
+                                    <tr class="divide-x divide-gray-200">
+                                        <td class="whitespace-normal py-3 pl-4 pr-3 sm:pl-0 sm:pr-0">
+                                            <div class="flex items-center">
+                                                <div class="ml-0">
+                                                    <div class="font-medium text-gray-900">@Form.GetFirstMiddleLastName()</div>
+                                                    <div class="my-2 text-gray-600">@Form.Gender | @Form.DOB</div>
+
+                                                    <div class="sec-col-main pt-1 whitespace-nowrap">
+                                                        <h2 class="text-sm font-semibold">Status</h2>
+                                                        <span class="inline-flex items-center rounded-md px-2 py-1 my-2 font-medium text-800-700 ring-1 ring-inset ring-gray-600/20 @GetStatusSpanCssClass(Form.Status)">@Form.Status</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="whitespace-normal px-2 py-3">
+                                            <div class="text-gray-900">@Form.Division</div>
+                                            <div class="mt-1 text-gray-600">@Form.Category | @Form.Portion</div>
+
+                                            <div class="text-gray-900">
+                                                <h2 class="py-2 text-sm font-semibold sec-col-main">Message</h2>
+                                                <span class="sec-col-main py-2">None</span>
+                                            </div>
+                                            <div class="sec-col-main pt-1 whitespace-nowrap">
+                                                <ActionDropdownBasic Form="@Form" SetActiveDropdown="SetActiveDropdown" ActiveDropdownId="@activeDropdownId" OnItemDeleted="OnItemDeleted" IsAdmin="IsAdmin" CanWithdraw="canWithdraw"/>
+                                            </div>
+                                        </td>
+                                        <td class="whitespace-normal px-3 py-3 text-gray-500 sec-col">
+                                            <div class="text-gray-900">@Form.StateProvince, @Form.Country</div>
+                                            <div class="mt-1 text-gray-600">@Form.City</div>
+                                        </td>
+                                        <td class="whitespace-normal px-3 py-3 text-gray-600 sec-col">
+                                            <span class="inline-flex items-center rounded-md px-2 py-1 font-medium text-800-700 ring-1 ring-inset ring-gray-600/20 @GetStatusSpanCssClass(Form.Status)">@Form.Status</span>
+                                        </td>
+                                        <td class="whitespace-normal px-3 py-3 text-gray-600 sec-col">
+                                            <span>None</span>
+                                        </td>
+                                        <td class="whitespace-normal py-3 pl-3 pr-4 text-right font-medium sm:pr-0 sec-col">
+                                            <ActionDropdownBasic Form="@Form" SetActiveDropdown="SetActiveDropdown" ActiveDropdownId="@activeDropdownId" OnItemDeleted="OnItemDeleted" IsAdmin="IsAdmin" CanWithdraw="canWithdraw" />
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] 
+    public List<BasicForm> Forms { get; set; }
+
+    [Parameter]
+    public bool Type { get; set; }
+
+    [Parameter] 
+    public bool IsAdmin { get; set; } = false;
+
+    private string activeDropdownId;
+
+
+    private bool canWithdraw = false;
+
+    private Settings settings;
+
+    private void SetActiveDropdown(string id)
+    {
+        activeDropdownId = id;
+        StateHasChanged();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Questionable Method and Setup???
+        // Load settings to check permissions.
+        settings = await SettingsData.GetSettings();
+
+        var anyForm = Forms?.FirstOrDefault();
+        var division = anyForm?.Division;
+
+        if (IsAdmin is false)
+        {
+            if (division == DivisionConstants.Memorization && settings.CanWithdrawMemorization)
+            {
+                canWithdraw = true;
+            }
+            else if (division == DivisionConstants.TenQiraat && settings.CanWithdrawTenQiraat)
+            {
+                canWithdraw = true;
+            }
+            else if (division == DivisionConstants.TenQiraat && settings.CanWithdrawTenQiraat)
+            {
+                canWithdraw = true;
+            }
+        }
+        else
+        {
+            canWithdraw = true;
+        }
+    }
+
+    [Parameter]
+    public EventCallback<string> OnItemDeleted { get; set; }
+
+    private async Task HandleItemDeleted()
+    {
+        await OnItemDeleted.InvokeAsync();
+    }
+
+    private string GetStatusSpanCssClass(string status)
+    {
+        switch (status)
+        {
+            case "Awaiting Review":
+                return "bg-emerald-50 text-emerald-950"; 
+            case "Reviewed":
+                return "bg-cyan-50 text-cyan-950"; 
+            case "Verified":
+                return "bg-violet-50 text-violet-950"; 
+            case "Pending":
+                return "bg-red-50 text-red-950"; 
+            case "Disqualified":
+                return "bg-gray-50 text-gray-950"; 
+            case "Withdrawn":
+                return "bg-amber-50 text-amber-950"; 
+            default:
+                return "bg-white text-black border-gray-300"; 
+        }
+    }
+}

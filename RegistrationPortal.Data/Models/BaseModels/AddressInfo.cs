@@ -9,4 +9,9 @@ public class AddressInfo
     {
         return $"{City}, {StateProvince}, {Country}";
     }
+    public string GetRegion()
+    {
+        return $"{StateProvince}, {Country}";
+    }
+
 }

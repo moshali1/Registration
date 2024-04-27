@@ -1,9 +1,276 @@
 ﻿@page "/search-record"
 
+@using Microsoft.AspNetCore.Components.QuickGrid
+
+@inject IFormData FormData
+@inject IUserData UserData
+@inject DefaultListService DefaultList
+@inject AuthenticationStateProvider AuthState
+@inject NavigationManager NavManager
+
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
 @attribute [Authorize(Roles = "Admin")]
 
-<div class="text-center">
-    <h1 class="text-xl mb-3 font-bold">Search Record</h1>
+<PageTitle>Records</PageTitle>
 
-    <p>This page is for a more advanced form list for searching records with filters and whatnot. Comming soon.</p>
-</div>
+
+@if (forms is null)
+{
+    <p><em>Loading list...</em></p>
+}
+else
+{
+    // Search With Filter Component
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-5xl">
+            <div class="flex flex-col justify-center">
+                <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-lg">
+                    <div class="relative mb-10 w-full flex items-center justify-between rounded-md">
+                        <svg class="absolute left-2 block h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8" class=""></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" class=""></line>
+                        </svg>
+                        <input  name="search" class="h-12 w-full cursor-text rounded-md border border-gray-100 bg-gray-100 py-4 pr-40 pl-12 shadow-sm outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" type="name" autofocus @bind="nameFilter" @bind:event="oninput" placeholder="Search by name - first, middle or last" />
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+
+                        <div class="flex flex-col">
+                            <label for="manufacturer" class="text-sm font-medium text-stone-600">Division</label>
+
+                            <select id="manufacturer" class="mt-2 block w-full rounded-md border border-gray-100 bg-gray-100 px-2 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                <option>Memorization</option>
+                                <option>Ten Qira'at</option>
+                                <option>Best Voice</option>
+                            </select>
+                        </div>
+
+                        <div class="flex flex-col">
+                            <label for="manufacturer" class="text-sm font-medium text-stone-600">Category</label>
+
+                            <select id="manufacturer" class="mt-2 block w-full rounded-md border border-gray-100 bg-gray-100 px-2 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                <option>Default</option>
+                            </select>
+                        </div>
+
+                        <div class="flex flex-col">
+                            <label for="manufacturer" class="text-sm font-medium text-stone-600">Gender</label>
+
+                            <select id="manufacturer" class="mt-2 block w-full rounded-md border border-gray-100 bg-gray-100 px-2 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                <option>Both</option>
+                                <option>Male</option>
+                                <option>Female</option>
+                            </select>
+                        </div>
+
+                        <div class="flex flex-col">
+                            <label for="status" class="text-sm font-medium text-stone-600">Status</label>
+
+                            <select id="status" class="mt-2 block w-full cursor-pointer rounded-md border border-gray-100 bg-gray-100 px-2 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                <option>Default</option>
+                                <option>Awaiting Review</option>
+                                <option>Reviewed</option>
+                                <option>Pending</option>
+                                <option>Withdrawn</option>
+                                <option>Disqualified</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 grid w-full grid-cols-2 justify-end space-x-4 md:flex">
+                        <button class="rounded-lg bg-gray-200 px-8 py-2 font-medium text-gray-700 outline-none hover:opacity-80 focus:ring">Reset</button>
+                        <button class="rounded-lg bg-blue-600 px-8 py-2 font-medium text-white outline-none hover:opacity-80 focus:ring">Search</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="flex flex-row">
+        <div class="basis-1/8">
+            Items per page:
+            <select class="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6" @bind="@pagination.ItemsPerPage">
+                @foreach (var option in itemsPerPageOptions)
+                {
+                    <option value="@option">@option</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    <div class="py-1">
+            Total: <strong>@numResults results found</strong>
+    </div>
+
+    <div class="box-border border-4 border-cyan-800/50 rounded-lg p-4 bg-white">
+        <div class="mt-1 flow-root">
+            <div class="-mx-4 -my-2 sm:-mx-6 lg:-mx-8">
+                <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                    <div class="grid" tabindex="-1">
+                        <QuickGrid Items="@FilteredForms" Pagination="@pagination">
+                            <TemplateColumn Title="Personal Info" SortBy="@nameSort">
+                                @{
+                                    <div class="flex items-center">
+                                        <div class="ml-0">
+                                            <div class="font-medium text-gray-900">@context.PersonalInfo.GetFirstMiddleLastName()</div>
+                                            <div class="my-2 text-gray-600">@context.PersonalInfo.Gender | @context.PersonalInfo.DOB</div>
+                                        </div>
+                                    </div>
+                                }
+                            </TemplateColumn>
+                            <TemplateColumn Title="Division / Category" SortBy="@categorySort">
+                                @{
+                                    <div class="text-gray-900">@context.CompetitionInfo.Division</div>
+                                    <div class="mt-1 text-gray-600">@context.CompetitionInfo.Category | @context.CompetitionInfo.Portion</div>
+                                }
+                            </TemplateColumn>
+                            <PropertyColumn Property="@(f => f.AddressInfo.GetRegion())" Title="Region"/>
+                            <TemplateColumn Title="Status" SortBy="@statusSort" Align="Align.Center">
+                                @{
+                                    <span class="inline-flex items-center rounded-md px-2 py-1 font-medium text-800-700 ring-1 ring-inset ring-gray-600/20 @GetStatusSpanCssClass(context.StatusInfo.Status)">@context.StatusInfo.Status</span>
+                                }
+                            </TemplateColumn>
+                            <TemplateColumn Title="Message">
+                                <span>None</span>
+                            </TemplateColumn>
+                            <TemplateColumn Title="Action">
+                                <a class="font-medium text-cyan-700 hover:underline" href="/form-review/@context.Id" target="_blank">Form Review</a>
+                            </TemplateColumn>
+                        </QuickGrid>
+                    </div>
+                  
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <Paginator State="@pagination" />
+}
+
+@code {
+    private User currentUser;
+    private bool IsAdmin = false;
+
+    private string nameFilter;
+    private int numResults;
+
+
+    PaginationState pagination = new PaginationState { ItemsPerPage = totalCount };
+
+
+    private IQueryable<Form> forms;
+
+    private IQueryable<Form> FilteredForms
+    {
+        get
+        {
+            var result = forms;
+            if (!string.IsNullOrEmpty(nameFilter))
+            {
+                var searchTerms = nameFilter.Split(' ');
+
+                foreach (var term in searchTerms)
+                {
+                    if (!string.IsNullOrEmpty(term))
+                    {
+                        result = result.Where(c => c.PersonalInfo.GetFirstMiddleLastName().Contains(term, StringComparison.CurrentCultureIgnoreCase));
+                        totalCount = result.Count();
+                        pagination = new() { ItemsPerPage = totalCount };
+                    }
+                }
+            }
+            else
+            {
+                pagination = new() { ItemsPerPage = totalCount };
+                Console.WriteLine($"True:{nameFilter}");
+            }
+
+            return result;
+        }
+    }
+
+
+    private void UpdateFilter(string value)
+    {
+        nameFilter = value;
+        numResults = FilteredForms.Count();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentUser = await AuthState.GetUserFromAuth(UserData);
+
+        var authState = await AuthState.GetAuthenticationStateAsync();
+        var user = authState.User;
+        IsAdmin = user.IsInRole("Admin");
+
+        totalCount = 100; // Reset to default value
+
+        await LoadForms();
+    }
+
+    private async Task LoadForms()
+    {
+        if (IsAdmin)
+        {
+            var result  = await FormData.GetForms();
+
+            forms = result.AsQueryable();
+            numResults = forms.Count();
+        }
+    }
+
+    private string selectedCategory;
+
+    // private async Task UpdateCategory(string value)
+    // {
+    //     selectedCategory = value;
+
+    //     if (!string.IsNullOrEmpty(selectedCategory))
+    //     {
+    //         var result = await competitorData.GetCompetitorsByCategory(selectedCategory);
+    //         competitors = result.AsQueryable();
+    //         numResults = competitors.Count();
+    //     }
+    //     else
+    //     {
+    //         competitors = Enumerable.Empty<CompetitorModel>().AsQueryable();
+    //         numResults = 0;
+    //     }
+
+    //     StateHasChanged();
+    // }
+
+    private GridSort<Form> nameSort = GridSort<Form>.ByAscending(x => x.PersonalInfo.FirstName);
+
+    private GridSort<Form> categorySort = GridSort<Form>.ByAscending(x => x.CompetitionInfo.Category);
+
+    private GridSort<Form> statusSort = GridSort<Form>.ByAscending(x => x.StatusInfo.Status);
+
+    private string GetStatusSpanCssClass(string status)
+    {
+        switch (status)
+        {
+            case "Awaiting Review":
+                return "bg-emerald-50 text-emerald-950";
+            case "Reviewed":
+                return "bg-cyan-50 text-cyan-950";
+            case "Verified":
+                return "bg-violet-50 text-violet-950";
+            case "Pending":
+                return "bg-red-50 text-red-950";
+            case "Disqualified":
+                return "bg-gray-50 text-gray-950";
+            case "Withdrawn":
+                return "bg-amber-50 text-amber-950";
+            default:
+                return "bg-white text-black border-gray-300";
+        }
+    }
+
+
+    private List<int> itemsPerPageOptions = new List<int> { 100, 200, 400, 840 };
+    private static int totalCount = 100; // Assume this is dynamically calculated
+}

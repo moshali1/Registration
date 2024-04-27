@@ -17,6 +17,20 @@ public class FormController : ControllerBase
         _logger = logger;
     }
 
+    //// GET: api/Form}
+    //[HttpGet]
+    //public async Task<ActionResult<List<FormDto>>> GetForms()
+    //{
+    //    var form = await _formService.GetForms();
+
+    //    if (form is null)
+    //    {
+    //        return NotFound();
+    //    }
+
+    //    return form;
+    //}
+
     // GET: api/Form/{id}
     [HttpGet("{id}")]
     public async Task<ActionResult<FormDto>> GetForm(string id)     
