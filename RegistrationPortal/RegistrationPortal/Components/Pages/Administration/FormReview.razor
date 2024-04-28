@@ -42,7 +42,23 @@
             </div>
             <div class="px-4 py-2 md:p-6">
                 <!-- Division Selection -->
-                <div class="sm:flex sm:items-center">
+                <div class="sm:flex sm:items-center justify-between">
+
+                    <div class="">
+                        <label class="block text-base text-gray-700">Display Option</label>
+                        <div class="space-y-2 mt-2">
+                            <InputRadioGroup Name="displayOptions" @bind-Value="selectedDisplayOption">
+                                <div class="flex items-center">
+                                    <InputRadio id="all" Value="DisplayOptions.All" class="h-4 w-4 border-gray-300 text-cyan-600 focus:ring-cyan-600" @oninput="() => OnDisplayOptionChange(DisplayOptions.All)" />
+                                    <label for="all" class="ml-3 block text-sm font-medium leading-6 text-gray-900">All Forms <span class="text-gray-300">(Default)</span></label>
+                                </div>
+                                <div class="flex items-center">
+                                    <InputRadio id="pending" Value="DisplayOptions.Pending" class="h-4 w-4 border-gray-300 text-cyan-600 focus:ring-cyan-600" @oninput="() => OnDisplayOptionChange(DisplayOptions.Pending)" />
+                                    <label for="pending" class="ml-3 block text-sm font-medium leading-6 text-gray-900">Pending Only</label>
+                                </div>
+                            </InputRadioGroup>
+                        </div>
+                    </div>
                     <div class="w-full sm:max-w-xs">
                         <label for="division" class="block text-base text-gray-700">Division</label>
                         <select id="division" @bind="SelectedDivision" @oninput="UpdateDivision" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm rounded-md">
@@ -52,8 +68,9 @@
                             <option value="Best Voice">Best Voice</option>
                         </select>
                     </div>
-                    @* <button @onclick="OnDivisionSelection" class="md:ml-3 mt-5 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-cyan-600 hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500">Load Form</button> *@
+
                 </div>
+                    
                 <!-- Form Details Display -->
                 @if (!string.IsNullOrEmpty(messageText))
                 {
@@ -268,6 +285,9 @@
     private Form CurrentForm;
     private int currentIndex = -1;
 
+    public enum DisplayOptions { All, Pending }
+    private DisplayOptions selectedDisplayOption = DisplayOptions.All; 
+
     private bool idPdf = false;
     private string idSasUrl;
     private string photoSasUrl;
@@ -282,8 +302,8 @@
         user = await AuthState.GetUserFromAuth(UserData);
 
         // Perhaps add a setting to show ALL, Pending, Reviewed, Verified etc. 
-        // AllForms = await FormData.GetForms(); // Fetch all forms once and store them
-        AllForms = await FormData.GetPendingForms(); 
+        AllForms = await FormData.GetForms(); // Fetch all forms once and store them
+                                              // Filter once Display Options and Division are selected
 
         if (!string.IsNullOrWhiteSpace(Id))
         {
@@ -303,13 +323,28 @@
         }
     }
 
+    private void OnDisplayOptionChange(DisplayOptions options)
+    {
+        selectedDisplayOption = options; // Reversing Existing Bug
+        OnDivisionSelection();
+        Console.WriteLine(selectedDisplayOption);
+    }
+
     private void  OnDivisionSelection()
     {
         messageText = ""; // Reset message
         if (!string.IsNullOrWhiteSpace(SelectedDivision))
         {
-            var filteredForms = AllForms.Where(f => f.CompetitionInfo.Division == SelectedDivision).ToList();
-
+            List<Form> filteredForms = new();
+            if (selectedDisplayOption == DisplayOptions.All)
+            {
+                filteredForms = AllForms.Where(f => f.CompetitionInfo.Division == SelectedDivision).ToList();
+            }
+            else if (selectedDisplayOption == DisplayOptions.Pending)
+            {
+                filteredForms = AllForms.Where(f => f.StatusInfo.Status == "Pending" && f.CompetitionInfo.Division == SelectedDivision).ToList();
+            }
+            
             if (filteredForms.Any())
             {
                 Forms = filteredForms;
