@@ -1,0 +1,107 @@
+﻿@page "/message/{ID}"
+
+@inject IFormData FormData
+@inject IUserData UserData
+@inject AuthenticationStateProvider AuthState
+@inject NavigationManager NavManager
+
+@rendermode InteractiveServer
+
+@attribute [Authorize]
+
+<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-3xl">
+        <div class="overflow-hidden rounded-lg bg-white shadow">
+            <div class="bg-cyan-950 px-4 py-5 sm:px-6">
+                <h1 class="text-base font-semibold leading-6 text-white">Message</h1>
+                <p class="text-sm text-white">View messages related to this form here. </p>
+            </div>
+            <div class="px-4 py-5 sm:p-6">
+                @if (String.IsNullOrEmpty(form?.EventScheduleInfo.PrelimScheduledDate) == false)
+                {
+                    <div class="border rounded-lg bg-gray-50 p-2">
+                        <div class="mb-4">
+                            <h6 class="mb-0">Subject: Preliminary Qur'an Competition</h6>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">Competitor Info: @form.PersonalInfo.GetFirstMiddleLastName() | @form.CompetitionInfo.Division | @form.CompetitionInfo.Category</h6>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">Competition Format: Virtual <span class="font-semibold">(via Zoom)</span></h6>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">Scheduled Date: <span class="font-semibold">@form.EventScheduleInfo.PrelimScheduledDate</span></h6>
+                            <h6 class="mb-0">Scheduled Time: <span class="font-semibold">@form.EventScheduleInfo.PrelimScheduledTime</span> Central Time (CT)</h6>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="text-sm"><span class="font-semibold">Zoom links</span> will be published on the official website <a class="underline decoration-sky-500" href="https://imamshatibi.org" target="_blank">imamshatibi.org</a> before the start of the preliminary competition.</h6>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">Competition Instructions:</h6>
+                            <ul class="list-disc pl-6 text-sm">
+                                <li>Join the Zoom Conference 1 hour before scheduled time.</li>
+                                <li>Wear appropriate clothing and position your camera against a well-lit background, such as in front of a window or against a well-lit wall, to clearly display your face.</li>
+                                <li>Locate yourself in a private, quiet room. A virtual inspection will be conducted to confirm compliance with competition conditions.</li>
+                            </ul>
+                            <p class="mt-2 text-sm">Further instructions will be provided upon joining the Zoom meeting.</p>
+                        </div>
+                    </div>
+
+                }
+                else
+                {
+                    <p><em>No Message</em></p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string ID { get; set; }
+
+    private Form form;
+
+    private User currentUser;
+
+    private bool IsAdmin = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (ID is not null) 
+        {
+            form = await FormData.GetForm(ID);
+            currentUser = await AuthState.GetUserFromAuth(UserData);
+
+            var authState = await AuthState.GetAuthenticationStateAsync();
+            var user = authState.User;
+            IsAdmin = user.IsInRole("Admin");
+
+            if (form.EventScheduleInfo.CheckedPrelimSchedule == false && IsAdmin == false)
+            {
+                form.EventScheduleInfo.CheckedPrelimSchedule = true;
+
+                UpdateTrackingInfo(form);
+
+                await FormData.UpdateForm(form);
+            }
+        }
+    }
+
+    private void UpdateTrackingInfo(Form form)
+    {
+        // Update Tracking Info
+        Tracking tracking = new();
+        tracking.PerformedById = currentUser.Id;
+        tracking.FullName = currentUser.GetFullName();
+        tracking.DisplayName = currentUser.DisplayName;
+        tracking.UserType = currentUser.UserType;
+        tracking.TrackingAction = $"Read Message: Preliminary Schedule";
+
+        var description = $"Message regarding preliminary schedule (date and time) was viewed by {currentUser.DisplayName} ({currentUser.UserType}).";
+        tracking.Descriptions.Add(description);
+
+        form.FormHistory.Add(tracking);
+    }
+}

@@ -57,10 +57,5 @@
     protected override async Task OnInitializedAsync()
     {
         forms = await FormData.GetFormsByCreator(UserId);
-
-        foreach (var form in forms) 
-        {
-            Console.WriteLine(form.PersonalInfo.GetFirstMiddleLastName());
-        }
     }
 }

@@ -15,7 +15,7 @@
 <PageTitle>Records</PageTitle>
 
 
-@if (forms is null)
+@* @if (forms is null)
 {
     <p><em>Loading list...</em></p>
 }
@@ -31,43 +31,39 @@ else
                             <circle cx="11" cy="11" r="8" class=""></circle>
                             <line x1="21" y1="21" x2="16.65" y2="16.65" class=""></line>
                         </svg>
-                        <input  name="search" class="h-12 w-full cursor-text rounded-md border border-gray-100 bg-gray-100 py-4 pr-40 pl-12 shadow-sm outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" type="name" autofocus @bind="nameFilter" @bind:event="oninput" placeholder="Search by name - first, middle or last" />
+                        <input  name="search" class="h-12 w-full cursor-text rounded-md border border-gray-100 bg-gray-100 py-4 pr-40 pl-12 shadow-sm outline-none focus:border-cyan-500 focus:ring focus:ring-cyan-200 focus:ring-opacity-50" type="name" autofocus @bind="nameFilter" @bind:event="oninput" placeholder="Search by name - first, middle or last" />
                     </div>
 
                     <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 
-                        <div class="flex flex-col">
-                            <label for="manufacturer" class="text-sm font-medium text-stone-600">Division</label>
-
-                            <select id="manufacturer" class="mt-2 block w-full rounded-md border border-gray-100 bg-gray-100 px-2 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                        <div class="flex flex-col p-1">
+                            <label for="division" class="text-sm font-medium text-stone-600">Division</label>
+                            <select id="division" @onchange="OnDivisionChanged" class="mt-2 block w-full rounded-md border border-gray-100 bg-gray-100 px-2 py-2 focus:border-cyan-500">
                                 <option>Memorization</option>
                                 <option>Ten Qira'at</option>
                                 <option>Best Voice</option>
                             </select>
                         </div>
 
-                        <div class="flex flex-col">
+                        <div class="flex flex-col p-1">
                             <label for="manufacturer" class="text-sm font-medium text-stone-600">Category</label>
-
-                            <select id="manufacturer" class="mt-2 block w-full rounded-md border border-gray-100 bg-gray-100 px-2 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                            <select id="manufacturer" class="mt-2 block w-full rounded-md border border-gray-100 bg-gray-100 px-2 py-2 focus:border-cyan-500">
                                 <option>Default</option>
                             </select>
                         </div>
 
-                        <div class="flex flex-col">
+                        <div class="flex flex-col p-1">
                             <label for="manufacturer" class="text-sm font-medium text-stone-600">Gender</label>
-
-                            <select id="manufacturer" class="mt-2 block w-full rounded-md border border-gray-100 bg-gray-100 px-2 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                            <select id="gender" @onchange="OnGenderChanged" class="mt-2 block w-full rounded-md border border-gray-100 bg-gray-100 px-2 py-2 focus:border-cyan-500">
                                 <option>Both</option>
                                 <option>Male</option>
                                 <option>Female</option>
                             </select>
                         </div>
 
-                        <div class="flex flex-col">
+                        <div class="flex flex-col p-1">
                             <label for="status" class="text-sm font-medium text-stone-600">Status</label>
-
-                            <select id="status" class="mt-2 block w-full cursor-pointer rounded-md border border-gray-100 bg-gray-100 px-2 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                            <select id="status" @onchange="OnStatusChanged" class="mt-2 block w-full rounded-md border border-gray-100 bg-gray-100 px-2 py-2 focus:border-cyan-500">
                                 <option>Default</option>
                                 <option>Awaiting Review</option>
                                 <option>Reviewed</option>
@@ -79,24 +75,11 @@ else
                     </div>
 
                     <div class="mt-6 grid w-full grid-cols-2 justify-end space-x-4 md:flex">
-                        <button class="rounded-lg bg-gray-200 px-8 py-2 font-medium text-gray-700 outline-none hover:opacity-80 focus:ring">Reset</button>
-                        <button class="rounded-lg bg-blue-600 px-8 py-2 font-medium text-white outline-none hover:opacity-80 focus:ring">Search</button>
+                        <button @onclick="ResetFilters" class="rounded-lg bg-gray-200 px-8 py-2 font-medium text-gray-700 focus:border-cyan-500">Reset</button>
+                        <button class="rounded-lg bg-cyan-600 px-8 py-2 font-medium text-white">Search</button>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-
-    <div class="flex flex-row">
-        <div class="basis-1/8">
-            Items per page:
-            <select class="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6" @bind="@pagination.ItemsPerPage">
-                @foreach (var option in itemsPerPageOptions)
-                {
-                    <option value="@option">@option</option>
-                }
-            </select>
         </div>
     </div>
 
@@ -109,7 +92,7 @@ else
             <div class="-mx-4 -my-2 sm:-mx-6 lg:-mx-8">
                 <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
                     <div class="grid" tabindex="-1">
-                        <QuickGrid Items="@FilteredForms" Pagination="@pagination">
+                        <QuickGrid Items="@FilteredForms" Virtualize="true">
                             <TemplateColumn Title="Personal Info" SortBy="@nameSort">
                                 @{
                                     <div class="flex items-center">
@@ -145,50 +128,62 @@ else
             </div>
         </div>
     </div>
-
-    <Paginator State="@pagination" />
 }
 
 @code {
     private User currentUser;
     private bool IsAdmin = false;
 
-    private string nameFilter;
     private int numResults;
-
-
-    PaginationState pagination = new PaginationState { ItemsPerPage = totalCount };
 
 
     private IQueryable<Form> forms;
 
-    private IQueryable<Form> FilteredForms
-    {
-        get
-        {
-            var result = forms;
-            if (!string.IsNullOrEmpty(nameFilter))
-            {
-                var searchTerms = nameFilter.Split(' ');
+    private string nameFilter, divisionFilter, categoryFilter, genderFilter, statusFilter;
 
-                foreach (var term in searchTerms)
+    private IQueryable<Form> FilteredForms => ApplyFilters();
+
+    // Applies filters based on the user's selections
+    private IQueryable<Form> ApplyFilters()
+    {
+        var query = forms;
+
+        if (!string.IsNullOrEmpty(nameFilter))
+        {
+            var searchTerms = nameFilter.Split(' ');
+
+            foreach (var term in searchTerms)
+            {
+                if (!string.IsNullOrEmpty(term))
                 {
-                    if (!string.IsNullOrEmpty(term))
-                    {
-                        result = result.Where(c => c.PersonalInfo.GetFirstMiddleLastName().Contains(term, StringComparison.CurrentCultureIgnoreCase));
-                        totalCount = result.Count();
-                        pagination = new() { ItemsPerPage = totalCount };
-                    }
+                    query = query.Where(c => c.PersonalInfo.GetFirstMiddleLastName().Contains(term, StringComparison.CurrentCultureIgnoreCase));
                 }
             }
-            else
-            {
-                pagination = new() { ItemsPerPage = totalCount };
-                Console.WriteLine($"True:{nameFilter}");
-            }
-
-            return result;
         }
+
+        if (!string.IsNullOrEmpty(divisionFilter))
+        {
+            query = query.Where(c => c.CompetitionInfo.Division == divisionFilter);
+        }
+
+        if (!string.IsNullOrEmpty(categoryFilter))
+        {
+            query = query.Where(c => c.CompetitionInfo.Category == categoryFilter);
+        }
+
+        if (!string.IsNullOrEmpty(genderFilter))
+        {
+            query = query.Where(c => c.PersonalInfo.Gender.ToString() == genderFilter);
+        }
+
+        if (!string.IsNullOrEmpty(statusFilter))
+        {
+            query = query.Where(c => c.StatusInfo.Status == statusFilter);
+        }
+
+        numResults = query.Count();
+        StateHasChanged();
+        return query;
     }
 
 
@@ -206,7 +201,6 @@ else
         var user = authState.User;
         IsAdmin = user.IsInRole("Admin");
 
-        totalCount = 100; // Reset to default value
 
         await LoadForms();
     }
@@ -224,24 +218,6 @@ else
 
     private string selectedCategory;
 
-    // private async Task UpdateCategory(string value)
-    // {
-    //     selectedCategory = value;
-
-    //     if (!string.IsNullOrEmpty(selectedCategory))
-    //     {
-    //         var result = await competitorData.GetCompetitorsByCategory(selectedCategory);
-    //         competitors = result.AsQueryable();
-    //         numResults = competitors.Count();
-    //     }
-    //     else
-    //     {
-    //         competitors = Enumerable.Empty<CompetitorModel>().AsQueryable();
-    //         numResults = 0;
-    //     }
-
-    //     StateHasChanged();
-    // }
 
     private GridSort<Form> nameSort = GridSort<Form>.ByAscending(x => x.PersonalInfo.FirstName);
 
@@ -271,6 +247,26 @@ else
     }
 
 
-    private List<int> itemsPerPageOptions = new List<int> { 100, 200, 400, 840 };
-    private static int totalCount = 100; // Assume this is dynamically calculated
+    // Example of handling filter change for division
+    private void OnDivisionChanged(ChangeEventArgs e)
+    {
+        divisionFilter = e.Value.ToString();
+    }
+
+    private void OnGenderChanged(ChangeEventArgs e)
+    {
+        genderFilter = e.Value.ToString();
+    }
+
+    private void OnStatusChanged(ChangeEventArgs e)
+    {
+        statusFilter = e.Value.ToString();
+    }
+
+    private void ResetFilters()
+    {
+        nameFilter = divisionFilter = categoryFilter = genderFilter = statusFilter = string.Empty;
+        StateHasChanged();
+    }
 }
+ *@

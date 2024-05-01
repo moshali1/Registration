@@ -61,7 +61,21 @@
                                             <span class="inline-flex items-center rounded-md px-2 py-1 font-medium text-800-700 ring-1 ring-inset ring-gray-600/20 @GetStatusSpanCssClass(Form.StatusInfo.Status)">@Form.StatusInfo.Status</span>
                                         </td>
                                         <td class="whitespace-normal px-3 py-3 text-gray-600 sec-col">
-                                            <span>None</span>
+                                            @if (String.IsNullOrEmpty(Form.EventScheduleInfo.PrelimScheduledDate) is true)
+                                            {
+                                                <span>None</span>
+                                            }
+                                            else
+                                            {
+                                                <a href="/message/@Form.Id" class="relative bg-sky-500 hover:bg-sky-600 text-white font-medium py-1 px-2 rounded inline-flex items-center">
+                                                    Update
+                                                    @if (Form.EventScheduleInfo.CheckedPrelimSchedule == false)
+                                                    {
+                                                        <span class="flex absolute -right-2 -top-2 justify-center items-center w-4 h-4 bg-red-500 rounded-full border-2 border-white">
+                                                        </span>
+                                                    }
+                                                </a>
+                                            }
                                         </td>
                                         <td class="whitespace-normal py-3 pl-3 pr-4 text-right font-medium sm:pr-0 sec-col">
                                             <ActionDropdown Form="@Form" SetActiveDropdown="SetActiveDropdown" ActiveDropdownId="@activeDropdownId" OnItemDeleted="OnItemDeleted" IsAdmin="IsAdmin" CanWithdraw="canWithdraw" />
