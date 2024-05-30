@@ -56,6 +56,12 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="mt-2">
+                    <h2 class="text-lg font-semibold text-gray-900">Read Messages</h2>
+                    <p>Number of Verified Memorization Division Read Messages: @readMessagesM out of @totalVerifiedM</p>
+                    <p>Number of Verified Ten Qira'at Read Messages: @readMessagesTQ out of @totalVerifiedTQ</p>
+                </div>
             </div>
         </div>
     </div>
@@ -74,6 +80,10 @@
         {"30 Juz", (0, 0, 0, 0)}
     };
 
+    private int totalVerifiedM;
+    private int totalVerifiedTQ;
+    private int readMessagesM;
+    private int readMessagesTQ;
 
     protected override async Task OnInitializedAsync()
     {
@@ -87,7 +97,7 @@
 
         foreach (var form in forms)
         {
-            if (form.CompetitionInfo.Division == "Memorization")
+            if (form.CompetitionInfo.Division == "Memorization" && (form.StatusInfo.Status == "Verified" || form.StatusInfo.Status == "Pending"))
             {
                 var category = form.CompetitionInfo.Category;
                 var isMN = form.AddressInfo.StateProvince == "MN";
@@ -106,6 +116,13 @@
                 }
             }
         }
+
+        totalVerifiedM = forms.Where(x => x.CompetitionInfo.Division == "Memorization" && x.StatusInfo.Status == "Verified" && x.EventScheduleInfo.IsAttended).Count();
+        readMessagesM = forms.Where(x => x.CompetitionInfo.Division == "Memorization" && x.StatusInfo.Status == "Verified" && x.EventScheduleInfo.CheckedFinalSchedule == true).Count();
+
+        totalVerifiedTQ = forms.Where(x => x.CompetitionInfo.Division == "Ten Qira'at" && x.EventScheduleInfo.IsAttended).Count();
+        readMessagesTQ = forms.Where(x => x.CompetitionInfo.Division == "Ten Qira'at" && x.StatusInfo.Status == "Verified" && x.EventScheduleInfo.CheckedFinalSchedule == true).Count();
+
     }
 
     private (int TotalMale, int TotalFemale, int TotalMN, int TotalNonMN, int GrandTotal) totals;

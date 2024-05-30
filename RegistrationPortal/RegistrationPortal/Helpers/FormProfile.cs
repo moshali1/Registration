@@ -32,5 +32,8 @@ public class FormProfile : Profile
 
         CreateMap<Tracking, TrackingDto>();
         CreateMap<TrackingDto, Tracking>();
+
+        CreateMap<EventScheduleInfo, EventScheduleInfoDto>();
+        CreateMap<EventScheduleInfoDto, EventScheduleInfo>();
     }
 }

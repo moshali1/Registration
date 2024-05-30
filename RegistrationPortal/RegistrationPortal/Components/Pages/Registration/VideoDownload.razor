@@ -1,0 +1,107 @@
+﻿@page "/video-download"
+
+@inject IFormData FormData
+@inject FetchSasUri FetchSasUri
+@inject NavigationManager NavManager
+
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+@attribute [Authorize(Roles = "Admin")]
+
+<div class="p-4">
+    <p>@info1</p>
+    <p class="font-semibold">@info2</p>
+    <button @onclick="DownloadVideos" class="mt-4 px-6 py-2 bg-cyan-700 text-white font-bold rounded hover:bg-cyan-600">
+        Download Videos
+    </button>
+
+    @if (isDownloading)
+    {
+        <div class="mt-4">
+            <p>Downloading: @currentDownloadIndex of @totalDownloads (@percentageCompleted%)</p>
+            <div class="w-full bg-gray-200 rounded-full">
+                <div class="bg-cyan-600 text-xs leading-none py-1 text-center text-white rounded-full" style="width: @percentageCompleted%">
+                    @percentageCompleted%
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<Form> bvForms;
+    private string info1;
+    private string info2;
+    private bool isDownloading = false;
+    private int currentDownloadIndex = 0;
+    private int totalDownloads = 0;
+    private int percentageCompleted = 0;
+    private string downloadsFolderPath = @"C:\Users\mshie\Downloads\Attempts";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var forms = await FormData.GetForms();
+        // bvForms = forms.Where(f => f.CompetitionInfo.Division == DivisionConstants.BestVoice && f.StatusInfo.Status == "Reviewed"
+        //                             && f.CompetitionInfo.Category == "13 Years Old & Older").ToList();
+        // info1 = $"Best Voice Divisions | 13 Years Old & Older | Reviewed Status";
+        // info2 = $"Total Forms: {bvForms.Count()}";
+
+        bvForms = forms.Where(f => f.CompetitionInfo.Division == DivisionConstants.BestVoice && f.StatusInfo.Status == "Reviewed"
+                                    && f.CompetitionInfo.Category == "12 Years Old & Younger").ToList();
+        info1 = $"Best Voice Divisions | 12 Years Old & Younger | Reviewed Status";
+        info2 = $"Total Forms: {bvForms.Count()}";
+
+        totalDownloads = bvForms.Count;
+    }
+
+    private async Task DownloadVideos()
+    {
+        isDownloading = true;
+        currentDownloadIndex = 0;
+        percentageCompleted = 0;
+
+        foreach (var form in bvForms)
+        {
+            var fileName = form.FileUploadInfo.VideoFileName;
+            var filePath = Path.Combine(downloadsFolderPath, fileName);
+
+            if (File.Exists(filePath))
+            {
+                // Skip downloading if the file already exists
+                currentDownloadIndex++;
+                percentageCompleted = (int)((currentDownloadIndex / (double)totalDownloads) * 100);
+                StateHasChanged();
+                continue;
+            }
+
+            try
+            {
+                Console.WriteLine($"Troubleshooting: {form.PersonalInfo.GetFirstMiddleLastName()}");
+                await FetchSasUri.SetContentDispositionHeader(fileName);
+
+                var sasUri = FetchSasUri.GetSasUri(fileName);
+
+                // Open in a new tab to initiate download
+                NavManager.NavigateTo(sasUri, true);
+
+                currentDownloadIndex++;
+                percentageCompleted = (int)((currentDownloadIndex / (double)totalDownloads) * 100);
+
+                // Force the UI to refresh
+                StateHasChanged();
+
+                await Task.Delay(5000); // Delay to avoid overwhelming the browser
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(fileName);
+                
+                Console.WriteLine(e.Message.ToString());
+            }
+            
+        }
+
+        isDownloading = false;
+        StateHasChanged(); // Ensure final state update
+    }
+}

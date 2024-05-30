@@ -2,6 +2,7 @@
 
 @inject IFormData FormData
 @inject IUserData UserData
+@inject IJSRuntime JSRuntime
 @inject AuthenticationStateProvider AuthState
 @inject NavigationManager NavManager
 
@@ -17,7 +18,81 @@
                 <p class="text-sm text-white">View messages related to this form here. </p>
             </div>
             <div class="px-4 py-5 sm:p-6">
-                @if (String.IsNullOrEmpty(form?.EventScheduleInfo.PrelimScheduledDate) == false)
+                @if (form?.EventScheduleInfo.IsQualified is true && form?.EventScheduleInfo.IsAttended is true)
+                {
+                    <div class="border rounded-lg bg-gray-50 p-2">
+                        <div class="mb-4">
+                            <h6 class="mb-0">Subject: Final Round Qur'an Competition</h6>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0"><strong class="underline decoration-sky-500">Congratulations!</strong> You have qualified for Round 2 (Final Round) of the 10th Annual Imam Al-Shatibi Qur'an Competition. Please check your scheduled date and time below.</h6>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">Competitor Info: <span class="font-semibold">@form.PersonalInfo.GetFirstMiddleLastName()</span> | @form.CompetitionInfo.Division | @form.CompetitionInfo.Category</h6>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">Competition Format: In-Person <span class="font-semibold">(in Minnesota, US)</span></h6>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">Competition Location</h6>
+                            <ul class="list-disc pl-6 text-sm">
+                                <li>Location: <span class="font-semibold">John F. Kennedy High School</span></li>
+                                <li>Address: 9701 Nicollet Ave, Bloomington, MN 55420</li>
+                            </ul>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">Scheduled Date: <span class="font-semibold">@form.EventScheduleInfo.FinalScheduledDate</span></h6>
+                            <h6 class="mb-0">Scheduled Time: <span class="font-semibold">@form.EventScheduleInfo.FinalScheduledTime</span> Central Time (CT)</h6>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="text-sm">We kindly request that you arrive <span class="font-semibold">at least 30 minutes</span> prior to your scheduled time.</h6>
+                        </div>
+                        @if (IsAdmin && form.CompetitionInfo.Category == "1 Juz")
+                        {
+                            <div class="mb-4">
+                                <button @onclick="DownloadCertificateImage"
+                                        class="inline-block bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 px-4 rounded">
+                                    Download Your Participation Certificate
+                                </button>
+                            </div>
+                        }
+                    </div>
+
+                }
+                else if (form?.EventScheduleInfo.IsQualified is false && form?.EventScheduleInfo.IsAttended is true)
+                {
+                    <div class="border rounded-lg bg-gray-50 p-2">
+                        <div class="mb-4">
+                            <h6 class="mb-0">Subject: Thank You for Participating</h6>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">Competitor Info: <span class="font-semibold">@form.PersonalInfo.GetFirstMiddleLastName()</span> | @form.CompetitionInfo.Division | @form.CompetitionInfo.Category</h6>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">
+                                Thank you for participating in Round 1 (Preliminary Round) of the 10th Annual Imam Al-Shatibi Qur'an Competition.
+                                Unfortunately, you have <strong>not qualified</strong> for Round 2.
+                                May Allah reward you for your efforts. We encourage you to keep practicing for future opportunities.
+                            </h6>
+                        </div>
+                        @if (IsAdmin && form.CompetitionInfo.Category == "1 Juz")
+                        {
+                            <div class="mb-4">
+                                <button @onclick="DownloadCertificateImage"
+                                        class="inline-block bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 px-4 rounded">
+                                    Download Your Participation Certificate
+                                </button>
+                            </div>
+                        }
+                    </div>
+
+                }
+                else
+                {
+                    <p><em>No Message</em></p>
+                }
+
+                @* @if (String.IsNullOrEmpty(form?.EventScheduleInfo.PrelimScheduledDate) == false)
                 {
                     <div class="border rounded-lg bg-gray-50 p-2">
                         <div class="mb-4">
@@ -51,7 +126,7 @@
                 else
                 {
                     <p><em>No Message</em></p>
-                }
+                } *@
             </div>
         </div>
     </div>
@@ -78,9 +153,9 @@
             var user = authState.User;
             IsAdmin = user.IsInRole("Admin");
 
-            if (form.EventScheduleInfo.CheckedPrelimSchedule == false && IsAdmin == false)
+            if (form.EventScheduleInfo.CheckedFinalSchedule == false && IsAdmin == false)
             {
-                form.EventScheduleInfo.CheckedPrelimSchedule = true;
+                form.EventScheduleInfo.CheckedFinalSchedule = true;
 
                 UpdateTrackingInfo(form);
 
@@ -97,11 +172,27 @@
         tracking.FullName = currentUser.GetFullName();
         tracking.DisplayName = currentUser.DisplayName;
         tracking.UserType = currentUser.UserType;
-        tracking.TrackingAction = $"Read Message: Preliminary Schedule";
+        tracking.TrackingAction = $"Read Message: Final Round Qualification / Schedule";
 
-        var description = $"Message regarding preliminary schedule (date and time) was viewed by {currentUser.DisplayName} ({currentUser.UserType}).";
+        var description = $"Message regarding final round qualification / schedule (date and time) was viewed by {currentUser.DisplayName} ({currentUser.UserType}).";
         tracking.Descriptions.Add(description);
 
         form.FormHistory.Add(tracking);
     }
+
+    private async Task DownloadCertificateImage()
+    {
+        char gender = 'A'; 
+        if (form.PersonalInfo.Gender == Data.Models.Gender.Male)
+        {
+            gender = 'M';
+        }
+        else if (form.PersonalInfo.Gender == Data.Models.Gender.Female)
+        {
+            gender = 'F';
+        }
+        var downloadUrl = $"api/CertificateImage/download?name={form.PersonalInfo.GetFirstMiddleLastName()}&category={form.CompetitionInfo.Category}&division={form.CompetitionInfo.Division}&gender={gender}";
+        await JSRuntime.InvokeVoidAsync("open", downloadUrl, "_blank");
+    }
+
 }

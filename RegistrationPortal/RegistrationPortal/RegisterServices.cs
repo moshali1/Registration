@@ -112,6 +112,9 @@ public static class RegisterServices
 
         builder.Services.AddScoped<FetchSasUri>();
 
+        builder.Services.AddSingleton<CertificateImageService>();
+
+        builder.Services.AddSingleton<IEmailService, EmailService>();
         builder.Services.AddSingleton<IEmailService, EmailService>();
 
         builder.Services.AddMemoryCache();

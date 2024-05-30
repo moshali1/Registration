@@ -19,6 +19,7 @@ public class FormDto
     public List<TrackingDto> FormHistory { get; set; } = new();
     public string Creator { get; set; }
     public List<string> SharedUsers { get; set; } = new();
+    public EventScheduleInfoDto EventScheduleInfo { get; set; }
 
     public FormDto()
     {
@@ -29,5 +30,6 @@ public class FormDto
         TeacherInfo = new();
         FileUploadInfo = new();
         StatusInfo = new();
+        EventScheduleInfo = new();
     }
 }

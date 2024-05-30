@@ -1,0 +1,199 @@
+﻿@page "/photo-download"
+
+@inject IFormData FormData
+@inject FetchSasUri FetchSasUri
+@inject NavigationManager NavManager
+
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+@attribute [Authorize(Roles = "Admin")]
+
+
+<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-3xl">
+        <div class="overflow-hidden rounded-lg bg-white shadow">
+            <div class="bg-cyan-950 px-4 py-5 sm:px-6">
+                <h1 class="text-base font-semibold leading-6 text-white">Photo Download</h1>
+                <p class="text-sm text-white">Download Photos of Participants in the Memorization Division.</p>
+            </div>
+            <div class="px-4 py-5 sm:p-6">
+                <div class="p-4">
+                    <div class="flex space-x-4">
+                        <div class="mb-4 flex-1">
+                            <label class="block text-sm font-medium leading-6 text-gray-900">Category:</label>
+                            <select @bind="selectedCategory" @oninput="OnSelectionChange" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6">
+                                <option value="" disabled selected>Choose Category</option>
+                                <option value="1 Juz">1 Juz</option>
+                                <option value="5 Juz">5 Juz</option>
+                                <option value="10 Juz">10 Juz</option>
+                                <option value="15 Juz">15 Juz</option>
+                                <option value="20 Juz">20 Juz</option>
+                                <option value="30 Juz">30 Juz</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4 flex-1">
+                            <label class="block text-sm font-medium leading-6 text-gray-900">Gender:</label>
+                            <select @bind="selectedGender" @oninput="OnSelectionChange" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6">
+                                <option value="" disabled selected>Choose Gender</option>
+                                <option value="@Data.Models.Gender.Male">Male</option>
+                                <option value="@Data.Models.Gender.Female">Female</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4 flex-1">
+                            <label class="block text-sm font-medium leading-6 text-gray-900">Location:</label>
+                            <select @bind="selectedLocation" @oninput="OnSelectionChange" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6">
+                                <option value="" disabled selected>Choose Location</option>
+                                <option value="MN">MN</option>
+                                <option value="Non-MN">Non-MN</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button @onclick="DisplayFormCount" class="mt-4 px-6 py-2 bg-cyan-700 text-white font-semibold rounded hover:bg-cyan-600">
+                        Display Number of Forms
+                    </button>
+
+                    @if (isFormCountDisplayed)
+                    {
+                        <div class="border rounded-lg bg-gray-100 mt-2 px-2">
+                            <p>@info1</p>
+                            <p class="font-semibold">@info2</p>
+                        </div>
+                    }
+
+                    @if (invalidSelection)
+                    {
+                        <div class="border rounded-lg bg-gray-100 mt-2 px-2">
+                            <p>Invalid Selection!</p>
+                        </div>
+                    }
+
+                    @if (isFormCountDisplayed)
+                    {
+                        <button @onclick="DownloadPhotos" class="mt-4 px-6 py-2 bg-orange-700 text-white font-semibold rounded hover:bg-orange-600">
+                            Download Photos
+                        </button>
+                    }
+
+                    @if (isDownloading)
+                    {
+                        <div class="mt-4">
+                            <p>Downloading: @currentDownloadIndex of @totalDownloads (@percentageCompleted%)</p>
+                            <div class="w-full bg-gray-200 rounded-full">
+                                <div class="bg-cyan-600 text-xs leading-none py-1 text-center text-white rounded-full" style="width: @percentageCompleted%">
+                                    @percentageCompleted%
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    @if (isDownloadComplete)
+                    {
+                        <div class="mt-4">
+                            <p class="text-green-600 font-semibold">Download Complete!</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    private List<Form> forms;
+
+    private List<Form> filteredForms;
+    private string info1;
+    private string info2;
+    private bool isDownloading = false;
+    private bool isDownloadComplete = false;
+    private int currentDownloadIndex = 0;
+    private int totalDownloads = 0;
+    private int percentageCompleted = 0;
+    private bool isFormCountDisplayed = false;
+    private bool invalidSelection = false;
+
+    private string selectedCategory;
+    private Data.Models.Gender? selectedGender;
+    private string selectedLocation;
+
+    private void OnSelectionChange(ChangeEventArgs e)
+    {
+        info1 = string.Empty;
+        info2 = string.Empty;
+        isFormCountDisplayed = false;
+        isDownloadComplete = false;
+        invalidSelection = false;
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+        var allForms = await FormData.GetForms();
+        forms = allForms.Where(f => f.CompetitionInfo.Division == "Memorization"
+                                    && f.StatusInfo.Status == "Verified"
+                                    && f.EventScheduleInfo.IsQualified == true).ToList();
+    }
+
+    private void DisplayFormCount()
+    {
+        if (string.IsNullOrEmpty(selectedCategory) || selectedGender == null || string.IsNullOrEmpty(selectedLocation))
+        {
+            invalidSelection = true;
+            return;
+        }
+
+        filteredForms = forms.Where(f => f.CompetitionInfo.Category == selectedCategory
+                                         && f.PersonalInfo.Gender == selectedGender
+                                         && ((selectedLocation == "MN" && f.AddressInfo.StateProvince == "MN") || (selectedLocation == "Non-MN" && f.AddressInfo.StateProvince != "MN"))).ToList();
+
+        info1 = $"Selected Category: {selectedCategory} | Gender: {selectedGender} | Location: {selectedLocation}";
+        info2 = $"Total Forms: {filteredForms.Count()}";
+
+        totalDownloads = filteredForms.Count;
+        isFormCountDisplayed = true;
+        invalidSelection = false;
+    }
+
+    private async Task DownloadPhotos()
+    {
+        isDownloading = true;
+        isDownloadComplete = false;
+        currentDownloadIndex = 0;
+        percentageCompleted = 0;
+
+        foreach (var form in filteredForms)
+        {
+            var fileName = form.FileUploadInfo.PhotoFileName;
+
+            try
+            {
+                Console.WriteLine($"Troubleshooting: {form.PersonalInfo.GetFirstMiddleLastName()}");
+                await FetchSasUri.SetContentDispositionHeader(fileName);
+
+                var sasUri = FetchSasUri.GetSasUri(fileName);
+
+                // Open in a new tab to initiate download
+                NavManager.NavigateTo(sasUri, true);
+
+                currentDownloadIndex++;
+                percentageCompleted = (int)((currentDownloadIndex / (double)totalDownloads) * 100);
+
+                // Force the UI to refresh
+                StateHasChanged();
+
+                await Task.Delay(3000); // Delay to avoid overwhelming the browser
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(fileName);
+                Console.WriteLine(e.Message.ToString());
+            }
+        }
+
+        isDownloading = false;
+        isDownloadComplete = true;
+        StateHasChanged(); // Ensure final state update
+    }
+}

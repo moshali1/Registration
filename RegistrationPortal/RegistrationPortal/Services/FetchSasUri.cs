@@ -1,4 +1,6 @@
 ﻿using Azure.Storage;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Azure.Storage.Sas;
 
 namespace RegistrationPortal.Services;
@@ -6,11 +8,13 @@ namespace RegistrationPortal.Services;
 // To revoke SAS tokens, modify the storage account/container access policy or change account keys, invalidating existing tokens.
 public class FetchSasUri
 {
+    private readonly string _storageConnectionString;
     private readonly string _storageAccountName;
     private readonly string _storageAccountKey;
 
     public FetchSasUri(IConfiguration config)
     {
+        _storageConnectionString = config.GetConnectionString("Storage");
         _storageAccountName = config.GetValue<string>("AzureStorage:AccountName");
         _storageAccountKey = config.GetValue<string>("AzureStorage:AccountKey");
     }
@@ -58,6 +62,22 @@ public class FetchSasUri
             Console.WriteLine(e.Message);
             return string.Empty;
         }
+    }
+
+    public async Task SetContentDispositionHeader(string fileName)
+    {
+        var connectionString = _storageConnectionString;
+        var blobName = fileName;
+        var containerName = DetermineContainerName(fileName);
+
+        var blobClient = new BlobClient(connectionString, containerName, blobName);
+
+        var headers = new BlobHttpHeaders
+        {
+            ContentDisposition = "attachment"
+        };
+
+        await blobClient.SetHttpHeadersAsync(headers);
     }
 
     public string DetermineContainerName(string identifier)

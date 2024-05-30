@@ -115,15 +115,19 @@ else
         if (IsAdmin)
         {
             forms = await FormData.GetForms();
+            // var result = await FormData.GetForms();
+            // forms = result.Where(x => x.StatusInfo.Status == "Reviewed").ToList();
         }
         else
         {
             forms = await FormData.GetFormsByCreator(currentUser.Id);
         }
 
+        
         mForms = forms.Where(f => f.CompetitionInfo.Division == DivisionConstants.Memorization).ToList();
         tForms = forms.Where(f => f.CompetitionInfo.Division == DivisionConstants.TenQiraat).ToList();
-        bForms = forms.Where(f => f.CompetitionInfo.Division == DivisionConstants.BestVoice).ToList();
+        // bForms = forms.Where(f => f.CompetitionInfo.Division == DivisionConstants.BestVoice).ToList();
+        bForms = forms.Where(f => f.CompetitionInfo.Division == DivisionConstants.BestVoice && f.StatusInfo.Status == "Reviewed").ToList();
     }
 
     private void HandleCloseNotification(bool value)

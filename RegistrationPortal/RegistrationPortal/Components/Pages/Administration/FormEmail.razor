@@ -219,7 +219,7 @@
         {
             messageText = string.IsNullOrEmpty(messageText) ? "No forms to display." : messageText;
         }
-        
+
     }
 
     protected override async Task OnInitializedAsync()
@@ -227,6 +227,8 @@
         user = await AuthState.GetUserFromAuth(UserData);
 
         allUsers = await UserData.GetUsers();
+        // var a = await UserData.GetUsers();
+        // allUsers = a.Where(x => x.Id == "65e4fbe5845c3e73612944d8").ToList();
         allForms = await FormData.GetForms();
 
 
@@ -389,6 +391,27 @@
 
 
 
+        // var htmlContent = $@"
+        //                 <div style='font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px;'>
+        //                     <div style='margin-top: 20px;'>
+        //                         <p>Assalamu Alaikum {creatorDisplayName} <small>({creatorUserType})</small>,</p>
+        //                         <p>We are pleased to inform you that your status is now verified, and the following student(s) have been verified for the Imam Al-Shatibi Quran Competition Registration {DateTime.Now.Year}, in the &quot;{selectedDivision}&quot; division:</p>
+        //             {BuildHtmlContent(currentUserForms)}
+        //                     <p>Please consider this email as confirmation of your verified status. No further action is required on your part at this moment.</p>
+        //                     <p>The <strong>preliminary schedule</strong> for the {selectedDivision} Division will be posted on the registration site and accessible via the link below starting May 1, 2024.</p>
+        //                     <p>Thank you for your participation.</p>
+        //                     </div>
+        //                     <div style='margin-top: 20px;'>
+        //                         <p>To view your form(s), please visit: <a href='https://register.imamshatibi.org' target='_blank'>https://register.imamshatibi.org</a></p>
+        //                         <p>If extenuating circumstances require you to withdraw, please contact us with your registration details and the reason for withdrawal as soon as possible.</p>
+        //                         <p>If you need to contact us, please reply to this email or call us at (612) 800-4435 from 8 AM to 8 PM CT.</p>
+        //                     </div>
+        //                     <div style='margin-top: 20px; font-size: 0.9em; text-align: center; color: #555;'>
+        //                         JazakAllahu Khairan,<br>
+        //                         Imam Al-Shatibi Quran Competition
+        //                     </div>
+        //                 </div>";
+
         var htmlContent = $@"
                         <div style='font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px;'>
                             <div style='margin-top: 20px;'>
@@ -396,12 +419,12 @@
                                 <p>We are pleased to inform you that your status is now verified, and the following student(s) have been verified for the Imam Al-Shatibi Quran Competition Registration {DateTime.Now.Year}, in the &quot;{selectedDivision}&quot; division:</p>
                     {BuildHtmlContent(currentUserForms)}
                             <p>Please consider this email as confirmation of your verified status. No further action is required on your part at this moment.</p>
-                            <p>The <strong>preliminary schedule</strong> for the {selectedDivision} Division will be posted on the registration site and accessible via the link below starting May 1, 2024.</p>
+                            <p>The <strong>preliminary schedule</strong> for the {selectedDivision} Division has been posted on the registration site and accessible via the link below.</p>
                             <p>Thank you for your participation.</p>
                             </div>
                             <div style='margin-top: 20px;'>
                                 <p>To view your form(s), please visit: <a href='https://register.imamshatibi.org' target='_blank'>https://register.imamshatibi.org</a></p>
-                                <p>If extenuating circumstances require you to withdraw, please contact us with your registration details and the reason for withdrawal as soon as possible.</p>
+                   
                                 <p>If you need to contact us, please reply to this email or call us at (612) 800-4435 from 8 AM to 8 PM CT.</p>
                             </div>
                             <div style='margin-top: 20px; font-size: 0.9em; text-align: center; color: #555;'>
@@ -411,6 +434,7 @@
                         </div>";
 
         await EmailService.SendEmailAsync(creatorEmail, creatorDisplayName, subject, plainText, htmlContent);
+        await EmailService.SendEmailAsync("mshiek114@gmail.com", creatorDisplayName, subject, plainText, htmlContent);
 
         successText = "Email sent successfully!";
     }

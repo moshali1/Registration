@@ -192,6 +192,11 @@
 
         UpdateTrackingInfo();
 
+        // Remove Prelim Event Info
+        Form.EventScheduleInfo.PrelimScheduledDate = null;
+        Form.EventScheduleInfo.PrelimScheduledTime = null;
+        Form.EventScheduleInfo.CheckedPrelimSchedule = false;
+
         await FormData.UpdateForm(Form);
         isWithdrawAlertVisible = false;
         CloseDropdown();
