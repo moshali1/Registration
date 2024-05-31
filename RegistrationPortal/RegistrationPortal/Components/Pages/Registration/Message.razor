@@ -13,9 +13,16 @@
 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     <div class="mx-auto max-w-3xl">
         <div class="overflow-hidden rounded-lg bg-white shadow">
-            <div class="bg-cyan-950 px-4 py-5 sm:px-6">
-                <h1 class="text-base font-semibold leading-6 text-white">Message</h1>
-                <p class="text-sm text-white">View messages related to this form here. </p>
+            <div class="bg-cyan-950 px-4 py-5 sm:px-6 flex items-center justify-between">
+                <div>
+                    <h1 class="text-base font-semibold leading-6 text-white">Edit Schedule</h1>
+                    <p class="text-sm text-white">Modify the scheduled date and time for the final round.</p>
+                </div>
+                <button @onclick="GoToList" class="text-white bg-cyan-600 hover:bg-cyan-700 rounded-full p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h13M3 14h9m-9 4h6M3 6h9" />
+                    </svg>
+                </button>
             </div>
             <div class="px-4 py-5 sm:p-6">
                 @if (form?.EventScheduleInfo.IsQualified is true && form?.EventScheduleInfo.IsAttended is true)
@@ -54,6 +61,16 @@
                                         class="inline-block bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 px-4 rounded">
                                     Download Your Participation Certificate
                                 </button>
+                            </div>
+                        }
+
+                        @if (IsAdmin)
+                        {
+                            <div class="mb-4">
+                                <a href="/schedule-update/@form.Id"
+                                   class="inline-block bg-pink-600 hover:bg-pink-700 text-white font-semibold py-2 px-4 rounded">
+                                    Update Schedule
+                                </a>
                             </div>
                         }
                     </div>
@@ -193,6 +210,19 @@
         }
         var downloadUrl = $"api/CertificateImage/download?name={form.PersonalInfo.GetFirstMiddleLastName()}&category={form.CompetitionInfo.Category}&division={form.CompetitionInfo.Division}&gender={gender}";
         await JSRuntime.InvokeVoidAsync("open", downloadUrl, "_blank");
+    }
+
+    private void GoToList()
+    {
+        @if (!IsAdmin)
+        {
+            NavManager.NavigateTo("/list");
+        }
+        else
+        {
+            NavManager.NavigateTo("/list2");
+        }
+        
     }
 
 }
