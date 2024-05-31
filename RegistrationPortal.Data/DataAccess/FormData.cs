@@ -28,11 +28,15 @@ public class FormData : IFormData
             var results = await _forms.Find(_ => true).ToListAsync();
             output = results;
 
-            _cache.Set((CacheName), output, TimeSpan.FromDays(1));
+            _cache.Set((CacheName), output, TimeSpan.FromHours(1));
         }
         return output;
     }
-        
+
+    public void ClearCache()
+    {
+        _cache.Remove(CacheName);
+    }
 
     public async Task<List<BasicForm>> GetFormsSummary(bool useCache = true)
     {

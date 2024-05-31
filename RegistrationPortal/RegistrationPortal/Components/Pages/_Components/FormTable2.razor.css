@@ -1,0 +1,12 @@
+﻿@media (min-width: 1168px) {
+    .sec-col-main {
+        display: none;
+    }
+}
+
+@media (max-width: 1167px) {
+    
+    .sec-col {
+        display: none;
+    }
+}

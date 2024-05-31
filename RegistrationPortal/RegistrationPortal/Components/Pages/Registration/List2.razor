@@ -1,0 +1,459 @@
+﻿@page "/list2"
+
+@inject IFormData FormData
+@inject IUserData UserData
+@inject AuthenticationStateProvider AuthState
+@inject NavigationManager NavManager
+@inject ProtectedSessionStorage SessionStorage
+
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>List</PageTitle>
+
+<div class="sm:flex sm:items-center">
+    <div class="sm:flex-auto">
+        <h1 class="text-2xl font-bold mb-3" tabindex="-1">Form Submission List</h1>
+        <p class="mt-2 text-gray-700">A list of all the registered participants in your account, including details such as personal information, division, category, status, and messages.</p>
+    </div>
+</div>
+
+@if (forms == null)
+{
+    <p><em>Loading list...</em></p>
+}
+else
+{
+    <div class="flex">
+        <!-- Main content area -->
+        <div class="w-4/5 pr-4">
+            <div class="list-type-dropdown">
+                <label for="tabs" class="sr-only">Select a tab</label>
+                <select id="tabs" name="tabs" @onchange="HandleDropdownChange" class="mt-2 block w-full rounded-lg border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-cyan-600 sm:text-sm sm:leading-6">
+                    <option value="M">Memorization Forms</option>
+                    <option value="T">Ten Qira'at Forms</option>
+                    <option value="B">Best Voice Forms</option>
+                </select>
+            </div>
+
+            <div class="list-type-tab">
+                <nav class="isolate flex divide-x divide-gray-200 rounded-lg shadow" aria-label="Tabs">
+                    <a @onclick="() => SetActiveTab('M')" class="@tabCssClass('M') cursor-pointer rounded-l-lg group relative min-w-0 flex-1 overflow-hidden bg-white py-4 px-4 text-center text-sm font-medium hover:bg-gray-50 focus:z-10" aria-current="page">
+                        <span>Memorization Forms</span>
+                        <span aria-hidden="true" class="@underlineCssClass('M') absolute inset-x-0 bottom-0 h-0.5"></span>
+                    </a>
+                    <a @onclick="() => SetActiveTab('T')" class="@tabCssClass('T') cursor-pointer group relative min-w-0 flex-1 overflow-hidden bg-white py-4 px-4 text-center text-sm font-medium hover:bg-gray-50 focus:z-10">
+                        <span>Ten Qira'at Forms</span>
+                        <span aria-hidden="true" class="@underlineCssClass('T') absolute inset-x-0 bottom-0 h-0.5"></span>
+                    </a>
+                    <a @onclick="() => SetActiveTab('B')" class="@tabCssClass('B') cursor-pointer rounded-r-lg group relative min-w-0 flex-1 overflow-hidden bg-white py-4 px-4 text-center text-sm font-medium hover:bg-gray-50 focus:z-10">
+                        <span>Best Voice Forms</span>
+                        <span aria-hidden="true" class="@underlineCssClass('B') absolute inset-x-0 bottom-0 h-0.5"></span>
+                    </a>
+                </nav>
+            </div>
+
+            <FormTable2 Forms="@forms" Type="@(forms?.Any() ?? false)" IsAdmin="IsAdmin" />
+        </div>
+
+        <!-- Filter section -->
+        <div class="w-1/5 pl-4">
+            <div class="bg-white p-4 rounded-lg shadow mb-4 flex justify-between items-center">
+                <h3 class="px-2 text-lg font-medium leading-6 text-gray-900">Filters</h3>
+                <span class="isolate inline-flex rounded-md shadow-sm">
+                    <button class="bg-pink-600 text-white text-sm font-semibold py-1 px-2 mr-2 rounded hover:bg-pink-700 focus:ring-2 focus:outline-none focus:ring-pink-300" @onclick="ResetFilters">Reset Filters</button>
+                    <button class="text-pink-600 border border-pink-600 hover:bg-pink-600 hover:text-white focus:ring-2 focus:outline-none focus:ring-pink-300 font-semibold rounded-lg text-sm p-2.5 text-center inline-flex items-center me-2" @onclick="RefreshForms">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4">
+                            <path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.311h2.433a.75.75 0 0 0 0-1.5H3.989a.75.75 0 0 0-.75.75v4.242a.75.75 0 0 0 1.5 0v-2.43l.31.31a7 7 0 0 0 11.712-3.138.75.75 0 0 0-1.449-.39Zm1.23-3.723a.75.75 0 0 0 .219-.53V2.929a.75.75 0 0 0-1.5 0V5.36l-.31-.31A7 7 0 0 0 3.239 8.188a.75.75 0 1 0 1.448.389A5.5 5.5 0 0 1 13.89 6.11l.311.31h-2.432a.75.75 0 0 0 0 1.5h4.243a.75.75 0 0 0 .53-.219Z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </span>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow mb-4">
+                <input type="text" class="block w-full rounded-lg border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-cyan-600 sm:text-sm sm:leading-6" placeholder="Search by competitor name" @oninput="OnSearchInput" />
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow mb-4">
+                <h3 class="px-2 text-lg font-medium leading-6 text-gray-900">Category</h3>
+                <ul class="mt-2 divide-y divide-gray-200">
+                    <li class="p-2 cursor-pointer @GetSelectedCategory()" @onclick="(() => OnCategoryClick())">All</li>
+                    @if (currentCategories is not null)
+                    {
+                        @foreach (var c in currentCategories)
+                        {
+                            <li class="p-2 cursor-pointer @GetSelectedCategory(c)" @onclick="(() => OnCategoryClick(c))">@c</li>
+                        }
+                    }
+                </ul>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow mb-4">
+                <h3 class="px-2 text-lg font-medium leading-6 text-gray-900">Gender</h3>
+                <ul class="mt-2 divide-y divide-gray-200">
+                    <li class="p-2 cursor-pointer @GetSelectedGender()" @onclick="(() => OnGenderClick())">All</li>
+                    <li class="p-2 cursor-pointer @GetSelectedGender("Male")" @onclick="(() => OnGenderClick(Data.Models.Gender.Male.ToString()))">Male</li>
+                    <li class="p-2 cursor-pointer @GetSelectedGender("Female")" @onclick="(() => OnGenderClick(Data.Models.Gender.Female.ToString()))">Female</li>
+                </ul>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow mb-4">
+                <h3 class="px-2 text-lg font-medium leading-6 text-gray-900">Location</h3>
+                <ul class="mt-2 divide-y divide-gray-200">
+                    <li class="p-2 cursor-pointer @GetSelectedLocation()" @onclick="(() => OnLocationClick())">All</li>
+                    <li class="p-2 cursor-pointer @GetSelectedLocation("MN")" @onclick="(() => OnLocationClick(LocationConstants.LocalState))">MN</li>
+                    <li class="p-2 cursor-pointer @GetSelectedLocation("Non-MN")" @onclick="(() => OnLocationClick(LocationConstants.OtherLocations))">Non-MN</li>
+                </ul>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow mb-4">
+                <h3 class="px-2 text-lg font-medium leading-6 text-gray-900">Qualified</h3>
+                <ul class="mt-2 divide-y divide-gray-200">
+                    <li class="p-2 cursor-pointer @GetSelectedQualified()" @onclick="(() => OnQualifiedClick())">All</li>
+                    <li class="p-2 cursor-pointer @GetSelectedQualified(true)" @onclick="(() => OnQualifiedClick(true))">Qualified (Attended Only)</li>
+                    <li class="p-2 cursor-pointer @GetSelectedQualified(false)" @onclick="(() => OnQualifiedClick(false))">Not Qualified (Attended Only)</li>
+                </ul>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow mb-4">
+                <h3 class="px-2 text-lg font-medium leading-6 text-gray-900">Status</h3>
+                <ul class="mt-2 divide-y divide-gray-200">
+                    <li class="p-2 cursor-pointer @GetSelectedStatus()" @onclick="(() => OnStatusClick())">All</li>
+                    <li class="p-2 cursor-pointer @GetSelectedStatus("Awaiting Review")" @onclick="(() => OnStatusClick(StatusEnums.AwaitingReview.Value))">Awaiting Review</li>
+                    <li class="p-2 cursor-pointer @GetSelectedStatus("Reviewed")" @onclick="(() => OnStatusClick(StatusEnums.Reviewed.Value))">Reviewed</li>
+                    <li class="p-2 cursor-pointer @GetSelectedStatus("Verified")" @onclick="(() => OnStatusClick(StatusEnums.Verified.Value))">Verified</li>
+                    <li class="p-2 cursor-pointer @GetSelectedStatus("Pending")" @onclick="(() => OnStatusClick(StatusEnums.Pending.Value))">Pending</li>
+                    <li class="p-2 cursor-pointer @GetSelectedStatus("Withdrawn")" @onclick="(() => OnStatusClick(StatusEnums.Verified.Value))">Withdrawn</li>
+                    <li class="p-2 cursor-pointer @GetSelectedStatus("Disqualified")" @onclick="(() => OnStatusClick(StatusEnums.Disqualified.Value))">Disqualified</li>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+}
+
+@code {
+    private User currentUser;
+    private bool IsAdmin = false;
+
+    private List<Form> forms;
+
+    private char activeTab = 'M';
+    private string activeCategory = "All";
+    private string activeGender = "All";
+    private string activeLocation = "All";
+    private bool? activeQualified = null; 
+    private string activeStatus = "All"; 
+    private string searchQuery = string.Empty;
+
+    private List<string> currentCategories;
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentUser = await AuthState.GetUserFromAuth(UserData);
+
+        var authState = await AuthState.GetAuthenticationStateAsync();
+        var user = authState.User;
+        IsAdmin = user.IsInRole("Admin");
+
+        UpdateCurrentCategories();
+
+
+        await LoadFilterState(); // Load filter state before loading forms
+        await LoadForms(); // Load forms based on the filter state
+        await FilterForms(); // Apply filters after loading forms
+    }
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await FilterForms(); // Re-apply filtering after the initial render
+            StateHasChanged(); // Ensure the UI is updated
+        }
+    }
+
+    private async Task LoadFilterState()
+    {
+        var stringResults = await SessionStorage.GetAsync<string>(nameof(activeCategory));
+        activeCategory = stringResults.Success ? stringResults.Value : "All";
+
+        stringResults = await SessionStorage.GetAsync<string>(nameof(activeLocation));
+        activeLocation = stringResults.Success ? stringResults.Value : "All";
+
+        stringResults = await SessionStorage.GetAsync<string>(nameof(activeGender));
+        activeGender = stringResults.Success ? stringResults.Value : "All";
+
+        var boolResults = await SessionStorage.GetAsync<bool?>(nameof(activeQualified));
+        activeQualified = boolResults.Success ? boolResults.Value : null;
+
+        stringResults = await SessionStorage.GetAsync<string>(nameof(activeStatus));
+        activeStatus = stringResults.Success ? stringResults.Value : "All";
+
+        stringResults = await SessionStorage.GetAsync<string>(nameof(activeStatus));
+        activeStatus = stringResults.Success ? stringResults.Value : "All";
+
+        stringResults = await SessionStorage.GetAsync<string>(nameof(activeTab));
+        activeTab = stringResults.Success ? Convert.ToChar(stringResults.Value) : 'M';  // Default to 'M'
+
+        stringResults = await SessionStorage.GetAsync<string>(nameof(searchQuery));
+        searchQuery = stringResults.Success ? stringResults.Value : string.Empty;
+    }
+
+    private async Task SaveFilterState()
+    {
+        await SessionStorage.SetAsync(nameof(activeCategory), activeCategory);
+        await SessionStorage.SetAsync(nameof(activeLocation), activeLocation);
+        await SessionStorage.SetAsync(nameof(activeGender), activeGender);
+        await SessionStorage.SetAsync(nameof(activeQualified), activeQualified);
+        await SessionStorage.SetAsync(nameof(activeStatus), activeStatus);
+        await SessionStorage.SetAsync(nameof(activeTab), activeTab.ToString()); // Save the active tab
+        await SessionStorage.SetAsync(nameof(searchQuery), searchQuery);
+    }
+
+    private async Task LoadForms()
+    {
+        if (IsAdmin)
+        {
+            forms = await FormData.GetCachedForms();
+        }
+        else
+        {
+            forms = await FormData.GetFormsByCreator(currentUser.Id);
+        }
+    }
+
+    private async Task HandleDropdownChange(ChangeEventArgs e)
+    {
+        await SetActiveTab(Convert.ToChar(e.Value.ToString()));
+        UpdateCurrentCategories();
+        await FilterForms(); // Re-apply filtering when tab changes
+        StateHasChanged();
+    }
+
+    private async Task SetActiveTab(char tabName)
+    {
+        activeTab = tabName;
+        activeCategory = "All"; // Reset the active category when the tab is changed
+        searchQuery = string.Empty; // Reset the search query when the tab is changed
+        UpdateCurrentCategories();
+        await FilterForms(); // Re-apply filtering when tab changes
+        StateHasChanged(); // Ensure the UI is updated
+    }
+
+    private async Task FilterForms()
+    {
+        var filteredForms = await FormData.GetCachedForms();
+
+        // Apply tab-based filtering
+        filteredForms = activeTab switch
+        {
+            'M' => filteredForms.Where(f => f.CompetitionInfo.Division == DivisionConstants.Memorization).ToList(),
+            'T' => filteredForms.Where(f => f.CompetitionInfo.Division == DivisionConstants.TenQiraat).ToList(),
+            'B' => filteredForms.Where(f => f.CompetitionInfo.Division == DivisionConstants.BestVoice).ToList(),
+            _ => new List<Form>()
+        };
+
+        if (activeCategory != "All")
+        {
+            filteredForms = filteredForms.Where(f => f.CompetitionInfo.Category == activeCategory).ToList();
+        }
+
+        if (activeGender != "All")
+        {
+            filteredForms = filteredForms.Where(f => f.PersonalInfo.Gender.ToString() == activeGender).ToList();
+        }
+
+        if (activeLocation == "MN")
+        {
+            filteredForms = filteredForms.Where(f => f.AddressInfo.StateProvince == "MN").ToList();
+        }
+
+        if (activeLocation == "Non-MN")
+        {
+            filteredForms = filteredForms.Where(f => f.AddressInfo.StateProvince != "MN").ToList();
+        }
+
+        if (activeQualified.HasValue)
+        {
+            filteredForms = filteredForms.Where(f => f.EventScheduleInfo.IsQualified == activeQualified.Value && f.EventScheduleInfo.IsAttended == true).ToList();
+        }
+
+        if (activeStatus != "All")
+        {
+            filteredForms = filteredForms.Where(f => f.StatusInfo.Status == activeStatus).ToList();
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchQuery))
+        {
+            filteredForms = filteredForms.Where(f =>
+                f.PersonalInfo.GetFirstMiddleLastName().Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                f.PersonalInfo.GetFullName().Contains(searchQuery, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+
+
+        forms = filteredForms;
+
+        await SaveFilterState();
+    }
+
+    private async Task OnCategoryClick(string category = "All")
+    {
+        activeCategory = category;
+        await FilterForms();
+    }
+
+    private async Task OnGenderClick(string gender = "All")
+    {
+        activeGender = gender;
+        await FilterForms();
+    }
+
+
+    private async Task OnLocationClick(string location = "All")
+    {
+        activeLocation = location;
+        await FilterForms(); 
+    }
+
+    private async Task OnQualifiedClick(bool? qualified = null)
+    {
+        activeQualified = qualified;
+        await FilterForms();
+    }
+
+    private async Task OnStatusClick(string status = "All")
+    {
+        activeStatus = status;
+        await FilterForms();
+    }
+
+    private async Task OnSearchInput(ChangeEventArgs e)
+    {
+        searchQuery = e.Value.ToString();
+        await FilterForms();
+    }
+
+
+
+
+
+    private string tabCssClass(char tabName)
+    {
+        return activeTab == tabName ? "text-gray-900 bg-white" : "text-gray-500 hover:text-gray-700";
+    }
+
+    private string underlineCssClass(char tabName)
+    {
+        return activeTab == tabName ? "bg-cyan-600" : "bg-gray-100";
+    }
+
+
+
+
+
+
+    private string GetSelectedCategory(string category = "All")
+    {
+        if (category == "All")
+        {
+            return activeCategory == category ? "bg-cyan-600 text-white font-semibold" : "hover:bg-gray-100";
+        }
+        else
+        {
+            return activeCategory == category ? "bg-amber-600 text-white font-semibold" : "hover:bg-gray-100";
+        }
+    }
+
+    private string GetSelectedGender(string gender = "All")
+    {
+        if (activeGender == "All")
+        {
+            return activeGender == gender ? "bg-cyan-600 text-white font-semibold" : "hover:bg-gray-100";
+        }
+        else
+        {
+            return activeGender == gender ? "bg-amber-600 text-white font-semibold" : "hover:bg-gray-100";
+        }
+    }
+
+    private string GetSelectedLocation(string location = "All")
+    {
+
+        if (activeLocation == "All")
+        {
+            return activeLocation == location ? "bg-cyan-600 text-white font-semibold" : "hover:bg-gray-100";
+        }
+        else
+        {
+            return activeLocation == location ? "bg-amber-600 text-white font-semibold" : "hover:bg-gray-100";
+        }
+    }
+
+    private string GetSelectedQualified(bool? qualified = null)
+    {
+        if (activeQualified == null)
+        {
+            return activeQualified == qualified ? "bg-cyan-600 text-white font-semibold" : "hover:bg-gray-100";
+        }
+        else
+        {
+            return activeQualified == qualified ? "bg-amber-600 text-white font-semibold" : "hover:bg-gray-100";
+        }
+
+    }
+
+    private string GetSelectedStatus(string status = "All")
+    {
+        if (status == "All")
+        {
+            return activeStatus == status ? "bg-cyan-600 text-white font-semibold" : "hover:bg-gray-100";
+        }
+        else
+        {
+            return activeStatus == status ? "bg-amber-600 text-white font-semibold" : "hover:bg-gray-100";
+        }
+    }
+
+
+
+    private void UpdateCurrentCategories()
+    {
+        if (activeTab == 'M')
+        {
+            currentCategories = new List<string> { "1 Juz", "5 Juz", "10 Juz", "15 Juz", "20 Juz", "30 Juz" };
+        }
+        else if (activeTab == 'T')
+        {
+            currentCategories = new List<string> { "5 Juz", "15 Juz", "30 Juz" };
+        }
+        else if (activeTab == 'B')
+        {
+            currentCategories = new List<string> { "12 Years Old & Younger", "13 Years Old & Older" };
+        }
+        else
+        {
+            currentCategories = new List<string> { "All" };
+        }
+    }
+
+    private async Task ResetFilters()
+    {
+        activeCategory = "All";
+        activeGender = "All";
+        activeLocation = "All";
+        activeQualified = null;
+        activeStatus = "All";
+        searchQuery = string.Empty;
+        await FilterForms();
+    }
+
+    private async Task RefreshForms()
+    {
+        FormData.ClearCache(); // Clear the cached forms
+        await FilterForms();
+        StateHasChanged(); // Refresh the UI
+    }
+
+}
