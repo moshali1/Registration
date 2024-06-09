@@ -19,15 +19,37 @@
     </div>
 </div>
 
+<script>
+    document.addEventListener('scroll', function () {
+        const scrollButton = document.getElementById('scroll-button');
+        const scrollThreshold = 300; // Adjust this value as needed
+        if (window.scrollY > scrollThreshold) {
+            scrollButton.textContent = 'Top';
+            scrollButton.onclick = scrollToTop;
+        } else {
+            scrollButton.textContent = 'Filters';
+            scrollButton.onclick = scrollToFilters;
+        }
+    });
+
+    function scrollToFilters() {
+        document.getElementById('filters-section').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function scrollToTop() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+</script>
+
 @if (forms == null)
 {
     <p><em>Loading list...</em></p>
 }
 else
 {
-    <div class="flex">
+    <div class="flex flex-col lg:flex-row">
         <!-- Main content area -->
-        <div class="w-4/5 pr-4">
+        <div class="lg:w-4/5 w-full lg:pr-4">
             <div class="list-type-dropdown">
                 <label for="tabs" class="sr-only">Select a tab</label>
                 <select id="tabs" name="tabs" @onchange="HandleDropdownChange" class="mt-2 block w-full rounded-lg border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-cyan-600 sm:text-sm sm:leading-6">
@@ -54,18 +76,20 @@ else
                 </nav>
             </div>
 
-            <FormTable2 Forms="@forms" Type="@(forms?.Any() ?? false)" IsAdmin="IsAdmin" />
+            <FormTable2 Forms="@forms" Type="@(forms?.Any() ?? false)" OnItemDeleted="RefreshForms" IsAdmin="IsAdmin" />
         </div>
 
         <!-- Filter section -->
-        <div class="w-1/5 pl-4">
-            <div class="bg-white p-4 rounded-lg shadow mb-4 flex justify-between items-center">
+        <div id="filters-section" class="lg:w-1/5 w-full lg:pl-4 mt-4 lg:mt-0">
+            <div class="bg-white p-4 rounded-lg shadow mb-4 flex flex-wrap justify-between items-center">
                 <h3 class="px-2 text-lg font-medium leading-6 text-gray-900">Filters</h3>
-                <span class="isolate inline-flex rounded-md shadow-sm">
-                    <button class="bg-pink-600 text-white text-sm font-semibold py-1 px-2 mr-2 rounded hover:bg-pink-700 focus:ring-2 focus:outline-none focus:ring-pink-300" @onclick="ResetFilters">Reset Filters</button>
-                    <button class="text-pink-600 border border-pink-600 hover:bg-pink-600 hover:text-white focus:ring-2 focus:outline-none focus:ring-pink-300 font-semibold rounded-lg text-sm p-2.5 text-center inline-flex items-center me-2" @onclick="RefreshForms">
+                <span class="flex flex-wrap isolate rounded-md shadow-sm mt-2 lg:mt-0 space-x-2">
+                    <button class="bg-pink-600 text-white text-sm font-semibold py-1 px-4 rounded hover:bg-pink-700 focus:ring-2 focus:ring-pink-300 focus:outline-none" @onclick="ResetFilters">
+                        Reset Filters
+                    </button>
+                    <button class="text-pink-600 border border-pink-600 hover:bg-pink-600 hover:text-white focus:ring-2 focus:ring-pink-300 focus:outline-none font-semibold rounded-lg text-sm p-2.5 flex items-center flex-shrink min-w-0" @onclick="RefreshForms">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4">
-                            <path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.311h2.433a.75.75 0 0 0 0-1.5H3.989a.75.75 0 0 0-.75.75v4.242a.75.75 0 0 0 1.5 0v-2.43l.31.31a7 7 0 0 0 11.712-3.138.75.75 0 0 0-1.449-.39Zm1.23-3.723a.75.75 0 0 0 .219-.53V2.929a.75.75 0 0 0-1.5 0V5.36l-.31-.31A7 7 0 0 0 3.239 8.188a.75.75 0 1 0 1.448.389A5.5 5.5 0 0 1 13.89 6.11l.311.31h-2.432a.75.75 0 0 0 0 1.5h4.243a.75.75 0 0 0 .53-.219Z" clip-rule="evenodd" />
+                            <path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.311h2.433a.75.75 0 0 0 0-1.5H3.989a.75.75 0 0 0-.75.75v4.242a.75.75 0 0 0 1.5 0v-2.43l.31-.31a7 7 0 0 0 11.712-3.138.75.75 0 0 0-1.449-.39Zm1.23-3.723a.75.75 0 0 0 .219-.53V2.929a.75.75 0 0 0-1.5 0V5.36l-.31-.31A7 7 0 0 0 3.239 8.188a.75.75 0 1 0 1.448.389A5.5 5.5 0 0 1 13.89 6.11l.311.31h-2.432a.75.75 0 0 0 0 1.5h4.243a.75.75 0 0 0 .53-.219Z" clip-rule="evenodd" />
                         </svg>
                     </button>
                 </span>
@@ -132,6 +156,11 @@ else
         </div>
     </div>
 }
+
+<!-- Floating Button -->
+<button id="scroll-button" class="fixed bottom-4 right-4 bg-pink-600 text-white p-3 rounded-full lg:hidden" onclick="scrollToFilters()">
+    Filters
+</button>
 
 @code {
     private User currentUser;
