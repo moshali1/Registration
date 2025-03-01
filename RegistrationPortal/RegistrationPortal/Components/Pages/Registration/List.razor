@@ -21,7 +21,7 @@
     </div>
 </div>
 
-@if (forms is null || mForms is null || tForms is null || bForms is null)
+@if (forms is null || mForms is null || tForms is null || iForms is null) // bForms is null
 {
     <p><em>Loading list...</em></p>
 }
@@ -33,7 +33,8 @@ else
             <select id="tabs" name="tabs" @onchange="HandleDropdownChange" class="mt-2 block w-full rounded-lg border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-cyan-600 sm:text-sm sm:leading-6">
                 <option value="M">Memorization Forms</option>
                 <option value="T">Ten Qira'at Forms</option>
-                <option value="B">Best Voice Forms</option>
+                @* <option value="B">Best Voice Forms</option> *@
+                <option value="I">Islamic Studies</option>
             </select>
         </div>
 
@@ -49,10 +50,15 @@ else
                     <span aria-hidden="true" class="@underlineCssClass('T') absolute inset-x-0 bottom-0 h-0.5"></span>
                     <span class="@badgeCssClass('T') ml-3 hidden rounded-full py-0.5 px-2.5 text-xs font-medium md:inline-block">@tForms?.Count()</span>
                 </a>
-                <a @onclick="() => SetActiveTab('B')" class="@tabCssClass('B') cursor-pointer rounded-r-lg group relative min-w-0 flex-1 overflow-hidden bg-white py-4 px-4 text-center text-sm font-medium hover:bg-gray-50 focus:z-10">
+                @* <a @onclick="() => SetActiveTab('B')" class="@tabCssClass('B') cursor-pointer rounded-r-lg group relative min-w-0 flex-1 overflow-hidden bg-white py-4 px-4 text-center text-sm font-medium hover:bg-gray-50 focus:z-10">
                     <span>Best Voice Forms</span>
                     <span aria-hidden="true" class="@underlineCssClass('B') absolute inset-x-0 bottom-0 h-0.5"></span>
                     <span class="@badgeCssClass('B') ml-3 hidden rounded-full py-0.5 px-2.5 text-xs font-medium md:inline-block">@bForms?.Count()</span>
+                </a> *@
+                <a @onclick="() => SetActiveTab('I')" class="@tabCssClass('I') cursor-pointer rounded-r-lg group relative min-w-0 flex-1 overflow-hidden bg-white py-4 px-4 text-center text-sm font-medium hover:bg-gray-50 focus:z-10">
+                    <span>Islamic Studies Forms</span>
+                    <span aria-hidden="true" class="@underlineCssClass('B') absolute inset-x-0 bottom-0 h-0.5"></span>
+                    <span class="@badgeCssClass('I') ml-3 hidden rounded-full py-0.5 px-2.5 text-xs font-medium md:inline-block">@iForms?.Count()</span>
                 </a>
             </nav>
         </div>
@@ -66,9 +72,13 @@ else
     {
         <FormTable Forms="@tForms" Type="@(tForms?.Any() ?? false)" OnItemDeleted="ReloadForms" IsAdmin="IsAdmin" />
     }
-    else if (activeTab == 'B')
+    @* else if (activeTab == 'B')
     {
         <FormTable Forms="@bForms" Type="@(bForms?.Any() ?? false)" OnItemDeleted="ReloadForms" IsAdmin="IsAdmin" />
+    } *@
+    else if (activeTab == 'I')
+    {
+        <FormTable Forms="iForms" Type="@(iForms?.Any() ?? false)" OnItemDeleted="ReloadForms" IsAdmin="IsAdmin" />
     }
 
 }
@@ -84,7 +94,8 @@ else
 
     private List<Form> mForms;
     private List<Form> tForms;
-    private List<Form> bForms;
+    // private List<Form> bForms;
+    private List<Form> iForms;
 
     private char activeTab;
 
@@ -127,7 +138,9 @@ else
         mForms = forms.Where(f => f.CompetitionInfo.Division == DivisionConstants.Memorization).ToList();
         tForms = forms.Where(f => f.CompetitionInfo.Division == DivisionConstants.TenQiraat).ToList();
         // bForms = forms.Where(f => f.CompetitionInfo.Division == DivisionConstants.BestVoice).ToList();
-        bForms = forms.Where(f => f.CompetitionInfo.Division == DivisionConstants.BestVoice && f.StatusInfo.Status == "Reviewed").ToList();
+        // bForms = forms.Where(f => f.CompetitionInfo.Division == DivisionConstants.BestVoice && f.StatusInfo.Status == "Reviewed").ToList();
+        iForms = forms.Where(f => f.CompetitionInfo.Division == DivisionConstants.IslamicStudies).ToList();
+
     }
 
     private void HandleCloseNotification(bool value)

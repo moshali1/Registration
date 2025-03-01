@@ -1,26 +1,54 @@
 ﻿<li class="col-span-1 divide-y divide-gray-200 rounded-lg bg-white shadow">
-    <div class="flex w-full items-center justify-between space-x-6 p-5">
-        <div class="flex-1 truncate">
-            <div class="flex items-center space-x-3">
-                <h3 class="truncate text-sm font-medium text-gray-900">Previous Forms</h3>
-                <span class="hidden lg:block inline-flex flex-shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">@ArchivedForms?.Count() @(ArchivedForms?.Count() == 1 ? "Form" : "Forms") Found</span>
+    <div class="w-full p-5">
+        <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center space-x-2">
+                <h3 class="text-sm font-medium text-gray-900">Previous Forms</h3>
+                <span class="inline-flex flex-shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+                    @CurrentForms?.Count() @(CurrentForms?.Count() == 1 ? "Form" : "Forms")
+                </span>
             </div>
-            @if (ArchivedForms is not null)
-            {
-                <ul class="list-none mt-1 truncate text-sm text-gray-500">
-                    <li>
-                        <span class="font-medium">Ten Qira'at Forms:</span> @ArchivedForms.Where(f => f.CompetitionInfo.Division == DivisionConstants.TenQiraat).Count()
-                    </li>
-                    <li>
-                        <span class="font-medium">Memorization Forms:</span> @ArchivedForms.Where(f => f.CompetitionInfo.Division == DivisionConstants.Memorization).Count()
-                    </li>
-                    <li>
-                        <span class="font-medium">Best Voice Forms:</span> @ArchivedForms.Where(f => f.CompetitionInfo.Division == DivisionConstants.BestVoice).Count()
-                    </li>
-                </ul>
-            }
+            <div class="inline-flex rounded-md shadow-sm" role="group">
+                <button @onclick="() => SelectYear(2023)" type="button" class="@GetYearButtonClass(2023)">
+                    2023
+                </button>
+                <button @onclick="() => SelectYear(2024)" type="button" class="@GetYearButtonClass(2024)">
+                    2024
+                </button>
+            </div>
         </div>
-        <img class="h-20 w-20 flex-shrink-0 rounded-full bg-gray-300" src="/images/archived-forms2.jpg" alt="archived-forms">
+
+        @if (CurrentForms is not null)
+        {
+            <div class="grid grid-cols-3 gap-2 text-base text-gray-500">
+                <div>
+                    <div class="font-medium">Ten Qira'at</div>
+                    <div class="text-center text-lg font-semibold text-cyan-700">
+                        @{
+                            var tenQiraatCount = CurrentForms.Where(f => f.CompetitionInfo.Division == DivisionConstants.TenQiraat).Count();
+                            @(tenQiraatCount > 0 ? tenQiraatCount.ToString() : "-")
+                        }
+                    </div>
+                </div>
+                <div>
+                    <div class="font-medium">Memorization</div>
+                    <div class="text-center text-lg font-semibold text-cyan-700">
+                        @{
+                            var memorizationCount = CurrentForms.Where(f => f.CompetitionInfo.Division == DivisionConstants.Memorization).Count();
+                            @(memorizationCount > 0 ? memorizationCount.ToString() : "-")
+                        }
+                    </div>
+                </div>
+                <div>
+                    <div class="font-medium">Best Voice</div>
+                    <div class="text-center text-lg font-semibold text-cyan-700">
+                        @{
+                            var bestVoiceCount = CurrentForms.Where(f => f.CompetitionInfo.Division == DivisionConstants.BestVoice).Count();
+                            @(bestVoiceCount > 0 ? bestVoiceCount.ToString() : "-")
+                        }
+                    </div>
+                </div>
+            </div>
+        }
     </div>
     <div>
         <div class="-mt-px flex divide-x divide-gray-200">
@@ -43,18 +71,46 @@
         </div>
     </div>
 </li>
-
-
-<AutofillModal Show="showModal" ArchivedForms="@ArchivedForms" />
+<AutofillModal Show="showModal" ArchivedForms="@CurrentForms" Year="@SelectedYear" OnClose="@CloseModal" />
 
 @code {
     private bool showModal = false;
+    private int SelectedYear = 2024; // Default to 2024
+
+    [Parameter]
+    public List<Form> Forms2023 { get; set; }
+
+    [Parameter]
+    public List<Form> Forms2024 { get; set; }
+
+    // Get the current forms based on selected year
+    private List<Form> CurrentForms => SelectedYear == 2023 ? Forms2023 : Forms2024;
 
     private void ShowModal()
     {
         showModal = true;
     }
 
-    [Parameter]
-    public List<Form> ArchivedForms { get; set; }
+    private void CloseModal()
+    {
+        showModal = false;
+    }
+
+    private void SelectYear(int year)
+    {
+        SelectedYear = year;
+        StateHasChanged();
+    }
+
+    private string GetYearButtonClass(int year)
+    {
+        string baseClass = "px-2 py-1 text-xs font-medium ";
+
+        if (year == SelectedYear)
+        {
+            return baseClass + "bg-cyan-600 text-white border border-cyan-700";
+        }
+
+        return baseClass + "bg-white text-gray-700 hover:bg-gray-100 border border-gray-300";
+    }
 }

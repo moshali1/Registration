@@ -1,12 +1,11 @@
 ﻿@inherits LayoutComponentBase
 @inject NavigationManager NavManager
 @inject BaseUrlProvider BaseUrlProvider
-
 <div id="app">
     <!--Wide Screen Sidebar & NavMenu-->
     <div class="sidebar">
-        <div class="overlay bg-black fixed top-0 bottom-0 left-0 right-0 z-10" onclick="closeSidebar()"></div>
-        <nav class="fixed flex flex-col h-screen bg-gradient-to-r from-cyan-800 to-cyan-950 text-white w-64 overflow-y-auto z-10 drop-shadow-2xl">
+        <div class="overlay bg-black fixed top-0 bottom-0 left-0 right-0 z-20" onclick="closeSidebar()"></div>
+        <nav class="fixed flex flex-col h-screen bg-gradient-to-r from-cyan-800 to-cyan-950 text-white w-64 overflow-y-auto z-20 drop-shadow-2xl">
             <div class="h-16 flex items-center px-6 text-lg bg-cyan-950 flex-shrink-0">
                 <span class="font-medium">Registration</span>
                 <span class="mx-1">|</span>
@@ -15,10 +14,10 @@
             <NavMenu />
         </nav>
     </div>
-    
-    <div class="md:ml-64 mt-16 md:mt-0 flex-shrink flex-grow z-0">
+
+    <div class="md:ml-64 mt-16 md:mt-0 flex-shrink flex-grow">
         <!--Small Screen Top Sidebar-->
-        <div class="bg-cyan-950 top-0 fixed w-full md:hidden h-16 flex items-center justify-between px-4 text-white text-lg z-10">
+        <div class="bg-cyan-950 top-0 fixed w-full md:hidden h-16 flex items-center justify-between px-4 text-white text-lg z-30">
             <div class="flex items-center">
                 <button title="Show navigation menu" class="hamburger mr-2 p-2 -m-3" onclick="toggleSidebar()">
                     <div class="handle rounded-lg bg-slate-600 p-2">
@@ -33,16 +32,14 @@
                 <span class="mx-1">|</span>
                 <span>Portal</span>
             </div>
-
             <div>
                 <LogInOrOut />
             </div>
         </div>
-
         <!--Right Section Content-->
         <div>
             <!--Wide Screen Top Row-->
-            <div class="top-row">
+            <div class="top-row z-30">
                 <LogInOrOut />
             </div>
             <div class="page">
@@ -51,7 +48,6 @@
         </div>
     </div>
 </div>
-
 @code {
     protected override Task OnInitializedAsync()
     {

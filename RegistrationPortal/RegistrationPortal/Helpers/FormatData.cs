@@ -28,6 +28,7 @@ public static class FormatData
         form.AddressInfo.City = CapitalizeFirstLetter(form.AddressInfo.City);
         form.TeacherInfo.Institution = CapitalizeFirstLetter(form.TeacherInfo.Institution);
 
+        form.PersonalInfo.PhoneNumber = FormatPhoneNumber(form.PersonalInfo.PhoneNumber);
         form.ParentInfo.ParentPhoneNumber = FormatPhoneNumber(form.ParentInfo.ParentPhoneNumber);
         form.TeacherInfo.TeacherPhoneNumber = FormatPhoneNumber(form.TeacherInfo.TeacherPhoneNumber);
     }

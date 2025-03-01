@@ -748,6 +748,7 @@
         + form.PersonalInfo.FirstName + "_" + form.PersonalInfo.LastName + "_" + form.PersonalInfo.DOBUSFormat
         + "_"
         + Guid.NewGuid().ToString().Substring(0, 4).ToUpper()
+        + "_" + DateTime.Now.Year.ToString().Substring(2, 2)
         + Path.GetExtension(fileName); // fileName is just for the extension
     }
 
@@ -789,6 +790,11 @@
         if (form.PersonalInfo.DOB != existingMForm.PersonalInfo.DOB)
         {
             changes.Add($"Changed Date of Birth from {existingMForm.PersonalInfo.DOB} to {form.PersonalInfo.DOB}.");
+        }
+
+        if (form.PersonalInfo.PhoneNumber != existingMForm.PersonalInfo.PhoneNumber)
+        {
+            changes.Add($"Changed Phone Number from {existingMForm.PersonalInfo.PhoneNumber} to {form.PersonalInfo.PhoneNumber}.");
         }
 
         if (form.AddressInfo.Country != existingMForm.AddressInfo.Country)

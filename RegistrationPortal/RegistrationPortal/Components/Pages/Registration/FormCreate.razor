@@ -59,39 +59,63 @@
                 <div class="flex flex-col md:flex-row flex-nowrap">
                     <div class="basis-1/2 md:pr-3">
                         <label class="block text-sm font-medium leading-6 text-gray-900 mb-1">ID Upload</label>
-                        <InputFile OnChange="LoadIDFile" accept=".png,.jpeg,.jpg,.pdf" class="block w-full rounded-md border-0 text-sm text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 file:cursor-pointer cursor-pointer file:border-0 file:py-2 file:px-4 file:mr-4 file:bg-gray-500 file:hover:bg-gray-600 file:text-white focus:ring-1 focus:ring-inset sm:leading-6" />
-                        <SfTooltip Position="Position.BottomCenter" Target="#id-info" WindowCollision="true">
-                            <ContentTemplate>
-                                <p>Acceptable forms of identification for the competitor include a passport, birth certificate, driver's license, or any state-issued ID, each must feature the competitor's photo, name, and date of birth.</p>
-                            </ContentTemplate>
-                        </SfTooltip>
-                        <p class="text-xs text-gray-500 flex items-center">
-                            PNG, JPEG, JPG, and PDF are Allowed. See Requirements: 
-                            <span id="id-info" class="inline-flex items-center ml-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-cyan-700">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 a9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
-                                </svg>
-                            </span>
-                        </p>
-                        <ValidationMessage For="() => form.FileUploadInfo.IDFileName" />
+                        @if(Type == "prev" && form.FileUploadInfo.IDFileName is not null)
+                        {
+                            <div class="mt-1">
+                                <input type="text" value="@form.FileUploadInfo.IDFileName" readonly class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6 bg-gray-200" />
+                            </div>
+                        }
+                        else
+                        {
+                            <InputFile OnChange="LoadIDFile" accept=".png,.jpeg,.jpg,.pdf" class="block w-full rounded-md border-0 text-sm text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 file:cursor-pointer cursor-pointer file:border-0 file:py-2 file:px-4 file:mr-4 file:bg-gray-500 file:hover:bg-gray-600 file:text-white focus:ring-1 focus:ring-inset sm:leading-6" />
+                            <SfTooltip Position="Position.BottomCenter" Target="#id-info" WindowCollision="true">
+                                <ContentTemplate>
+                                    <p>Acceptable forms of identification for the competitor include a passport, birth certificate, driver's license, or any state-issued ID, each must feature the competitor's photo, name, and date of birth.</p>
+                                </ContentTemplate>
+                            </SfTooltip>
+                            <p class="text-xs text-gray-500 flex items-center">
+                                PNG, JPEG, JPG, and PDF are Allowed. See Requirements:
+                                <span id="id-info" class="inline-flex items-center ml-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-cyan-700">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 a9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                                    </svg>
+                                </span>
+                            </p>
+                            <ValidationMessage For="() => form.FileUploadInfo.IDFileName" />
+                        }
                     </div>
                     <div class="basis-1/2 md:pl-3">
                         <label class="block text-sm font-medium leading-6 text-gray-900 mb-1">Photo Upload</label>
-                        <InputFile OnChange="LoadPhotoFile" accept=".png,.jpeg,.jpg" class="block w-full rounded-md border-0 text-sm text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 file:cursor-pointer cursor-pointer file:border-0 file:py-2 file:px-4 file:mr-4 file:bg-gray-500 file:hover:bg-gray-600 file:text-white focus:ring-1 focus:ring-inset sm:leading-6" />
-                        <SfTooltip Position="Position.BottomCenter" Target="#photo-info" WindowCollision="true">
-                            <ContentTemplate>
-                                <p>A high-quality, passport-style photograph is required. The background should be bright and uncluttered, without objects, trees, or similar distractions. Ensure the image captures only the face, clearly visible in a well-lit setting, without being cropped or blurred. The photo must be a standalone image, not part of an identification document. This photograph will be displayed during the competition.</p>
-                            </ContentTemplate>
-                        </SfTooltip>
-                        <p class="text-xs text-gray-500 flex items-center">
-                            PNG, JPEG, and JPG are Allowed. See Requirements:
-                            <span id="photo-info" class="inline-flex items-center ml-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-cyan-700">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 a9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
-                                </svg>
-                            </span>
-                        </p>
-                        <ValidationMessage For="() => form.FileUploadInfo.PhotoFileName" />
+                        @if (Type == "prev" && form.FileUploadInfo.PhotoFileName is not null)
+                        {
+                            <div class="mt-1">
+                                <input type="text" value="@form.FileUploadInfo.PhotoFileName" readonly class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6 bg-gray-200" />
+                                <p class="mt-1 text-xs text-amber-600 flex items-start">
+                                    <svg class="inline-block w-4 h-4 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span>The photo from last year's form will be used. You can update it later by editing your form after submission if desired.</span>
+                                </p>
+                            </div>
+                        }
+                        else
+                        {
+                            <InputFile OnChange="LoadPhotoFile" accept=".png,.jpeg,.jpg" class="block w-full rounded-md border-0 text-sm text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 file:cursor-pointer cursor-pointer file:border-0 file:py-2 file:px-4 file:mr-4 file:bg-gray-500 file:hover:bg-gray-600 file:text-white focus:ring-1 focus:ring-inset sm:leading-6" />
+                            <SfTooltip Position="Position.BottomCenter" Target="#photo-info" WindowCollision="true">
+                                <ContentTemplate>
+                                    <p>A high-quality, passport-style photograph is required. The background should be bright and uncluttered, without objects, trees, or similar distractions. Ensure the image captures only the face, clearly visible in a well-lit setting, without being cropped or blurred. The photo must be a standalone image, not part of an identification document. This photograph will be displayed during the competition.</p>
+                                </ContentTemplate>
+                            </SfTooltip>
+                            <p class="text-xs text-gray-500 flex items-center">
+                                PNG, JPEG, and JPG are Allowed. See Requirements:
+                                <span id="photo-info" class="inline-flex items-center ml-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-cyan-700">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 a9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                                    </svg>
+                                </span>
+                            </p>
+                            <ValidationMessage For="() => form.FileUploadInfo.PhotoFileName" />
+                        }
                     </div>
                 </div>
             </div>
@@ -195,8 +219,11 @@
             case "ten-qiraat":
                 Division = "Ten Qira'at";
                 break;
-            case "best-voice":
-                Division = "Best Voice";
+            // case "best-voice":
+            //     Division = "Best Voice";
+            //     break;
+            case "islamic-studies":
+                Division = "Islamic Studies";
                 break;
             default:
                 NavManager.NavigateTo("/register");
@@ -302,8 +329,11 @@
                 return;
             }
 
-            SetFileInfo(IDFile, "id");
-            SetFileInfo(PhotoFile, "photo");
+            if (Type != "prev" || String.IsNullOrEmpty(form.FileUploadInfo.IDFileName) || String.IsNullOrEmpty(form.FileUploadInfo.PhotoFileName))
+            {
+                SetFileInfo(IDFile, "id");
+                SetFileInfo(PhotoFile, "photo");
+            }     
 
 
             // Potential Issue: The form is marked as submitted in cases of server-side errors, such as duplicate entries (DUPL). 
@@ -677,6 +707,7 @@
         + form.PersonalInfo.FirstName + "_" + form.PersonalInfo.LastName + "_" + form.PersonalInfo.DOBUSFormat
         + "_"
         + Guid.NewGuid().ToString().Substring(0, 4).ToUpper()
+        + "_" + DateTime.Now.Year.ToString().Substring(2, 2)
         + Path.GetExtension(fileName); // fileName is just for the extension
     }
 

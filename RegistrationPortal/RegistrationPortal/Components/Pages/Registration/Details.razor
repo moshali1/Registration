@@ -46,6 +46,12 @@ else
                             <dd class="mt-1 leading-6 text-gray-700 sm:col-span-2 sm:mt-0">@form.PersonalInfo.DOB</dd>
                         </div>
                         <div class="px-4 py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+                            <dt class="font-medium leading-6 text-gray-900">Phone Number</dt>
+                            <dd class="mt-1 leading-6 text-gray-700 sm:col-span-2 sm:mt-0">
+                                @(form.PersonalInfo.PhoneNumber is not null ? form.PersonalInfo.PhoneNumber : "Not Given")
+                            </dd>
+                        </div>
+                        <div class="px-4 py-2 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
                             <dt class="font-medium leading-6 text-gray-900">Region</dt>
                             <dd class="mt-1 leading-6 text-gray-700 sm:col-span-2 sm:mt-0">@form.AddressInfo.City, @form.AddressInfo.StateProvince, @form.AddressInfo.Country</dd>
                         </div>

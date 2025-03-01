@@ -6,6 +6,7 @@ public class PersonalInfo
     public string LastName { get; set; }
     public Gender Gender { get; set; }
     public DateOnly DOB { get; set; }
+    public string PhoneNumber { get; set; }
 
     public string GetFullName()
     {

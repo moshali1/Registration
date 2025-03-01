@@ -39,6 +39,14 @@ public class CompetitionOptions
                         new CategoryOption { CategoryName = "13 Years Old & Older", Portions = new List<string> { "NA" } },
                         new CategoryOption { CategoryName = "12 Years Old & Younger", Portions = new List<string> { "NA" } },
                     }
+                },
+                new DivisionOption
+                {
+                    DivisionName = "Islamic Studies",
+                    Categories = new List<CategoryOption>
+                    {
+                        new CategoryOption { CategoryName = "Islamic Studies Book - 5 Subject", Portions = new List<string> { "NA" } }
+                    }
                 }
             };
     }

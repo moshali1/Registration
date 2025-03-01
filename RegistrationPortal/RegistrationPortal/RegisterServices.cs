@@ -77,12 +77,14 @@ public static class RegisterServices
         builder.Services.AddSwaggerGen();
 
         builder.Services.AddSingleton<IDbConnection, DbConnection>();
+        builder.Services.AddSingleton<IArchivedDbConnection, ArchivedDbConnection>();
 
         builder.Services.AddAutoMapper(typeof(FormProfile), typeof(UserProfile));
 
         builder.Services.AddScoped<IFormData, FormData>();
         builder.Services.AddScoped<IUserData, UserData>();
         builder.Services.AddScoped<ISettingsData, SettingsData>();
+        builder.Services.AddScoped<IDatabaseArchivedFormData, DatabaseArchivedFormData>();
 
         builder.Services.AddScoped<IFormService, FormService>();
         builder.Services.AddScoped<IUserService, UserService>();

@@ -1,62 +1,117 @@
 ﻿@page "/register"
 @attribute [Authorize]
 
-<div class="box-border border-4 border-cyan-800/50 rounded-lg divide-y divide-gray-200 overflow-hidden shadow sm:grid sm:grid-cols-2 sm:gap-px sm:divide-y-0">
-    <div class="rounded-tl-lg rounded-tr-lg sm:rounded-tr-none group relative bg-white p-6 hover:bg-gray-50 focus:z-10">
-        <div class="mt-8">
-            <h3 class="text-base font-semibold leading-6 text-gray-900">
+<div class="text-center my-8">
+    <h1 class="text-4xl font-bold text-cyan-800 mb-2">Register for Competition Divisions</h1>
+    <div class="w-24 h-1 bg-cyan-700 mx-auto mb-4"></div>
+    <p class="mt-2 text-gray-600">Select one of the following divisions to begin your registration for the North America Imam Al-Shatibi Qur'an Competition 2025</p>
+</div>
+
+<div class="box-border rounded-lg overflow-hidden shadow-lg sm:grid sm:grid-cols-2 sm:gap-6 sm:divide-y-0">
+    <div class="group relative bg-white p-6 hover:bg-gradient-to-br hover:from-white hover:to-cyan-50 transition-all duration-300 rounded-lg border-l-4 border-cyan-600 shadow-md">
+        <div class="flex flex-col h-full">
+            <div class="mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-cyan-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                </svg>
+            </div>
+            <h3 class="text-lg font-semibold leading-6 text-gray-900 mb-2">
                 <a href="create/memorization" class="focus:outline-none">
                     <span class="absolute inset-0" aria-hidden="true"></span>
                     Memorization
                 </a>
             </h3>
-            <p class="mt-2 text-sm text-gray-500">
-                Participants compete on their memorization and recitation of various portions of the Quran, ranging from the entire Quran (30 Juz) to smaller sections (20 Juz, 15 Juz, 10 Juz, 5 Juz, 1 Juz).
+            <p class="text-sm text-gray-700 flex-grow">
+                Compete in Quranic memorization and recitation across multiple categories: complete Quran (30 Juz), 20 Juz, 15 Juz, 10 Juz, 5 Juz, or Juz Amma (1 Juz). Each category has specific age requirements as detailed in the competition rules.
             </p>
+            <div class="mt-4 pt-3 border-t border-gray-100 text-right">
+                <a href="create/memorization" class="inline-flex items-center text-cyan-600 text-sm font-medium group-hover:translate-x-1 transition-transform duration-200">
+                    Register now
+                    <svg class="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                </a>
+            </div>
         </div>
-        <span class="pointer-events-none absolute right-6 top-6 text-gray-300 group-hover:text-gray-400" aria-hidden="true">
-            <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M20 4h1a1 1 0 00-1-1v1zm-1 12a1 1 0 102 0h-2zM8 3a1 1 0 000 2V3zM3.293 19.293a1 1 0 101.414 1.414l-1.414-1.414zM19 4v12h2V4h-2zm1-1H8v2h12V3zm-.707.293l-16 16 1.414 1.414 16-16-1.414-1.414z" />
-            </svg>
-        </span>
     </div>
-    <div class="sm:rounded-tr-lg group relative bg-white p-6 hover:bg-gray-50 focus:z-10">
-        <div class="mt-8">
-            <h3 class="text-base font-semibold leading-6 text-gray-900">
+
+    <div class="group relative bg-white p-6 hover:bg-gradient-to-br hover:from-white hover:to-cyan-50 transition-all duration-300 rounded-lg border-l-4 border-cyan-600 shadow-md">
+        <div class="flex flex-col h-full">
+            <div class="mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-cyan-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                </svg>
+            </div>
+            <h3 class="text-lg font-semibold leading-6 text-gray-900 mb-2">
                 <a href="create/ten-qiraat" class="focus:outline-none">
                     <span class="absolute inset-0" aria-hidden="true"></span>
                     Ten Qira'at
                 </a>
             </h3>
-            <p class="mt-2 text-sm text-gray-500">
-                This division focuses on recitation styles and offers categories for the entire Quran (30 Juz), 15 Juz, and 5 Juz.
+            <p class="text-sm text-gray-700 flex-grow">
+                Showcase your proficiency in various Quranic recitation styles in one of three categories: complete Quran (30 Juz), 15 Juz, or 5 Juz. Open to participants 35-40 years of age or younger depending on category.
             </p>
+            <div class="mt-4 pt-3 border-t border-gray-100 text-right">
+                <a href="create/ten-qiraat" class="inline-flex items-center text-cyan-600 text-sm font-medium group-hover:translate-x-1 transition-transform duration-200">
+                    Register now
+                    <svg class="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                </a>
+            </div>
         </div>
-        <span class="pointer-events-none absolute right-6 top-6 text-gray-300 group-hover:text-gray-400" aria-hidden="true">
-            <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M20 4h1a1 1 0 00-1-1v1zm-1 12a1 1 0 102 0h-2zM8 3a1 1 0 000 2V3zM3.293 19.293a1 1 0 101.414 1.414l-1.414-1.414zM19 4v12h2V4h-2zm1-1H8v2h12V3zm-.707.293l-16 16 1.414 1.414 16-16-1.414-1.414z" />
-            </svg>
-        </span>
     </div>
-    <div class="group relative bg-white p-6 hover:bg-gray-50 focus:z-10">
-        <div class="mt-8">
-            <h3 class="text-base font-semibold leading-6 text-gray-900">
-                <a href="create/best-voice" class="focus:outline-none">
+
+    <div class="group relative bg-gray-50 p-6 rounded-lg border-l-4 border-gray-300 shadow-md">
+        <div class="flex flex-col h-full">
+            <div class="mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                </svg>
+            </div>
+            <h3 class="text-lg font-semibold leading-6 text-gray-400 mb-2">
+                <text class="focus:outline-none">
                     <span class="absolute inset-0" aria-hidden="true"></span>
                     Best Voice
+                </text>
+            </h3>
+            <p class="text-sm text-gray-500 flex-grow">
+                This special division recognizes excellence in melodious Quranic recitation in two age groups: 13 years and older (Group A) and 12 years and younger (Group B). Note: Direct registration is not available - all Memorization division participants are automatically considered as candidates.
+            </p>
+            <div class="mt-4 pt-3 border-t border-gray-100 text-right">
+                <span class="inline-flex items-center text-gray-400 text-sm font-medium">
+                    Not available for direct registration
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="group relative bg-white p-6 hover:bg-gradient-to-br hover:from-white hover:to-cyan-50 transition-all duration-300 rounded-lg border-l-4 border-cyan-600 shadow-md">
+        <div class="flex flex-col h-full">
+            <div class="mb-4 relative">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-cyan-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z" />
+                </svg>
+
+                <span class="absolute -right-2 -top-2 bg-cyan-600 text-white text-xs font-bold px-2 py-1 rounded-full">NEW</span>
+            </div>
+            <h3 class="text-lg font-semibold leading-6 text-gray-900 mb-2">
+                <a href="create/islamic-studies" class="focus:outline-none">
+                    <span class="absolute inset-0" aria-hidden="true"></span>
+                    Islamic Studies
                 </a>
             </h3>
-            <p class="mt-2 text-sm text-gray-500">
-                This division is aimed at participants who excel in the melodiousness and quality of their Quranic recitation, with age categories for those 13 years and older and those 12 years and younger.
+            <p class="text-sm text-gray-700 flex-grow">
+                New for 2025! This pilot program tests participants' knowledge across five Islamic Studies subjects. Open to participants 18 years of age or younger who are proficient in both Arabic and English. Limited slots available.
             </p>
+            <div class="mt-4 pt-3 border-t border-gray-100 text-right">
+                <a href="create/islamic-studies" class="inline-flex items-center text-cyan-600 text-sm font-medium group-hover:translate-x-1 transition-transform duration-200">
+                    Register now
+                    <svg class="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                </a>
+            </div>
         </div>
-        <span class="pointer-events-none absolute right-6 top-6 text-gray-300 group-hover:text-gray-400" aria-hidden="true">
-            <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M20 4h1a1 1 0 00-1-1v1zm-1 12a1 1 0 102 0h-2zM8 3a1 1 0 000 2V3zM3.293 19.293a1 1 0 101.414 1.414l-1.414-1.414zM19 4v12h2V4h-2zm1-1H8v2h12V3zm-.707.293l-16 16 1.414 1.414 16-16-1.414-1.414z" />
-            </svg>
-        </span>
-    </div>
-    <div class="group relative bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-cyan-700">
-
     </div>
 </div>

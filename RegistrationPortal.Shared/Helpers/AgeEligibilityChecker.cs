@@ -9,7 +9,7 @@ public static class AgeEligibilityChecker
             throw new AgeEligibilityException("Age Validation Error: Invalid Date of Birth");
         }
 
-        DateOnly referenceDate = new DateOnly(2024, 5, 19);
+        DateOnly referenceDate = new DateOnly(2024, 12, 31);
         int ageInYears = CalculateAge(referenceDate, dob.Value);
         int minAge = GetMinimumAge(division, category);
 
@@ -84,6 +84,18 @@ public static class AgeEligibilityChecker
                     break;
                 case "12 Years Old & Younger":
                     minAge = 12;
+                    break;
+                default:
+                    minAge = int.MaxValue;
+                    break;
+            }
+        }
+        else if (division == "Islamic Studies")
+        {
+            switch (category)
+            {
+                case "Islamic Studies Book - 5 Subject":
+                    minAge = 18;
                     break;
                 default:
                     minAge = int.MaxValue;

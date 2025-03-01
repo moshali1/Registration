@@ -200,6 +200,8 @@ public class FileUploadController : ControllerBase
                 return "memorization";
             case "Best Voice":
                 return "bestvoice";
+            case "Islamic Studies":
+                return "islamicstudies";
             default:
                 return ""; // Or some default action if division is unrecognized
         }

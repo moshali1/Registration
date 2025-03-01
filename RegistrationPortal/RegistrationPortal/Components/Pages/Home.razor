@@ -4,6 +4,7 @@
 
 @inject IUserData UserData
 @inject IArchivedFormData ArchivedFormData
+@inject IDatabaseArchivedFormData DatabaseArchivedFormData
 @inject AuthenticationStateProvider AuthProvider
 
 @attribute [Authorize]
@@ -11,31 +12,32 @@
 <PageTitle>Home</PageTitle>
 
 <div class="text-center">
-    <h1 class="text-3xl mb-3 bg-gradient-to-r from-teal-600 to-sky-700 text-transparent bg-clip-text tracking-tight"><span class="font-bold" tabindex="-1">Welcome to the 10th Annual Imam Al-Shatibi Quran Competition (2024)</span> | Registration Portal</h1>
+    <h1 class="text-3xl mb-3 bg-gradient-to-r from-teal-600 to-sky-700 text-transparent bg-clip-text tracking-tight"><span class="font-bold" tabindex="-1">Welcome to the 11th Annual Imam Al-Shatibi Quran Competition (2025)</span> | Registration Portal</h1>
 
     <p class="text-base">Please review the rules and regulations on the main site <a href="https://imamshatibi.org" target="_blank" class="underline decoration-sky-500">imamshatibi.org</a> before registering. Thank you.</p>
 </div>
 
 <div class="px-1" role="alert">
-    <h1 class="text-xl font-bold text-cyan-800">Returning from 2023?</h1>
-    <p class="text-md">We've made it simpler for you to get started again by prefilling your registration form with last year's information. If you would like to use the submitted information from the same account, please choose the <b>autofill</b> option below. Otherwise, if you prefer to start fresh, select the <b>new form</b> option.</p>
+    <h1 class="text-xl font-bold text-cyan-800">Returning Applicant?</h1>
+    <p class="text-md">We've made it simpler for you to get started by prefilling your registration with your previous information. You now have access to your submitted forms from both <b>2023</b> and <b>2024</b>. Click the <b>Autofill</b> button on the Previous Forms card to select which year's data you'd like to use, or start with a <b>New Form</b> if you prefer.</p>
 </div>
 
 <ul role="list" class="py-2 list-none grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-    <ArchivedFormsCard ArchivedForms="archivedForms" @rendermode="InteractiveServer" />
+    <ArchivedFormsCard Forms2023="@archivedForms" Forms2024="@databaseArchivedForms" @rendermode="InteractiveServer" />
     <CountdownCard @rendermode="InteractiveServer" />
     <CurrentFormsCard UserId="@currentUser?.Id" @rendermode="InteractiveServer" />
 </ul>
 
 <ul role="list" class="py-2 list-none grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
     <FaqCard @rendermode="InteractiveServer" />
-    <InfoCard @rendermode="InteractiveServer" />
+    @* <InfoCard @rendermode="InteractiveServer" /> *@
 </ul>
 
 @code {
     private AuthenticationState authState;
     private User currentUser;
-    private List<Form> archivedForms;
+    private List<Form> archivedForms; // 2023
+    private List<Form> databaseArchivedForms; // 2024
 
     protected async override Task OnInitializedAsync()
     {
@@ -54,6 +56,10 @@
         if (email is not null)  
         {
             archivedForms = await ArchivedFormData.GetFormsAsync(email);
+        }
+        if (currentUser.Id is not null)
+        {
+            databaseArchivedForms = await DatabaseArchivedFormData.GetFormsAsync(currentUser.Id);
         }
     }
 

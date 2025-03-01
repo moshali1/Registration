@@ -82,7 +82,39 @@ public class FetchSasUri
 
     public string DetermineContainerName(string identifier)
     {
-        string containerPrefix = "24-"; // Based on the current year
+        const string defaultPrefix = "24-";
+        string containerPrefix;
+
+        try
+        {
+            // Extract the filename without extension
+            string nameWithoutExtension = Path.GetFileNameWithoutExtension(identifier);
+
+            // Split by underscores to get the components
+            string[] components = nameWithoutExtension.Split('_');
+
+            // Check if there are components and if the last component is a two-digit number
+            string lastComponent = components.LastOrDefault();
+            if (lastComponent != null &&
+                lastComponent.Length == 2 &&
+                int.TryParse(lastComponent, out _))
+            {
+                containerPrefix = $"{lastComponent}-";
+            }
+            else
+            {
+                // If we couldn't find a valid two-digit number in the last component,
+                // return default for older file type
+                containerPrefix = defaultPrefix;
+            }
+        }
+        catch
+        {
+            // In case of any error, return the default
+            containerPrefix = defaultPrefix;
+        }
+        Console.WriteLine(containerPrefix);
+
         int underscoreIndex = identifier.IndexOf('_');
         if (underscoreIndex == -1 || underscoreIndex == identifier.Length - 1) throw new ArgumentException("Invalid identifier format");
 
@@ -92,6 +124,7 @@ public class FetchSasUri
             'B' => "bestvoice",
             'M' => "memorization",
             'T' => "tenqiraat",
+            'I' => "islamicstudies",
             _ => throw new ArgumentException("Invalid identifier division")
         };
 
