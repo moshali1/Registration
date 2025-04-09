@@ -6,7 +6,8 @@
 @inject AuthenticationStateProvider AuthState
 @rendermode InteractiveServer
 
-@attribute [Authorize]
+@attribute [Authorize(Roles = "Admin, Volunteer")]
+
 
 <div class="bg-white shadow rounded-lg">
     <div class="px-4 py-5 sm:p-6">
@@ -14,50 +15,52 @@
         <div class="mt-2 max-w-xl text-sm text-gray-500">
             <p>Track activity of a form from submission throughout the competition.</p>
         </div>
-            @if (hideParticipantSelection == true && selectedForm is null)
-            {
-                <div class="mt-5 sm:flex sm:items-center">
-                    <div class="w-full sm:max-w-xs">
-                        <label class="sr-only">Division</label>
-                        <select class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6" @bind="selectedDivision">
-                            <option value="">Select Division</option>
-                            <option value="Memorization">Memorization</option>
-                            <option value="Ten Qira'at">Ten Qiraat</option>
-                            <option value="Best Voice">Best Voice</option>
-                        </select>
-                    </div>
-                    <button @onclick="OnDivisionSelection" class="mt-3 inline-flex w-full items-center justify-center rounded-md bg-cyan-700 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cyan-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-700 sm:ml-3 sm:mt-0 sm:w-auto">Next</button>
+        @if (hideParticipantSelection == true && selectedForm is null)
+        {
+            <div class="mt-5 sm:flex sm:items-center">
+                <div class="w-full sm:max-w-xs">
+                    <label class="sr-only">Division</label>
+                    <select class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6" @bind="selectedDivision">
+                        <option value="">Select Division</option>
+                        <option value="Memorization">Memorization</option>
+                        <option value="Ten Qira'at">Ten Qiraat</option>
+                        @* <option value="Best Voice">Best Voice</option> *@
+                        <option value="Islamic Studies">Islamic Studies</option>
+
+                    </select>
                 </div>
-                @if (displayErrorMessage == true)
-                {
+                <button @onclick="OnDivisionSelection" class="mt-3 inline-flex w-full items-center justify-center rounded-md bg-cyan-700 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cyan-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-700 sm:ml-3 sm:mt-0 sm:w-auto">Next</button>
+            </div>
+            @if (displayErrorMessage == true)
+            {
                 <div class="mt-3">
                     <p class="text-red-600">There are no existing forms in the selected division.</p>
                 </div>
-                }
             }
-            else if (hideParticipantSelection == false && selectedForm is null)
-            {
-                <div class="mt-5 sm:flex sm:items-center">
-                    <div class="w-full sm:max-w-xs">
-                        <label class="sr-only">Division</label>
-                        <input type="text" readonly class="block w-full rounded-md border-0 py-1.5 text-gray-900 bg-gray-100 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6" @bind="selectedDivision" />
-                    </div>
-                 </div>
-
-                <div class="mt-5 sm:flex sm:items-center">
-                    <div class="w-full sm:max-w-xs">
-                        <label class="sr-only">Full Name</label>
-                        <select class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6" @bind="selectedParticipantId">
-                            <option disabled selected>Choose a Participant</option>
-                            @foreach (var form in forms)
-                            {
-                                <option value="@form.Id">@form.PersonalInfo.GetFullName()</option>
-                            }
-                        </select>
-                    </div>
-                    <button @onclick="OnInput" class="mt-3 inline-flex w-full items-center justify-center rounded-md bg-cyan-700 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cyan-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-700 sm:ml-3 sm:mt-0 sm:w-auto">Track</button>
+        }
+        else if (hideParticipantSelection == false && selectedForm is null)
+        {
+            <div class="mt-5 sm:flex sm:items-center">
+                <div class="w-full sm:max-w-xs">
+                    <label class="sr-only">Division</label>
+                    <input type="text" readonly class="block w-full rounded-md border-0 py-1.5 text-gray-900 bg-gray-100 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6" @bind="selectedDivision" />
                 </div>
-            }
+            </div>
+
+            <div class="mt-5 sm:flex sm:items-center">
+                <div class="w-full sm:max-w-xs">
+                    <label class="sr-only">Full Name</label>
+                    <select class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6" @bind="selectedParticipantId">
+                        <option disabled selected>Choose a Participant</option>
+                        @foreach (var form in forms)
+                        {
+                            <option value="@form.Id">@form.PersonalInfo.GetFullName()</option>
+                        }
+                    </select>
+                </div>
+                <button @onclick="OnInput" class="mt-3 inline-flex w-full items-center justify-center rounded-md bg-cyan-700 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cyan-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-700 sm:ml-3 sm:mt-0 sm:w-auto">Track</button>
+            </div>
+        }
         else if (selectedForm is not null)
         {
             <div class="mt-5 sm:flex sm:items-center">
@@ -73,6 +76,45 @@
     <div class="flex justify-center mt-6">
         <div class="md:basis-3/4 basis-full bg-white shadow rounded-lg px-2 py-4">
             <p class="text-sm text-center">@selectedForm.CompetitionInfo.Division Form | @selectedForm.PersonalInfo.GetFullName()</p>
+
+            @if (IsAdmin)
+            {
+                <div class="mt-4 px-4">
+                    <div class="border-t border-gray-200 pt-4">
+                        <h4 class="text-sm font-medium text-gray-900">Form Creator Management</h4>
+                        <div class="mt-1">
+                            <p class="text-xs text-gray-500">Current creator: @(formCreatorEmail ?? "Loading...")</p>
+                        </div>
+                        <div class="mt-3 sm:flex sm:items-center">
+                            <div class="w-full sm:max-w-xs">
+                                <label for="creatorEmail" class="sr-only">New Creator Email</label>
+                                <input type="email" id="creatorEmail" placeholder="Enter new creator email"
+                                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6"
+                                @bind="newCreatorEmail" />
+                            </div>
+                            <button @onclick="ChangeFormCreator"
+                            class="mt-3 inline-flex w-full items-center justify-center rounded-md bg-cyan-700 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cyan-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-700 sm:ml-3 sm:mt-0 sm:w-auto"
+                            disabled="@isProcessingCreatorChange">
+                                @if (isProcessingCreatorChange)
+                                {
+                                    <span>Processing...</span>
+                                }
+                                else
+                                {
+                                    <span>Change Creator</span>
+                                }
+                            </button>
+                        </div>
+                        @if (!string.IsNullOrEmpty(creatorChangeErrorMessage))
+                        {
+                            <div class="mt-2">
+                                <p class="text-xs text-red-600">@creatorChangeErrorMessage</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
             <ul role="list" class="space-y-6 mt-4">
                 @foreach (var tracking in selectedForm.FormHistory)
                 {
@@ -122,6 +164,13 @@
     private bool hideParticipantSelection = true;
 
     private bool IsAdmin { get; set; }
+    private bool IsVolunteer { get; set; }
+
+    // Form creator management
+    private string formCreatorEmail;
+    private string newCreatorEmail;
+    private string creatorChangeErrorMessage = string.Empty;
+    private bool isProcessingCreatorChange = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -130,17 +179,102 @@
         var authState = await AuthState.GetAuthenticationStateAsync();
         var user = authState.User;
         IsAdmin = user.IsInRole("Admin");
+        IsVolunteer = user.IsInRole("Volunteer");
 
-        if (Id is not null && IsAdmin) 
+        if (Id is not null && (IsAdmin || IsVolunteer))
         {
             try
             {
                 selectedForm = await FormData.GetForm(Id);
+                await LoadFormCreatorEmail();
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
             }
+        }
+    }
+
+    private async Task LoadFormCreatorEmail()
+    {
+        if (selectedForm != null)
+        {
+            try
+            {
+                var creator = await UserData.GetUser(selectedForm.Creator);
+                formCreatorEmail = creator?.EmailAddress ?? "Unknown";
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error loading creator email: {e.Message}");
+                formCreatorEmail = "Error loading creator";
+            }
+        }
+    }
+
+    private async Task ChangeFormCreator()
+    {
+        if (selectedForm == null || !IsAdmin)
+            return;
+
+        if (string.IsNullOrWhiteSpace(newCreatorEmail))
+        {
+            creatorChangeErrorMessage = "Please enter a valid email address.";
+            return;
+        }
+
+        isProcessingCreatorChange = true;
+        creatorChangeErrorMessage = string.Empty;
+
+        try
+        {
+            // Find user by email
+            var newCreator = await UserData.GetUserByEmail(newCreatorEmail);
+
+            if (newCreator == null)
+            {
+                creatorChangeErrorMessage = "User with this email address not found.";
+                isProcessingCreatorChange = false;
+                return;
+            }
+
+            // Update form creator
+            var originalCreatorId = selectedForm.Creator;
+            selectedForm.Creator = newCreator.Id;
+
+            // Update form in database
+            await FormData.UpdateForm(selectedForm);
+
+            // Add tracking history entry
+            RegistrationPortal.Data.Models.Tracking tracking = new();
+            tracking.PerformedById = loggedInUser.Id;
+            tracking.FullName = loggedInUser.GetFullName();
+            tracking.DisplayName = loggedInUser.DisplayName;
+            tracking.UserType = loggedInUser.UserType;
+            tracking.TrackingAction = "Form Creator Changed";
+        
+
+            // Add descriptions
+            var description = $"Form creator changed to '{newCreatorEmail}' by {loggedInUser.DisplayName ?? loggedInUser.EmailAddress} (Admin).";
+            tracking.Descriptions.Add(description);
+            tracking.Descriptions.Add($"Changed from: {(loggedInUser.UserType == "Admin" ? "Admin Account" : formCreatorEmail)}");
+
+            // Add to form history
+            selectedForm.FormHistory.Add(tracking);
+            await FormData.UpdateForm(selectedForm);
+
+            // Update displayed creator email
+            formCreatorEmail = newCreatorEmail;
+            newCreatorEmail = string.Empty;
+        }
+        catch (Exception e)
+        {
+            creatorChangeErrorMessage = $"Error updating creator: {e.Message}";
+            Console.WriteLine($"Error changing form creator: {e.Message}");
+        }
+        finally
+        {
+            isProcessingCreatorChange = false;
         }
     }
 
@@ -150,7 +284,7 @@
         {
             var results = new List<Form>();
 
-            if (IsAdmin)    
+            if (IsAdmin)
             {
                 results = await FormData.GetForms();
             }
@@ -160,7 +294,7 @@
             }
 
             forms = results.Where(f => f.CompetitionInfo.Division == selectedDivision).ToList();
-            if (forms.Count() == 0)  
+            if (forms.Count() == 0)
             {
                 ResetTrackingSearch();
                 displayErrorMessage = true;
@@ -173,11 +307,15 @@
         }
     }
 
-    private void OnInput()
+    private async Task OnInput()
     {
         if (string.IsNullOrWhiteSpace(selectedParticipantId) == false)
         {
             selectedForm = forms.Where(m => m.Id == selectedParticipantId).FirstOrDefault();
+            if (selectedForm != null && IsAdmin)
+            {
+                await LoadFormCreatorEmail();
+            }
         }
     }
 
@@ -189,6 +327,9 @@
         forms = null;
         selectedForm = null;
         hideParticipantSelection = true;
+        formCreatorEmail = null;
+        newCreatorEmail = null;
+        creatorChangeErrorMessage = string.Empty;
     }
 
     public static string TimeAgo(DateTime dateTime)

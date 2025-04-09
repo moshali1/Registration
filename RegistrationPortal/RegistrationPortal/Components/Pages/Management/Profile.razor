@@ -20,6 +20,13 @@
                 <p class="text-sm text-white">Manage your account details and settings here.</p>
             </div>
             <div class="px-4 py-5 sm:p-6">
+                @* @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+                        <p class="font-bold">Error</p>
+                        <p>@errorMessage</p>
+                    </div>
+                } *@
                 @if (isLoading)
                 {
                     <div class="animate-pulse">
@@ -60,7 +67,10 @@
                         </div>
                         <div class="mb-4">
                             <h6 class="mb-0">Full Name:</h6>
-                            <small>@user.GivenName @user.Surname</small>
+                            <small>
+                                @(user.GivenName == "" ? "Not Provided" : user.GivenName)
+                                @user.Surname
+                            </small>
                         </div>
                         <div class="mb-4">
                             <h6 class="mb-0">User Type:</h6>
@@ -69,7 +79,7 @@
                         <div class="mb-4">
                             <h6 class="mb-0">Identities:</h6>
                             <div><small>Sign-in Type: @user.SignInType</small></div>
-                            <div><small>Issuer: @user.Issuer</small></div>
+                            @* <div><small>Issuer: @user.Issuer</small></div> *@
                             <div><small>Issuer Assigned ID: @user.IssuerAssignedId</small></div>
                         </div>
                         @if (user.UserTypeCustom is null)
@@ -80,7 +90,7 @@
                             </div>
                         }
                     </div>
-                } 
+                }
             </div>
         </div>
     </div>
@@ -106,27 +116,49 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Read from Azure AD B2C Management Settings
-        tenantId = _configuration["MicrosoftGraph:TenantId"];
-        clientId = _configuration["MicrosoftGraph:ClientId"];
-        clientSecret = _configuration["MicrosoftGraph:ClientSecret"];
-        extensionAttributes = _configuration["MicrosoftGraph:ExtensionAttributes"];
+        try
+        {
+            // Read from Azure AD B2C Management Settings
+            tenantId = _configuration["MicrosoftGraph:TenantId"];
+            clientId = _configuration["MicrosoftGraph:ClientId"];
+            clientSecret = _configuration["MicrosoftGraph:ClientSecret"];
+            extensionAttributes = _configuration["MicrosoftGraph:ExtensionAttributes"];
 
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
+            // Check if config values were retrieved properly
+            if (string.IsNullOrEmpty(tenantId) || string.IsNullOrEmpty(clientId) ||
+                string.IsNullOrEmpty(clientSecret) || string.IsNullOrEmpty(extensionAttributes))
+            {
+                throw new Exception("One or more Microsoft Graph configuration values are missing");
+            }
 
-        // Get the user's object ID from claims.
-        objectId = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("objectidentifier"))?.Value;
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
 
-        await ReadProfile(objectId);
+            // Get the user's object ID from claims.
+            objectId = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("objectidentifier"))?.Value;
 
-        ConstructQueryString();
+            if (string.IsNullOrEmpty(objectId))
+            {
+                throw new Exception("Could not retrieve user object ID from claims");
+            }
+
+            await ReadProfile(objectId);
+
+            ConstructQueryString();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Initialization error: {ex.Message}";
+            isLoading = false; // Important: set loading to false on error
+        }
     }
 
     private async Task ReadProfile(string userObjectId)
     {
         try
         {
+            Console.WriteLine($"Attempting to fetch profile for user ID: {userObjectId}");
+
             var clientSecretCredential = new ClientSecretCredential(tenantId, clientId, clientSecret);
             var graphClient = new GraphServiceClient(clientSecretCredential, scopes);
 
@@ -136,6 +168,10 @@
                 requestConfiguration.QueryParameters.Expand = new string[] { "Extensions" };
             });
 
+            if (profile == null)
+            {
+                throw new Exception("User profile not found");
+            }
 
             // Populate the user's attributes
             user.Id = profile.Id;
@@ -145,20 +181,38 @@
 
             // Get the custom user type from the extension attributes
             object userTypeCustom;
-            if (profile.AdditionalData.TryGetValue($"{extensionAttributes}_UserType", out userTypeCustom))
+            if (profile.AdditionalData != null && profile.AdditionalData.TryGetValue($"{extensionAttributes}_UserType", out userTypeCustom))
             {
-                user.UserTypeCustom = userTypeCustom.ToString();
+                user.UserTypeCustom = userTypeCustom?.ToString();
             }
 
             // Get the user identities
-            GetIdentities(profile.Identities);
+            if (profile.Identities != null && profile.Identities.Count > 0)
+            {
+                GetIdentities(profile.Identities);
+            }
+            else
+            {
+                Console.WriteLine("No identities found in the user profile");
+            }
 
             isLoading = false;
-
+        }
+        catch (ServiceException graphEx)
+        {
+            Console.WriteLine($"Graph API error: {graphEx.Message}");
+            errorMessage = $"Microsoft Graph error: {graphEx.Message}";
+            if (graphEx.InnerException != null)
+            {
+                Console.WriteLine($"Inner exception: {graphEx.InnerException.Message}");
+            }
+            isLoading = false; // Important: set loading to false on error
         }
         catch (Exception ex)
         {
-            errorMessage = $"Can't read the profile due to the following error: {ex.Message}";
+            Console.WriteLine($"General error: {ex.Message}");
+            errorMessage = $"Cannot read the profile due to the following error: {ex.Message}";
+            isLoading = false; // Important: set loading to false on error
         }
     }
 
@@ -179,8 +233,6 @@
         }
     }
 
-    // private string queryString;
-
     private void ConstructQueryString()
     {
         var profileInfo = new
@@ -190,7 +242,18 @@
             LastName = user.Surname,
             UserType = user.UserTypeCustom
         };
+    }
 
-        // queryString = $"displayName={Uri.EscapeDataString(profileInfo.DisplayName)}&firstName={Uri.EscapeDataString(profileInfo.FirstName)}&lastName={Uri.EscapeDataString(profileInfo.LastName)}&userType={Uri.EscapeDataString(profileInfo.UserType)}";
+    // This class would need to be defined somewhere in your code
+    public class GraphUser
+    {
+        public string Id { get; set; }
+        public string DisplayName { get; set; }
+        public string GivenName { get; set; }
+        public string Surname { get; set; }
+        public string UserTypeCustom { get; set; }
+        public string Issuer { get; set; }
+        public string IssuerAssignedId { get; set; }
+        public string SignInType { get; set; }
     }
 }

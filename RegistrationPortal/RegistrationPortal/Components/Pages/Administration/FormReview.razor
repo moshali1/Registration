@@ -10,7 +10,7 @@
 
 @rendermode InteractiveServer
 
-@attribute [Authorize(Roles = "Admin")]
+@attribute [Authorize(Roles = "Admin, Volunteer")]
 
 <div class="flex flex-col md:flex-row mx-auto max-w-7xl px-4 sm:px-4 lg:px-4 space-y-4 md:space-y-0 md:space-x-2">
     <div class="flex-initial w-full md:w-3/4 mx-auto max-w-3xl">
@@ -53,6 +53,10 @@
                                     <label for="all" class="ml-3 block text-sm font-medium leading-6 text-gray-900">All Forms <span class="text-gray-300">(Default)</span></label>
                                 </div>
                                 <div class="flex items-center">
+                                    <InputRadio id="pending" Value="DisplayOptions.AwaitingReview" class="h-4 w-4 border-gray-300 text-cyan-600 focus:ring-cyan-600" @oninput="() => OnDisplayOptionChange(DisplayOptions.AwaitingReview)" />
+                                    <label for="pending" class="ml-3 block text-sm font-medium leading-6 text-gray-900">Awaiting Review Only</label>
+                                </div>
+                                <div class="flex items-center">
                                     <InputRadio id="pending" Value="DisplayOptions.Pending" class="h-4 w-4 border-gray-300 text-cyan-600 focus:ring-cyan-600" @oninput="() => OnDisplayOptionChange(DisplayOptions.Pending)" />
                                     <label for="pending" class="ml-3 block text-sm font-medium leading-6 text-gray-900">Pending Only</label>
                                 </div>
@@ -66,11 +70,12 @@
                             <option value="Memorization">Memorization</option>
                             <option value="Ten Qira'at">Ten Qiraat</option>
                             <option value="Best Voice">Best Voice</option>
+                            <option value="Islamic Studies">Islamic Studies</option>
                         </select>
                     </div>
 
                 </div>
-                    
+
                 <!-- Form Details Display -->
                 @if (!string.IsNullOrEmpty(messageText))
                 {
@@ -170,7 +175,7 @@
                             <textarea id="statusComment" @bind="StatusComment" rows="3" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm rounded-md"></textarea>
                         </div>
                     </div>
-                    
+
                 }
             </div>
             <div class="bg-cyan-800 px-2 py-2 sm:px-6">
@@ -228,10 +233,27 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Middle Name Removal Section -->
+                <div class="mt-8">
+                    <div class="mt-4 bg-white shadow sm:rounded-lg">
+                        <div class="px-4 py-5 sm:p-6">
+                            <h3 class="text-sm font-medium leading-6 text-gray-900">Remove Middle Name</h3>
+                            <div class="mt-5">
+                                <button @onclick="RemoveMiddleName" class="inline-flex items-center px-4 py-2 border border-transparent font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                    </svg>
+                                    Remove Middle Name
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     }
-    
+
 </div>
 
 <!-- Dialog Component -->
@@ -285,8 +307,8 @@
     private Form CurrentForm;
     private int currentIndex = -1;
 
-    public enum DisplayOptions { All, Pending }
-    private DisplayOptions selectedDisplayOption = DisplayOptions.All; 
+    public enum DisplayOptions { All, AwaitingReview, Pending }
+    private DisplayOptions selectedDisplayOption = DisplayOptions.AwaitingReview; // TEMP CHANGE
 
     private bool idPdf = false;
     private string idSasUrl;
@@ -304,6 +326,9 @@
         // Perhaps add a setting to show ALL, Pending, Reviewed, Verified etc. 
         AllForms = await FormData.GetForms(); // Fetch all forms once and store them
                                               // Filter once Display Options and Division are selected
+
+        SelectedDivision = DivisionConstants.Memorization; //TEMP REMOVE LATER
+        OnDivisionSelection();
 
         if (!string.IsNullOrWhiteSpace(Id))
         {
@@ -339,6 +364,10 @@
             if (selectedDisplayOption == DisplayOptions.All)
             {
                 filteredForms = AllForms.Where(f => f.CompetitionInfo.Division == SelectedDivision).ToList();
+            }
+            else if (selectedDisplayOption == DisplayOptions.AwaitingReview)
+            {
+                filteredForms = AllForms.Where(f => f.StatusInfo.Status == "Awaiting Review" && f.CompetitionInfo.Division == SelectedDivision).ToList();
             }
             else if (selectedDisplayOption == DisplayOptions.Pending)
             {
@@ -478,6 +507,11 @@
         // Enhancing the description to include more context
         // Hard coding Admin because Admin is not a UserType
         var description = $"Form status changed to '{SelectedStatus}' by {user.DisplayName} (Admin).";
+
+        @if (user.UserType == "Volunteer")
+        {
+            description = $"Form status changed to '{SelectedStatus}' by {user.DisplayName} (V).";
+        }
         tracking.Descriptions.Add(description);
         tracking.Descriptions.Add($"Status Comment: {StatusComment}");
         if (SelectedStatus == "Pending")
@@ -587,6 +621,17 @@
         NavManager.NavigateTo(sasUri);
     }
 
+    private async Task RemoveMiddleName()
+    {
+        if (CurrentForm == null) return;
+
+
+        // Remove middle name and add tracking
+        CurrentForm.PersonalInfo.MiddleName = "";
+
+        await FormData.UpdateForm(CurrentForm);
+    }
+
 
     private void LoadComment(char comment)
     {
@@ -633,7 +678,7 @@
         var plainText = $"Assalamu Alaikum {creatorDisplayName},\n\n" +
                         $"We are writing to inform you that your submission for the Imam Al-Shatibi Quran Competition Registration {DateTime.Now.Year}, in the \"{SelectedDivision}\" division, for student {CurrentForm.PersonalInfo.GetFirstMiddleLastName()}, is currently marked as pending.\n\n" +
                         $"Status Comment: {StatusComment}\n\n" +
-                        $"To ensure your participation, please address the noted issue(s) as soon as possible before the registration closes on 3/17/2024. Should you have any questions or require further assistance, do not hesitate to get in touch.\n\n" +
+                        $"To ensure your participation, please address the noted issue(s) as soon as possible. Registration closes on 3/16/2025. Should you have any questions or require further assistance, do not hesitate to get in touch.\n\n" +
                         $"Thank you for your attention to this matter.\n\n" +
                         $"If you need to contact us, please reply to this email or call us at (612) 800-4435 from 8 AM to 8 PM CT.\n\n" +
                         $"To edit your form, please visit: https://register.imamshatibi.org\n\n" +

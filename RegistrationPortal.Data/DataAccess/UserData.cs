@@ -12,6 +12,9 @@ public class UserData : IUserData
     public async Task<User> GetUser(string id) =>
         await _users.Find(u => u.Id == id).FirstOrDefaultAsync();
 
+    public async Task<User> GetUserByEmail(string emailAddress) =>
+        await _users.Find(u => u.EmailAddress == emailAddress).FirstOrDefaultAsync();
+
     public async Task<User> GetUserFromAuthentication(string objectId) =>
         await _users.Find(u => u.ObjectIdentifier == objectId).FirstOrDefaultAsync();
 

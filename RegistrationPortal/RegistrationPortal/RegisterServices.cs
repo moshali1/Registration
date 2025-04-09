@@ -120,5 +120,14 @@ public static class RegisterServices
         builder.Services.AddSingleton<IEmailService, EmailService>();
 
         builder.Services.AddMemoryCache();
+
+        builder.Services.AddSignalR(hubOptions =>
+        {
+            hubOptions.MaximumReceiveMessageSize = 64 * 1024; // 64KB
+                                                              // You can set it higher if needed, like 1MB:
+                                                              // hubOptions.MaximumReceiveMessageSize = 1024 * 1024; // 1MB
+
+            hubOptions.EnableDetailedErrors = true; // Keep detailed errors enabled
+        });
     }
 }

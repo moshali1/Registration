@@ -39,11 +39,11 @@
                     </div>
                 </div>
                 <div>
-                    <div class="font-medium">Best Voice</div>
+                    <div class="font-medium">Islamic Studies</div>
                     <div class="text-center text-lg font-semibold text-cyan-700">
                         @{
-                            var bestVoiceCount = CurrentForms.Where(f => f.CompetitionInfo.Division == DivisionConstants.BestVoice).Count();
-                            @(bestVoiceCount > 0 ? bestVoiceCount.ToString() : "-")
+                            var islamicStudiesCount = CurrentForms.Where(f => f.CompetitionInfo.Division == DivisionConstants.IslamicStudies).Count();
+                            @(islamicStudiesCount > 0 ? islamicStudiesCount.ToString() : "-")
                         }
                     </div>
                 </div>

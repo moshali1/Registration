@@ -247,6 +247,13 @@
             // Load settings to check permissions.
             settings = await SettingsData.GetSettings();
             // Redirect if creating forms is disabled.
+
+            // Here we made an exception for pending forms to allow the user to resubmit the form.
+            // They can resubmit the form even if the settings disallow it.
+
+            // TODO: However, currently the user can edit form even if the status has been reviewed or verified, which is why temporarily 
+            // I am runing logic to check for any edits in tracking before verifiying status.
+            // Does a verified status mean that the form is locked for editing?!!!!
             if (Division == DivisionConstants.Memorization && !settings.CanUpdateMemorization && form.StatusInfo.Status != "Pending")
             {
                 NavManager.NavigateTo("/", forceLoad: true);
@@ -256,6 +263,10 @@
                 NavManager.NavigateTo("/", forceLoad: true);
             }
             else if (Division == DivisionConstants.BestVoice && !settings.CanUpdateBestVoice && form.StatusInfo.Status != "Pending")
+            {
+                NavManager.NavigateTo("/", forceLoad: true);
+            }
+            else if (Division == DivisionConstants.IslamicStudies && !settings.CanUpdateIslamicStudies && form.StatusInfo.Status != "Pending")
             {
                 NavManager.NavigateTo("/", forceLoad: true);
             }
@@ -276,6 +287,10 @@
                 NavManager.NavigateTo("/", forceLoad: true);
             }
             else if (Division == DivisionConstants.BestVoice && !settings.CanUpdateBestVoice && form.StatusInfo.Status != "Pending")
+            {
+                NavManager.NavigateTo("/", forceLoad: true);
+            }
+            else if (Division == DivisionConstants.IslamicStudies && !settings.CanUpdateIslamicStudies && form.StatusInfo.Status != "Pending")
             {
                 NavManager.NavigateTo("/", forceLoad: true);
             }
@@ -433,6 +448,7 @@
         {
             notificationText = ModalInfo.AgeEligibilityError();
             showNotification = true;
+            isSubmitting = false; // Allow the user to correct the form and resubmit. 
             return false;
         }
         return true;

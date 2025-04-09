@@ -5,7 +5,7 @@ public class PersonalInfoDto
     [Display(Name = "First Name")]
     public string FirstName { get; set; }
 
-    [MaxLength(50, ErrorMessage = "Middle Name must be a maximum of 50 characters.")]
+    [Required, MaxLength(50, ErrorMessage = "Middle Name must be a maximum of 50 characters.")]
     public string MiddleName { get; set; }
 
     [Required, MaxLength(50, ErrorMessage = "Last Name must be a maximum of 50 characters.")]

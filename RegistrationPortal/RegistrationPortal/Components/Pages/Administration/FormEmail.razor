@@ -29,14 +29,14 @@
 
                     <!-- Navigation Buttons -->
                     <div class="flex justify-between">
-                        <button @onclick="GoToPreviousUser" class="inline-flex justify-center py-1 px-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-cyan-950">
+                        <button @onclick="GoToPreviousUser" class="inline-flex justify-center py-1 px-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-cyan-950" disabled="@isProcessing">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 mx-2">
                                 <path fill-rule="evenodd" d="M7.793 2.232a.75.75 0 0 1-.025 1.06L3.622 7.25h10.003a5.375 5.375 0 0 1 0 10.75H10.75a.75.75 0 0 1 0-1.5h2.875a3.875 3.875 0 0 0 0-7.75H3.622l4.146 3.957a.75.75 0 0 1-1.036 1.085l-5.5-5.25a.75.75 0 0 1 0-1.085l5.5-5.25a.75.75 0 0 1 1.06.025Z" clip-rule="evenodd" />
                             </svg>
                             Previous Form
                         </button>
                         <span class="py-1 px-2 text-sm font-medium text-white">@($"Form {currentUserIndex + 1} of {users.Count}")</span>
-                        <button @onclick="GoToNextUser" class="inline-flex justify-center py-1 px-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-cyan-950">
+                        <button @onclick="GoToNextUser" class="inline-flex justify-center py-1 px-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-cyan-950" disabled="@isProcessing">
                             Next Form
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 mx-2">
                                 <path fill-rule="evenodd" d="M12.207 2.232a.75.75 0 0 0 .025 1.06l4.146 3.958H6.375a5.375 5.375 0 0 0 0 10.75H9.25a.75.75 0 0 0 0-1.5H6.375a3.875 3.875 0 0 1 0-7.75h10.003l-4.146 3.957a.75.75 0 0 0 1.036 1.085l5.5-5.25a.75.75 0 0 0 0-1.085l-5.5-5.25a.75.75 0 0 0-1.06.025Z" clip-rule="evenodd" />
@@ -47,94 +47,103 @@
                 </div>
             }
 
-                <div class="px-4 py-2 md:p-6">
-                    <!-- Division Selection -->
-                    <div class="sm:flex sm:items-center justify-between">
+            <div class="px-4 py-2 md:p-6">
+                <!-- Division Selection -->
+                <div class="sm:flex sm:items-center justify-between">
 
-                        <div class="">
-                            <label class="block text-base text-gray-700">Display Option</label>
-                            <div class="space-y-2 mt-2">
-                                <InputRadioGroup Name="displayOptions" @bind-Value="selectedDisplayOption">
-                                    <div class="flex items-center">
-                                        <InputRadio id="all" Value="DisplayOptions2.All" class="h-4 w-4 border-gray-300 text-cyan-600 focus:ring-cyan-600" @oninput="() => OnDisplayOptionChange(DisplayOptions2.All)" />
-                                        <label for="all" class="ml-3 block text-sm font-medium leading-6 text-gray-900">Reviewed & Verified Forms <span class="text-gray-300">(Default)</span></label>
-                                    </div>
-                                    <div class="flex items-center">
-                                        <InputRadio id="reviewed" Value="DisplayOptions2.Reviewed" class="h-4 w-4 border-gray-300 text-cyan-600 focus:ring-cyan-600" @oninput="() => OnDisplayOptionChange(DisplayOptions2.Reviewed)" />
-                                        <label for="reviewed" class="ml-3 block text-sm font-medium leading-6 text-gray-900">Reviewed Only</label>
-                                    </div>
-                                </InputRadioGroup>
+                    <div class="">
+                        <label class="block text-base text-gray-700">Display Option</label>
+                        <div class="space-y-2 mt-2">
+                            <InputRadioGroup Name="displayOptions" @bind-Value="selectedDisplayOption">
+                                <div class="flex items-center">
+                                    <InputRadio id="all" Value="DisplayOptions2.All" class="h-4 w-4 border-gray-300 text-cyan-600 focus:ring-cyan-600" @oninput="() => OnDisplayOptionChange(DisplayOptions2.All)" />
+                                    <label for="all" class="ml-3 block text-sm font-medium leading-6 text-gray-900">Reviewed & Verified Forms <span class="text-gray-300">(Default)</span></label>
+                                </div>
+                                <div class="flex items-center">
+                                    <InputRadio id="reviewed" Value="DisplayOptions2.Reviewed" class="h-4 w-4 border-gray-300 text-cyan-600 focus:ring-cyan-600" @oninput="() => OnDisplayOptionChange(DisplayOptions2.Reviewed)" />
+                                    <label for="reviewed" class="ml-3 block text-sm font-medium leading-6 text-gray-900">Reviewed Only</label>
+                                </div>
+                            </InputRadioGroup>
+                        </div>
+                    </div>
+                    <div class="w-full sm:max-w-xs">
+                        <label for="division" class="block text-base text-gray-700">Division</label>
+                        <select id="division" @bind="selectedDivision" @oninput="UpdateDivision" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm rounded-md">
+                            <option>Select a Division</option>
+                            <option value="Memorization">Memorization</option>
+                            <option value="Ten Qira'at">Ten Qiraat</option>
+                            <option value="Best Voice">Best Voice</option>
+                            <option value="Islamic Studies">Islamic Studies</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                @if (users != null && users.Any())
+                {
+                    <!-- User/ Associated Forms Display -->
+                    <div class="mt-5">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">User Details</h3>
+
+                        <dl class="mt-2 border-t border-b border-gray-200 divide-y divide-gray-200">
+                            <div class="py-3 flex justify-between text-sm font-medium">
+                                <dt class="text-gray-700">
+                                    <span class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-sm font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
+                                        User Information
+                                    </span>
+                                </dt>
+                                <dd class="text-gray-900">@ToTitleCase(currentUser.DisplayName) (@currentUser.UserType)</dd>
                             </div>
-                        </div>
-                        <div class="w-full sm:max-w-xs">
-                            <label for="division" class="block text-base text-gray-700">Division</label>
-                            <select id="division" @bind="selectedDivision" @oninput="UpdateDivision" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm rounded-md">
-                                <option>Select a Division</option>
-                                <option value="Memorization">Memorization</option>
-                                <option value="Ten Qira'at">Ten Qiraat</option>
-                                <option value="Best Voice">Best Voice</option>
-                            </select>
-                        </div>
+                            <div class="py-3 flex justify-between text-sm font-medium">
+                                <dt class="text-gray-700">
+                                    <span class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-sm font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
+                                        Number of Associated Forms (Memorization)
+                                    </span>
+                                </dt>
+                                <dd class="text-gray-900">@currentUserForms.Count()</dd>
+                            </div>
+
+                        </dl>
+
+                        <span class="text-emerald-600">@successText</span>
+
+                        @if (isProcessing)
+                        {
+                            <div class="mt-3 flex items-center">
+                                <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-emerald-600"></div>
+                                <span class="ml-2 text-emerald-600">Processing... (@(currentProcessingIndex + 1) of @users.Count)</span>
+                            </div>
+                        }
 
                     </div>
 
-                    @if (users != null && users.Any())
-                    {
-                        <!-- User/ Associated Forms Display -->
-                        <div class="mt-5">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900">User Details</h3>
+                    <div class="mt-5">
 
-                            <dl class="mt-2 border-t border-b border-gray-200 divide-y divide-gray-200">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">Associated Form(s)</h3>
+
+                        <dl class="mt-2 border-t border-b border-gray-200 divide-y divide-gray-200">
+                            @foreach (var form in currentUserForms)
+                            {
                                 <div class="py-3 flex justify-between text-sm font-medium">
-                                    <dt class="text-gray-700">
-                                        <span class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-sm font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
-                                            User Information
-                                        </span>
-                                    </dt>
-                                    <dd class="text-gray-900">@ToTitleCase(currentUser.DisplayName) (@currentUser.UserType)</dd>
+                                    <dt class="text-gray-500">Full Name</dt>
+                                    <dd class="text-gray-900">@form.PersonalInfo.GetFirstMiddleLastName()</dd>
                                 </div>
                                 <div class="py-3 flex justify-between text-sm font-medium">
-                                    <dt class="text-gray-700">
-                                        <span class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-sm font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
-                                            Number of Associated Forms (Memorization)
-                                        </span>
-                                    </dt>
-                                    <dd class="text-gray-900">@currentUserForms.Count()</dd>
+                                    <dt class="text-gray-500">Date of Birth</dt>
+                                    <dd class="text-gray-900">@form.PersonalInfo.DOB</dd>
                                 </div>
-
-                            </dl>
-
-                            <span class="text-emerald-600">@successText</span>
-
-                        </div>
-
-                        <div class="mt-5">
-
-                            <h3 class="text-lg leading-6 font-medium text-gray-900">Associated Form(s)</h3>
-
-                            <dl class="mt-2 border-t border-b border-gray-200 divide-y divide-gray-200">
-                                @foreach (var form in currentUserForms)
-                                {
-                                    <div class="py-3 flex justify-between text-sm font-medium">
-                                        <dt class="text-gray-500">Full Name</dt>
-                                        <dd class="text-gray-900">@form.PersonalInfo.GetFirstMiddleLastName()</dd>
-                                    </div>
-                                    <div class="py-3 flex justify-between text-sm font-medium">
-                                        <dt class="text-gray-500">Date of Birth</dt>
-                                        <dd class="text-gray-900">@form.PersonalInfo.DOB</dd>
-                                    </div>
-                                    <div class="py-3 flex justify-between text-sm font-medium">
-                                        <dt class="text-gray-500">Competition Information</dt>
-                                        <dd class="text-gray-900">@form.CompetitionInfo.Division | @form.CompetitionInfo.Category | @form.CompetitionInfo.Portion</dd>
-                                    </div>
-                                    <div class="py-3 flex justify-between text-sm font-medium">
-                                        <dt class="text-gray-500">Status</dt>
-                                        <dd class="text-gray-900">
-                                            <span class="inline-flex items-center rounded-md px-2 py-1 font-medium text-800-700 ring-1 ring-inset ring-gray-600/20 @GetStatusSpanCssClass(form.StatusInfo.Status)">@form.StatusInfo.Status</span>
-                                        </dd>
-                                    </div>
-                                }
-                            </dl>
+                                <div class="py-3 flex justify-between text-sm font-medium">
+                                    <dt class="text-gray-500">Competition Information</dt>
+                                    <dd class="text-gray-900">@form.CompetitionInfo.Division | @form.CompetitionInfo.Category | @form.CompetitionInfo.Portion</dd>
+                                </div>
+                                <div class="py-3 flex justify-between text-sm font-medium">
+                                    <dt class="text-gray-500">Status</dt>
+                                    <dd class="text-gray-900">
+                                        <span class="inline-flex items-center rounded-md px-2 py-1 font-medium text-800-700 ring-1 ring-inset ring-gray-600/20 @GetStatusSpanCssClass(form.StatusInfo.Status)">@form.StatusInfo.Status</span>
+                                    </dd>
+                                </div>
+                            }
+                        </dl>
                     </div>
 
                 }
@@ -149,22 +158,29 @@
                     }
                 }
             </div>
-            
-            <div class="bg-cyan-800 px-2 py-2 sm:px-6 flex justify-center items-center">
+
+            <div class="bg-cyan-800 px-2 py-2 sm:px-6 flex justify-center items-center space-x-4">
                 @if (users != null && users.Any())
                 {
-                    <button @onclick="VerifiedStatus" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
-                        Verified Status
+                    <button @onclick="VerifiedStatus" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500" disabled="@isProcessing">
+                        Verify Current
                     </button>
+                    <button @onclick="StartAutoVerification" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-slate-400 hover:bg-slate-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" disabled="@isProcessing">
+                        Auto Verify All
+                    </button>
+                    @if (isProcessing)
+                    {
+                        <button @onclick="StopAutoVerification" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                            Stop
+                        </button>
+                    }
                 }
             </div>
         </div>
     </div>
-    
-
 </div>
 
-@code{
+@code {
     private User user; // Admin
 
     private List<User> users;
@@ -181,12 +197,17 @@
     private string successText;
     private string messageText;
 
+    // Variables for auto verification
+    private bool isProcessing = false;
+    private int currentProcessingIndex = 0;
+    private CancellationTokenSource cts = new CancellationTokenSource();
+
     public enum DisplayOptions2 { All, Reviewed }
     private DisplayOptions2 selectedDisplayOption = DisplayOptions2.All;
 
     private string selectedDivision;
 
-    [Parameter] 
+    [Parameter]
     public string Test { get; set; }
 
     private bool isTest = false;
@@ -195,7 +216,7 @@
     {
         successText = null;
 
-        if (users.Count > 0)  
+        if (users.Count > 0)
         {
             // Wrap around to the first user if the current is the last one
             currentUserIndex = (currentUserIndex + 1) % users.Count;
@@ -219,7 +240,6 @@
         {
             messageText = string.IsNullOrEmpty(messageText) ? "No forms to display." : messageText;
         }
-
     }
 
     protected override async Task OnInitializedAsync()
@@ -227,12 +247,9 @@
         user = await AuthState.GetUserFromAuth(UserData);
 
         allUsers = await UserData.GetUsers();
-        // var a = await UserData.GetUsers();
-        // allUsers = a.Where(x => x.Id == "65e4fbe5845c3e73612944d8").ToList();
         allForms = await FormData.GetForms();
 
-
-        if (Test is not null && Test == "TEST")   
+        if (Test is not null && Test == "TEST")
         {
             isTest = true;
         }
@@ -280,11 +297,9 @@
             if (users.Any())
             {
                 currentUserIndex = 0; // Start from the first form in the list
-                // currentUser = Forms[currentUserIndex]; // Automatically load the first form
             }
             else
             {
-                // CurrentForm = null;
                 currentUserIndex = -1;
                 messageText = "No forms available in this division.";
             }
@@ -325,9 +340,9 @@
 
     private async Task VerifiedStatus()
     {
-        if (currentUserForms.All(x => x.StatusInfo.Status != "Verified")) // To Allow for Additional Form Email Confirmation
+        if (currentUserForms.All(x => x.StatusInfo.Status != "Verified") || true) // Modified to allow re-verification
         {
-            foreach (var form in currentUserForms)  
+            foreach (var form in currentUserForms)
             {
                 await UpdateStatusAndTrackingInfo(form);
             }
@@ -336,12 +351,81 @@
         }
     }
 
+    // New method to start automated verification of all users
+    private async Task StartAutoVerification()
+    {
+        if (users == null || !users.Any() || isProcessing)
+            return;
+
+        // Reset cancellation token
+        cts = new CancellationTokenSource();
+
+        isProcessing = true;
+        currentProcessingIndex = 0;
+
+        try
+        {
+            // Start from the current user index
+            for (int i = 0; i < users.Count; i++)
+            {
+                if (cts.Token.IsCancellationRequested)
+                    break;
+
+                currentUserIndex = i;
+                currentProcessingIndex = i;
+
+                // Verify current user's forms
+                if (currentUserForms.Any(x => x.StatusInfo.Status == "Reviewed"))
+                {
+                    foreach (var form in currentUserForms)
+                    {
+                        if (cts.Token.IsCancellationRequested)
+                            break;
+
+                        await UpdateStatusAndTrackingInfo(form);
+                    }
+
+                    await ConfirmationEmailNotification();
+
+                    // Wait for 2 seconds between each user verification
+                    if (i < users.Count - 1) // Don't wait after the last user
+                    {
+                        await Task.Delay(2000, cts.Token);
+                    }
+                }
+
+                // Force UI refresh
+                StateHasChanged();
+            }
+
+            successText = "All forms have been verified!";
+        }
+        catch (TaskCanceledException)
+        {
+            successText = "Auto verification was stopped.";
+        }
+        catch (Exception ex)
+        {
+            successText = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    // Method to stop the auto verification process
+    private void StopAutoVerification()
+    {
+        cts.Cancel();
+    }
+
     private async Task UpdateStatusAndTrackingInfo(Form form)
     {
-        if (form.StatusInfo.Status == "Reviewed" && isTest == false) // Avoid Redundency in Tracking  
+        if ((form.StatusInfo.Status == "Reviewed" || form.StatusInfo.Status == "Verified") && isTest == false) // Avoid Redundency in Tracking
         {
             //Update Status
-
             form.StatusInfo.Status = "Verified";
             form.StatusInfo.StatusComment = "";
 
@@ -357,7 +441,6 @@
             // Hard coding Admin because Admin is not a UserType
             var description = $"Form status changed to 'Verified' by {user.DisplayName} (Admin).";
             tracking.Descriptions.Add(description);
-            // tracking.Descriptions.Add($"Status Comment: Verified");
             tracking.Descriptions.Add("Email Confirmation Sent");
 
             form.FormHistory.Add(tracking);
@@ -375,68 +458,59 @@
 
         var subject = $"Imam Shatibi Registration {DateTime.Today.Year.ToString()}: Verified Form Status";
 
+        // Check if any form's address is in MN
+        bool isAnyFormInMN = currentUserForms.Any(form => form.AddressInfo.StateProvince == "MN");
+
+        // Create the appropriate final round message based on location
+        string finalRoundMessage = isAnyFormInMN
+            ? "The <strong>final round</strong> this year will be a little earlier than in previous years. The exact dates will be communicated with you soon. It will be held in person in MN, as in prior years."
+            : "The <strong>final round</strong> this year will be held the beginning of July. The exact dates will be communicated with you soon. It will be held in person in MN, as in prior years.";
+
+        // Plain text version of the final round message (without HTML formatting)
+        string finalRoundPlainText = isAnyFormInMN
+            ? "The final round this year will be a little earlier than in previous years. The exact dates will be communicated with you soon. It will be held in person in MN, as in prior years."
+            : "The final round this year will be held the beginning of July. The exact dates will be communicated with you soon. It will be held in person in MN, as in prior years.";
 
         var plainText = $"Assalamu Alaikum {creatorDisplayName},\n\n" +
+                $"We are pleased to inform you that your status is now verified, and the following student(s) have been verified for the Imam Al-Shatibi Quran Competition Registration {DateTime.Now.Year}, in the {selectedDivision} division:" +
+                $"{BuildHtmlContent(currentUserForms)}\n\n" +
+                $"Please consider this email as confirmation of your verified status. No further action is required on your part at this moment.\n" +
+                $"The preliminary round will be held between May 22nd to May 26th, 2025. The exact scheduled date and time information will be posted soon. Please be aware that the competition will be recorded live on YouTube and Facebook. Make sure to prepare accordingly. Further information on setup and joining the virtual competition will be communicated to your account.\n" +
+                $"{finalRoundPlainText}\n" +
+                $"If you wish to withdraw, please do so as soon as possible before we plan the schedule. If you do not see a competitor you registered for above, or have questions, please let us know.\n\n" +
+                $"To view your form(s), please visit: https://register.imamshatibi.org\n" +
+                $"If you need to contact us, please reply to this email or call us at (612) 800-4435 from 8 AM to 8 PM CT. \n\n" +
+                $"JazakAllahu Khairan,\n" +
+                $"Imam Al-Shatibi Quran Competition";
 
-                        $"We are pleased to inform you that your status is now <strong>verified</strong>, and the following student(s) have been verified for the Imam Al-Shatibi Quran Competition Registration {DateTime.Now.Year}, in the {selectedDivision} division:" +
-                        $"{BuildHtmlContent(currentUserForms)}\n\n" +
-                        $"Please consider this email as confirmation of your verified status. No further action is required on your part at this moment." +
-                        $"The preliminary schedule for the Memorization Division will be posted on the registration site and accessible via the link below starting May 1, 2024." +
-                        $"Thank you for your participation.\n\n " +
-                        $"To view your form(s), please visit: https://register.imamshatibi.org" +
-                        $"If extenuating circumstances require you to withdraw, please contact us with your registration details and the reason for withdrawal as soon as possible." +
-                        $"If you need to contact us, please reply to this email or call us at (612) 800-4435 from 8 AM to 8 PM CT. \n\n" +
-                        $"JazakAllahu Khairan,\n" +
-                        $"Imam Al-Shatibi Quran Competition";
-
-
-
-        // var htmlContent = $@"
-        //                 <div style='font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px;'>
-        //                     <div style='margin-top: 20px;'>
-        //                         <p>Assalamu Alaikum {creatorDisplayName} <small>({creatorUserType})</small>,</p>
-        //                         <p>We are pleased to inform you that your status is now verified, and the following student(s) have been verified for the Imam Al-Shatibi Quran Competition Registration {DateTime.Now.Year}, in the &quot;{selectedDivision}&quot; division:</p>
-        //             {BuildHtmlContent(currentUserForms)}
-        //                     <p>Please consider this email as confirmation of your verified status. No further action is required on your part at this moment.</p>
-        //                     <p>The <strong>preliminary schedule</strong> for the {selectedDivision} Division will be posted on the registration site and accessible via the link below starting May 1, 2024.</p>
-        //                     <p>Thank you for your participation.</p>
-        //                     </div>
-        //                     <div style='margin-top: 20px;'>
-        //                         <p>To view your form(s), please visit: <a href='https://register.imamshatibi.org' target='_blank'>https://register.imamshatibi.org</a></p>
-        //                         <p>If extenuating circumstances require you to withdraw, please contact us with your registration details and the reason for withdrawal as soon as possible.</p>
-        //                         <p>If you need to contact us, please reply to this email or call us at (612) 800-4435 from 8 AM to 8 PM CT.</p>
-        //                     </div>
-        //                     <div style='margin-top: 20px; font-size: 0.9em; text-align: center; color: #555;'>
-        //                         JazakAllahu Khairan,<br>
-        //                         Imam Al-Shatibi Quran Competition
-        //                     </div>
-        //                 </div>";
 
         var htmlContent = $@"
-                        <div style='font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px;'>
-                            <div style='margin-top: 20px;'>
-                                <p>Assalamu Alaikum {creatorDisplayName} <small>({creatorUserType})</small>,</p>
-                                <p>We are pleased to inform you that your status is now verified, and the following student(s) have been verified for the Imam Al-Shatibi Quran Competition Registration {DateTime.Now.Year}, in the &quot;{selectedDivision}&quot; division:</p>
-                    {BuildHtmlContent(currentUserForms)}
-                            <p>Please consider this email as confirmation of your verified status. No further action is required on your part at this moment.</p>
-                            <p>The <strong>preliminary schedule</strong> for the {selectedDivision} Division has been posted on the registration site and accessible via the link below.</p>
-                            <p>Thank you for your participation.</p>
-                            </div>
-                            <div style='margin-top: 20px;'>
-                                <p>To view your form(s), please visit: <a href='https://register.imamshatibi.org' target='_blank'>https://register.imamshatibi.org</a></p>
-                   
-                                <p>If you need to contact us, please reply to this email or call us at (612) 800-4435 from 8 AM to 8 PM CT.</p>
-                            </div>
-                            <div style='margin-top: 20px; font-size: 0.9em; text-align: center; color: #555;'>
-                                JazakAllahu Khairan,<br>
-                                Imam Al-Shatibi Quran Competition
-                            </div>
-                        </div>";
+            <div style='font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px;'>
+                <div style='margin-top: 20px;'>
+                    <p>Assalamu Alaikum {creatorDisplayName} <small>({creatorUserType})</small>,</p>
+                    <p>We are pleased to inform you that your status is now verified, and the following student(s) have been verified for the Imam Al-Shatibi Quran Competition Registration {DateTime.Now.Year}, in the &quot;{selectedDivision}&quot; division:</p>
+        {BuildHtmlContent(currentUserForms)}
+                <p>Please consider this email as confirmation of your verified status. No further action is required on your part at this moment.</p>
+                <p>The preliminary round will be held between <strong>May 22nd to May 26th, 2025.</strong> The exact scheduled date and time information will be posted soon. Please be aware that the competition will be recorded live on <strong>YouTube and Facebook.</strong> Make sure to prepare accordingly. Further information on setup and joining the virtual competition will be communicated to your account.</p>
+                <p>{finalRoundMessage}</p>
+                <p>If you wish to withdraw, please do so as soon as possible before we plan the schedule. If you do not see a competitor you registered for above, or have questions, please let us know.</p>
+                <p>Thank you for your participation.</p>
+                </div>
+                <div style='margin-top: 20px;'>
+                    <p>To view your form(s), please visit: <a href='https://register.imamshatibi.org' target='_blank'>https://register.imamshatibi.org</a></p>
+
+                    <p>If you need to contact us, please reply to this email or call us at (612) 800-4435 from 8 AM to 8 PM CT.</p>
+                </div>
+                <div style='margin-top: 20px; font-size: 0.9em; text-align: center; color: #555;'>
+                    JazakAllahu Khairan,<br>
+                    Imam Al-Shatibi Quran Competition
+                </div>
+            </div>";
 
         await EmailService.SendEmailAsync(creatorEmail, creatorDisplayName, subject, plainText, htmlContent);
         await EmailService.SendEmailAsync("mshiek114@gmail.com", creatorDisplayName, subject, plainText, htmlContent);
 
-        successText = "Email sent successfully!";
+        successText = $"Email sent successfully to {creatorDisplayName}!";
     }
 
     private string BuildHtmlContent(List<Form> forms)
@@ -457,7 +531,7 @@
 
     private string CategoryPortion(string category, string portion)
     {
-        if (portion == "NA")    
+        if (portion == "NA")
         {
             return category;
         }
@@ -466,5 +540,4 @@
             return $"{category}, <small>{portion}</small>";
         }
     }
-
 }

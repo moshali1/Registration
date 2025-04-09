@@ -91,10 +91,14 @@
                             <div class="mt-1">
                                 <input type="text" value="@form.FileUploadInfo.PhotoFileName" readonly class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6 bg-gray-200" />
                                 <p class="mt-1 text-xs text-amber-600 flex items-start">
-                                    <svg class="inline-block w-4 h-4 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    <span>The photo from last year's form will be used. You can update it later by editing your form after submission if desired.</span>
+                                    @if (existingPhotoMessage is not null)
+                                    {
+                                        <svg class="inline-block w-4 h-4 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <span>@existingPhotoMessage</span>
+                                    }
+                                    
                                 </p>
                             </div>
                         }
@@ -203,6 +207,7 @@
     private bool isBusy = false;
     private string exceptionMessage;
     private string successMessage;
+    private string existingPhotoMessage = "The photo from last year's form will be used. You can update it later by editing your form after submission if desired.";
 
     private bool niqabCompetitor = false;
 
@@ -219,9 +224,7 @@
             case "ten-qiraat":
                 Division = "Ten Qira'at";
                 break;
-            // case "best-voice":
-            //     Division = "Best Voice";
-            //     break;
+
             case "islamic-studies":
                 Division = "Islamic Studies";
                 break;
@@ -288,7 +291,7 @@
                 NavManager.NavigateTo("/", forceLoad: true);
             }
         }
-        
+
         successMessage = null;
         showNotification = false;
         isSubmitting = true;
@@ -329,7 +332,8 @@
                 return;
             }
 
-            if (Type != "prev" || String.IsNullOrEmpty(form.FileUploadInfo.IDFileName) || String.IsNullOrEmpty(form.FileUploadInfo.PhotoFileName))
+            // Scenario where the form is being auto-filled, but its from 2023 and the photo is uploaded. The file info must be set. 
+            if (Type != "prev" || String.IsNullOrEmpty(form.FileUploadInfo.IDFileName) || String.IsNullOrEmpty(form.FileUploadInfo.PhotoFileName) || existingPhotoMessage is null)
             {
                 SetFileInfo(IDFile, "id");
                 SetFileInfo(PhotoFile, "photo");
@@ -415,6 +419,7 @@
         {
             notificationText = ModalInfo.AgeEligibilityError();
             showNotification = true;
+            isSubmitting = false; // Allow the user to correct the form and resubmit.
             return false;
         }
         return true;
@@ -523,6 +528,7 @@
     {
         Console.WriteLine("Photo File loading initiated!");
 
+        existingPhotoMessage = null;
         exceptionMessage = null;
         successMessage = null;
         isBusy = true;

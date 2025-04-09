@@ -18,8 +18,11 @@
                     <li>
                         <span class="font-medium">Memorization Forms:</span> @forms.Where(f => f.CompetitionInfo.Division == DivisionConstants.Memorization).Count()
                     </li>
-                    <li>
+                    @* <li>
                         <span class="font-medium">Best Voice Forms:</span> @forms.Where(f => f.CompetitionInfo.Division == DivisionConstants.BestVoice).Count()
+                    </li> *@
+                    <li>
+                        <span class="font-medium">Islamic Studies Forms:</span> @forms.Where(f => f.CompetitionInfo.Division == DivisionConstants.IslamicStudies).Count()
                     </li>
                 </ul>
             }

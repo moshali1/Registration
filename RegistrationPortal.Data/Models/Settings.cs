@@ -18,4 +18,9 @@ public class Settings
     public bool CanCreateBestVoice { get; set; }
     public bool CanUpdateBestVoice { get; set; }
     public bool CanWithdrawBestVoice { get; set; }
+
+    // Islamic Studies form permission
+    public bool CanCreateIslamicStudies { get; set; }
+    public bool CanUpdateIslamicStudies { get; set; }
+    public bool CanWithdrawIslamicStudies { get; set; }
 }

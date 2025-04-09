@@ -4,71 +4,407 @@
 
 @attribute [Authorize(Roles = "Admin")]
 
-@attribute [StreamRendering]
+@rendermode InteractiveServer
 
 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-    <div class="mx-auto max-w-5xl">
+    <div class="mx-auto max-w-6xl">
         <div class="overflow-hidden rounded-lg bg-white shadow">
             <div class="bg-cyan-950 px-4 py-5 sm:px-6">
-                <h1 class="text-base font-semibold leading-6 text-white">Competition Divisions</h1>
-                <p class="text-sm text-white">Summary of competitors in each division and category, including total counts by gender for the Memorization division.</p>
+                <h1 class="text-lg font-semibold leading-6 text-white">Competition Statistics Dashboard</h1>
+                <p class="text-sm text-white">View competition data across divisions and categories</p>
             </div>
+
+            @{
+                var activeTabMemorization = "memorization";
+                var activeTabIslamicStudies = "islamic-studies";
+                var activeTabSummary = "summary";
+            }
+            <!-- Tabs navigation -->
+            <div class="border-b border-gray-200">
+                <nav class="flex -mb-px">
+                    <button @onclick="() => activeTab = activeTabMemorization" class="@GetTabClasses("memorization") pl-4">
+                        <span class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                            </svg>
+                            Memorization Division
+                        </span>
+                    </button>
+                    <button @onclick="() => activeTab = activeTabIslamicStudies" class="@GetTabClasses("islamic-studies") pl-4">
+                        <span class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
+                            </svg>
+                            Islamic Studies Division
+                        </span>
+                    </button>
+                    <button @onclick="() => activeTab = activeTabSummary" class="@GetTabClasses("summary") pl-4">
+                        <span class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
+                                <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
+                            </svg>
+                            Overall Summary
+                        </span>
+                    </button>
+                </nav>
+            </div>
+            
+            <!-- Tab content -->
             <div class="px-4 py-5 sm:p-6">
-                <div class="mt-2">
-                    <h2 class="text-lg font-semibold text-gray-900">Memorization Division</h2>
-                    <div class="mt-2 flow-root">
-                        <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-                            <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-                                <table class="min-w-full divide-y divide-gray-300">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col" class="px-3 py-3 text-left text-sm font-semibold text-gray-900">Category</th>
-                                            <th scope="col" class="px-3 py-3 text-left text-sm font-semibold text-gray-900">Male</th>
-                                            <th scope="col" class="px-3 py-3 text-left text-sm font-semibold text-gray-900">Female</th>
-                                            <th scope="col" class="px-3 py-3 text-left text-sm font-semibold text-gray-900">MN</th>
-                                            <th scope="col" class="px-3 py-3 text-left text-sm font-semibold text-gray-900">Non-MN</th>
-                                            <th scope="col" class="px-3 py-3 text-left text-sm font-semibold text-gray-900">Total Competitors</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-gray-200">
-                                        @foreach (var item in memorizationStats)
-                                        {
+                @if (activeTab == "memorization")
+                {
+                    <!-- Memorization Division Tab Content -->
+                    <div class="mt-2">
+                        <h2 class="text-lg font-semibold text-gray-900">Memorization Division Statistics</h2>
+                        <div class="mt-2 flow-root">
+                            <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                                <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                                    <table class="min-w-full divide-y divide-gray-300">
+                                        <thead>
                                             <tr>
-                                                <td class="px-3 py-3 text-sm text-gray-900">@item.Key</td>
-                                                <td class="px-3 py-3 text-sm text-gray-500">@item.Value.Male</td>
-                                                <td class="px-3 py-3 text-sm text-gray-500">@item.Value.Female</td>
-                                                <td class="px-3 py-3 text-sm text-gray-500">@item.Value.MN</td>
-                                                <td class="px-3 py-3 text-sm text-gray-500">@item.Value.NonMN</td>
-                                                <td class="px-3 py-3 text-sm text-gray-500">@(@item.Value.Male + @item.Value.Female)</td>
+                                                <th scope="col" class="px-3 py-3 text-left text-sm font-semibold text-gray-900">Category</th>
+                                                <th scope="col" class="px-3 py-3 text-left text-sm font-semibold text-gray-900">Male</th>
+                                                <th scope="col" class="px-3 py-3 text-left text-sm font-semibold text-gray-900">Female</th>
+                                                <th scope="col" class="px-3 py-3 text-left text-sm font-semibold text-gray-900">MN</th>
+                                                <th scope="col" class="px-3 py-3 text-left text-sm font-semibold text-gray-900">Non-MN</th>
+                                                <th scope="col" class="px-3 py-3 text-left text-sm font-semibold text-gray-900">Total Competitors</th>
                                             </tr>
-                                        }
-                                        <tr class="bg-gray-100">
-                                            <td class="px-3 py-3 text-sm font-semibold text-gray-900">Total</td>
-                                            <td class="px-3 py-3 text-sm text-gray-500">@totals.TotalMale</td>
-                                            <td class="px-3 py-3 text-sm text-gray-500">@totals.TotalFemale</td>
-                                            <td class="px-3 py-3 text-sm text-gray-500">@totals.TotalMN</td>
-                                            <td class="px-3 py-3 text-sm text-gray-500">@totals.TotalNonMN</td>
-                                            <td class="px-3 py-3 text-sm text-gray-500">@totals.GrandTotal</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200">
+                                            @foreach (var item in memorizationStats)
+                                            {
+                                                <tr>
+                                                    <td class="px-3 py-3 text-sm text-gray-900">@item.Key</td>
+                                                    <td class="px-3 py-3 text-sm text-gray-500">@item.Value.Male</td>
+                                                    <td class="px-3 py-3 text-sm text-gray-500">@item.Value.Female</td>
+                                                    <td class="px-3 py-3 text-sm text-gray-500">@item.Value.MN</td>
+                                                    <td class="px-3 py-3 text-sm text-gray-500">@item.Value.NonMN</td>
+                                                    <td class="px-3 py-3 text-sm text-gray-500">@(@item.Value.Male + @item.Value.Female)</td>
+                                                </tr>
+                                            }
+                                            <tr class="bg-gray-100">
+                                                <td class="px-3 py-3 text-sm font-semibold text-gray-900">Total</td>
+                                                <td class="px-3 py-3 text-sm text-gray-500">@totals.TotalMale</td>
+                                                <td class="px-3 py-3 text-sm text-gray-500">@totals.TotalFemale</td>
+                                                <td class="px-3 py-3 text-sm text-gray-500">@totals.TotalMN</td>
+                                                <td class="px-3 py-3 text-sm text-gray-500">@totals.TotalNonMN</td>
+                                                <td class="px-3 py-3 text-sm text-gray-500">@totals.GrandTotal</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                            <h3 class="text-md font-medium text-gray-900">Read Messages</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                                <div class="bg-white p-4 rounded border border-gray-200">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-sm text-gray-500">Memorization Division</p>
+                                            <p class="text-xl font-semibold">@readMessagesM / @totalVerifiedM</p>
+                                        </div>
+                                        <div class="h-12 w-12 rounded-full bg-cyan-100 flex items-center justify-center">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-cyan-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <p class="text-sm text-gray-500 mt-1">Verified read messages</p>
+                                    <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                                        <div class="bg-cyan-600 h-2.5 rounded-full" style="width: @(totalVerifiedM > 0 ? (readMessagesM * 100 / totalVerifiedM) : 0)%"></div>
+                                    </div>
+                                </div>
+                                <div class="bg-white p-4 rounded border border-gray-200">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-sm text-gray-500">Ten Qira'at Division</p>
+                                            <p class="text-xl font-semibold">@readMessagesTQ / @totalVerifiedTQ</p>
+                                        </div>
+                                        <div class="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <p class="text-sm text-gray-500 mt-1">Verified read messages</p>
+                                    <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                                        <div class="bg-indigo-600 h-2.5 rounded-full" style="width: @(totalVerifiedTQ > 0 ? (readMessagesTQ * 100 / totalVerifiedTQ) : 0)%"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                }
+                else if (activeTab == "islamic-studies")
+                {
+                    <!-- Islamic Studies Division Tab Content -->
+                    <div class="mt-2">
+                        <h2 class="text-lg font-semibold text-gray-900">Islamic Studies Division Statistics</h2>
+                        
+                        <!-- States with more than 20 competitors -->
+                        <div class="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div>
+                                <h3 class="text-md font-medium text-gray-900">States with 20+ Competitors</h3>
+                                <div class="mt-2 flow-root">
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-300">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col" class="px-3 py-3 text-left text-sm font-semibold text-gray-900">State</th>
+                                                    <th scope="col" class="px-3 py-3 text-left text-sm font-semibold text-gray-900">Competitor Count</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-200">
+                                                @{
+                                                    var largeStates = GetIslamicStudiesStates();
+                                                    if (largeStates.Count == 0)
+                                                    {
+                                                        <tr>
+                                                            <td colspan="2" class="px-3 py-3 text-sm text-gray-500 text-center">No states with 20+ competitors found.</td>
+                                                        </tr>
+                                                    }
+                                                    else
+                                                    {
+                                                        foreach (var state in largeStates)
+                                                        {
+                                                            <tr>
+                                                                <td class="px-3 py-3 text-sm text-gray-900">@state.Key</td>
+                                                                <td class="px-3 py-3 text-sm text-gray-500">@state.Value</td>
+                                                            </tr>
+                                                        }
+                                                    }
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
 
-                <div class="mt-2">
-                    <h2 class="text-lg font-semibold text-gray-900">Read Messages</h2>
-                    <p>Number of Verified Memorization Division Read Messages: @readMessagesM out of @totalVerifiedM</p>
-                    <p>Number of Verified Ten Qira'at Read Messages: @readMessagesTQ out of @totalVerifiedTQ</p>
-                </div>
+                            <!-- States with fewer than 20 competitors -->
+                            <div>
+                                <h3 class="text-md font-medium text-gray-900">States with Fewer Than 20 Competitors</h3>
+                                <div class="mt-2 flow-root">
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-300">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col" class="px-3 py-3 text-left text-sm font-semibold text-gray-900">State</th>
+                                                    <th scope="col" class="px-3 py-3 text-left text-sm font-semibold text-gray-900">Competitor Count</th>
+                                                    <th scope="col" class="px-3 py-3 text-right text-sm font-semibold text-gray-900">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-200">
+                                                @{
+                                                    var smallStates = GetSmallIslamicStudiesStates();
+                                                    if (smallStates.Count == 0)
+                                                    {
+                                                        <tr>
+                                                            <td colspan="3" class="px-3 py-3 text-sm text-gray-500 text-center">No states with fewer than 20 competitors found.</td>
+                                                        </tr>
+                                                    }
+                                                    else
+                                                    {
+                                                        foreach (var state in smallStates)
+                                                        {
+                                                            <tr>
+                                                                <td class="px-3 py-3 text-sm text-gray-900">@state.Key</td>
+                                                                <td class="px-3 py-3 text-sm text-gray-500">@state.Value</td>
+                                                                <td class="px-3 py-3 text-sm text-right">
+                                                                    <button @onclick="() => ShowCompetitorsForState(state.Key)" class="text-cyan-600 hover:text-cyan-900">
+                                                                        View Details
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        }
+                                                    }
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        @* <!-- Map visualization placeholder -->
+                        <div class="mt-6 bg-white rounded-lg border border-gray-200 p-4">
+                            <h3 class="text-md font-medium text-gray-900">Geographic Distribution</h3>
+                            <div class="mt-2 bg-gray-100 h-64 rounded flex items-center justify-center">
+                                <p class="text-gray-500">State distribution map visualization would appear here</p>
+                            </div>
+                        </div> *@
+                    </div>
+                }
+                else if (activeTab == "summary")
+                {
+                    <!-- Summary Tab Content -->
+                    <div class="mt-2">
+                        <h2 class="text-lg font-semibold text-gray-900">Competition Overview</h2>
+                        
+                        <!-- Summary statistics cards -->
+                        <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm">
+                                <h3 class="text-lg font-medium text-gray-900">Total Competitors</h3>
+                                <p class="mt-2 text-3xl font-semibold text-cyan-600">@totals.GrandTotal</p>
+                                <div class="mt-1 flex items-center text-sm">
+                                    <span class="text-gray-500">Across all divisions</span>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm">
+                                <h3 class="text-lg font-medium text-gray-900">Gender Breakdown</h3>
+                                <div class="mt-2 grid grid-cols-2 gap-2">
+                                    <div>
+                                        <p class="text-xl font-semibold text-cyan-600">@totals.TotalMale</p>
+                                        <p class="text-sm text-gray-500">Male</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xl font-semibold text-purple-600">@totals.TotalFemale</p>
+                                        <p class="text-sm text-gray-500">Female</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm">
+                                <h3 class="text-lg font-medium text-gray-900">Location Breakdown</h3>
+                                <div class="mt-2 grid grid-cols-2 gap-2">
+                                    <div>
+                                        <p class="text-xl font-semibold text-cyan-600">@totals.TotalMN</p>
+                                        <p class="text-sm text-gray-500">Minnesota</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xl font-semibold text-amber-600">@totals.TotalNonMN</p>
+                                        <p class="text-sm text-gray-500">Out of State</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Division highlights -->
+                        <div class="mt-6 bg-white rounded-lg border border-gray-200 p-6">
+                            <h3 class="text-md font-medium text-gray-900">Division Highlights</h3>
+                            <div class="mt-4 space-y-4">
+                                <!-- Memorization highlights -->
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-900">Memorization Division</h4>
+                                    <div class="mt-1 flex items-center">
+                                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                            <div class="bg-cyan-600 h-2.5 rounded-full" style="width: 100%"></div>
+                                        </div>
+                                        <span class="ml-2 text-sm text-gray-500">@totals.GrandTotal participants</span>
+                                    </div>
+                                    <div class="mt-2 text-sm text-gray-500">
+                                        <span class="font-medium">Largest Category: </span> 
+                                        @{
+                                            var mostPopular = memorizationStats.OrderByDescending(x => x.Value.Male + x.Value.Female).FirstOrDefault();
+                                            <span>@mostPopular.Key (@(mostPopular.Value.Male + mostPopular.Value.Female) participants)</span>
+                                        }
+                                    </div>
+                                </div>
+                                
+                                <!-- Islamic Studies highlights -->
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-900">Islamic Studies Division</h4>
+                                    <div class="mt-2 text-sm text-gray-500">
+                                        <span class="font-medium">State Distribution: </span> 
+                                        @{
+                                            var stateCount = GetIslamicStudiesStates().Count + GetSmallIslamicStudiesStates().Count;
+                                            <span>@stateCount total states</span>
+                                        }
+                                    </div>
+                                    <div class="mt-1 text-sm text-gray-500">
+                                        <span class="font-medium">Highest State Enrollment: </span> 
+                                        @{
+                                            var topState = GetIslamicStudiesStates().OrderByDescending(x => x.Value).FirstOrDefault();
+                                            if (topState.Key != null)
+                                            {
+                                                <span>@topState.Key (@topState.Value participants)</span>
+                                            }
+                                            else
+                                            {
+                                                <span>None</span>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
     </div>
 </div>
 
+<!-- Modal for competitor details -->
+@if (!string.IsNullOrEmpty(selectedState))
+{
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-10 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl overflow-hidden max-w-4xl w-full max-h-[80vh] flex flex-col">
+            <!-- Modal header -->
+            <div class="bg-cyan-950 px-4 py-4 sm:px-6 flex justify-between items-center">
+                <h3 class="text-base font-semibold leading-6 text-white">Competitors from @selectedState</h3>
+                <button @onclick="() => selectedState = null" class="text-white hover:text-gray-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Modal body -->
+            <div class="flex-1 overflow-auto p-4">
+                <div class="flow-root">
+                    <table class="min-w-full divide-y divide-gray-300">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="sticky top-0 z-10 bg-gray-50 px-3 py-3 text-left text-sm font-semibold text-gray-900">Full Name</th>
+                                <th scope="col" class="sticky top-0 z-10 bg-gray-50 px-3 py-3 text-left text-sm font-semibold text-gray-900">Phone Number</th>
+                                <th scope="col" class="sticky top-0 z-10 bg-gray-50 px-3 py-3 text-left text-sm font-semibold text-gray-900">Parent Phone</th>
+                                <th scope="col" class="sticky top-0 z-10 bg-gray-50 px-3 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 bg-white">
+                            @{
+                                var stateCompetitors = GetCompetitorsForState(selectedState);
+                                if (stateCompetitors.Count == 0)
+                                {
+                                    <tr>
+                                        <td colspan="4" class="px-3 py-3 text-sm text-gray-500 text-center">No competitors found for this state.</td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    foreach (var competitor in stateCompetitors)
+                                    {
+                                        <tr>
+                                            <td class="px-3 py-3 text-sm text-gray-900">@competitor.FullName</td>
+                                            <td class="px-3 py-3 text-sm text-gray-500">@competitor.PhoneNumber</td>
+                                            <td class="px-3 py-3 text-sm text-gray-500">@competitor.ParentPhone</td>
+                                            <td class="px-3 py-3 text-sm text-gray-500">@competitor.Status</td>
+                                        </tr>
+                                    }
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Modal footer -->
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 flex justify-end">
+                <button @onclick="() => selectedState = null" class="inline-flex justify-center rounded-md bg-cyan-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cyan-500">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private List<Form> forms;
+    private string activeTab = "memorization"; // Default active tab
 
     private Dictionary<string, (int Male, int Female, int MN, int NonMN)> memorizationStats = new()
     {
@@ -85,6 +421,19 @@
     private int readMessagesM;
     private int readMessagesTQ;
 
+    // Method to determine tab classes based on active state
+    private string GetTabClasses(string tabName)
+    {
+        string baseClasses = "w-1/3 py-4 px-1 text-center border-b-2 font-medium text-sm";
+        
+        if (activeTab == tabName)
+        {
+            return $"{baseClasses} border-cyan-500 text-cyan-600";
+        }
+        
+        return $"{baseClasses} border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300";
+    }
+
     protected override async Task OnInitializedAsync()
     {
         await LoadForms();
@@ -97,7 +446,7 @@
 
         foreach (var form in forms)
         {
-            if (form.CompetitionInfo.Division == "Memorization" && (form.StatusInfo.Status == "Verified" || form.StatusInfo.Status == "Pending"))
+            if (form.CompetitionInfo.Division == "Memorization" && (form.StatusInfo.Status == "Awaiting Review" || form.StatusInfo.Status == "Reviewed" || form.StatusInfo.Status == "Pending"))
             {
                 var category = form.CompetitionInfo.Category;
                 var isMN = form.AddressInfo.StateProvince == "MN";
@@ -122,26 +471,96 @@
 
         totalVerifiedTQ = forms.Where(x => x.CompetitionInfo.Division == "Ten Qira'at" && x.EventScheduleInfo.IsAttended).Count();
         readMessagesTQ = forms.Where(x => x.CompetitionInfo.Division == "Ten Qira'at" && x.StatusInfo.Status == "Verified" && x.EventScheduleInfo.CheckedFinalSchedule == true).Count();
-
     }
 
     private (int TotalMale, int TotalFemale, int TotalMN, int TotalNonMN, int GrandTotal) totals;
 
     // This method aggregates total counts across all categories in the memorizationStats dictionary.
-    // It calculates the totals for male and female participants, participants from Minnesota (MN),
-    // participants not from Minnesota (Non-MN), and the grand total of participants.
-    // The aggregation iterates over each category's counts, summing them up to produce overall totals.
     private void CalculateTotals()
     {
         totals = memorizationStats.Values.Aggregate(
             (0, 0, 0, 0, 0),
             (acc, next) => (
                 acc.Item1 + next.Male,
-                acc.Item2 + next.Female, 
-                acc.Item3 + next.MN, 
-                acc.Item4 + next.NonMN, 
-                acc.Item5 + next.Male + next.Female 
+                acc.Item2 + next.Female,
+                acc.Item3 + next.MN,
+                acc.Item4 + next.NonMN,
+                acc.Item5 + next.Male + next.Female
             )
         );
+    }
+
+    private string selectedState;
+
+    // Keep your existing GetIslamicStudiesStates method
+    private Dictionary<string, int> GetIslamicStudiesStates()
+    {
+        if (forms == null)
+        {
+            return new Dictionary<string, int>();
+        }
+
+        var islamicStudiesStates = forms
+            .Where(x => x.CompetitionInfo.Division == DivisionConstants.IslamicStudies)
+            .GroupBy(x => x.AddressInfo.StateProvince)
+            .Where(x => x.Count() >= 20)
+            .ToDictionary(x => x.Key, x => x.Count());
+
+        return islamicStudiesStates ?? new Dictionary<string, int>();
+    }
+
+    // Add a new method for states with fewer than 20 competitors
+    private Dictionary<string, int> GetSmallIslamicStudiesStates()
+    {
+        if (forms == null)
+        {
+            return new Dictionary<string, int>();
+        }
+
+        var smallStates = forms
+            .Where(x => x.CompetitionInfo.Division == DivisionConstants.IslamicStudies)
+            .GroupBy(x => x.AddressInfo.StateProvince)
+            .Where(x => x.Count() < 20 && x.Count() > 0)
+            .OrderByDescending(x => x.Count())
+            .ToDictionary(x => x.Key, x => x.Count());
+
+        return smallStates ?? new Dictionary<string, int>();
+    }
+
+    // Create a class to hold competitor information
+    private class CompetitorInfo
+    {
+        public string FullName { get; set; }
+        public string PhoneNumber { get; set; }
+        public string ParentPhone { get; set; }
+        public string Status { get; set; }
+    }
+
+    // Method to show competitors for a selected state
+    private void ShowCompetitorsForState(string state)
+    {
+        selectedState = state;
+    }
+
+    // Method to get competitors from a specific state
+    private List<CompetitorInfo> GetCompetitorsForState(string state)
+    {
+        if (forms == null || string.IsNullOrEmpty(state))
+        {
+            return new List<CompetitorInfo>();
+        }
+
+        return forms
+            .Where(x => x.CompetitionInfo.Division == DivisionConstants.IslamicStudies &&
+                    x.AddressInfo.StateProvince == state)
+            .Select(x => new CompetitorInfo
+                {
+                    FullName = x.PersonalInfo.GetFullName(),
+                    PhoneNumber = x.PersonalInfo.PhoneNumber ?? "No phone number",
+                    ParentPhone = x.ParentInfo.ParentPhoneNumber,
+                    Status = x.StatusInfo.Status
+                })
+            .OrderBy(x => x.FullName)
+            .ToList();
     }
 }
