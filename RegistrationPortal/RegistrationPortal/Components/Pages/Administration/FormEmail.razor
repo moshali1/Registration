@@ -2,9 +2,14 @@
 @page "/form-email/{TEST}"
 @using System.Globalization
 @using System.Text
+@using RegistrationPortal.Data.Models
+@using RegistrationPortal.Data.DataAccess
+@using RegistrationPortal.Services
 
 @inject IFormData FormData
 @inject IUserData UserData
+@inject IEmailTemplateData EmailTemplateData
+@inject IEmailTemplateProcessor TemplateProcessor
 @inject AuthenticationStateProvider AuthState
 @inject FetchSasUri FetchSasUri
 @inject IEmailService EmailService
@@ -48,9 +53,8 @@
             }
 
             <div class="px-4 py-2 md:p-6">
-                <!-- Division Selection -->
+                <!-- Division and Template Selection -->
                 <div class="sm:flex sm:items-center justify-between">
-
                     <div class="">
                         <label class="block text-base text-gray-700">Display Option</label>
                         <div class="space-y-2 mt-2">
@@ -76,8 +80,30 @@
                             <option value="Islamic Studies">Islamic Studies</option>
                         </select>
                     </div>
-
                 </div>
+
+                <!-- Email Template Selection -->
+                @if (!string.IsNullOrEmpty(selectedDivision))
+                {
+                    <div class="mt-4">
+                        <label for="template" class="block text-base text-gray-700">Email Template</label>
+                        <div class="flex mt-1">
+                            <select id="template" @bind="selectedTemplateId" @oninput="OnTemplateSelectionChanged" class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm rounded-md">
+                                <option value="">Select a Template</option>
+                                @if (availableTemplates != null)
+                                {
+                                    @foreach (var template in availableTemplates)
+                                    {
+                                        <option value="@template.Id">@template.Name</option>
+                                    }
+                                }
+                            </select>
+                            <button @onclick="PreviewEmailTemplate" class="ml-2 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-cyan-600 hover:bg-cyan-700" disabled="@(string.IsNullOrEmpty(selectedTemplateId) || users == null || !users.Any())">
+                                Preview
+                            </button>
+                        </div>
+                    </div>
+                }
 
                 @if (users != null && users.Any())
                 {
@@ -97,12 +123,11 @@
                             <div class="py-3 flex justify-between text-sm font-medium">
                                 <dt class="text-gray-700">
                                     <span class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-sm font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
-                                        Number of Associated Forms (Memorization)
+                                        Number of Associated Forms (@selectedDivision)
                                     </span>
                                 </dt>
                                 <dd class="text-gray-900">@currentUserForms.Count()</dd>
                             </div>
-
                         </dl>
 
                         <span class="text-emerald-600">@successText</span>
@@ -114,11 +139,9 @@
                                 <span class="ml-2 text-emerald-600">Processing... (@(currentProcessingIndex + 1) of @users.Count)</span>
                             </div>
                         }
-
                     </div>
 
                     <div class="mt-5">
-
                         <h3 class="text-lg leading-6 font-medium text-gray-900">Associated Form(s)</h3>
 
                         <dl class="mt-2 border-t border-b border-gray-200 divide-y divide-gray-200">
@@ -133,6 +156,10 @@
                                     <dd class="text-gray-900">@form.PersonalInfo.DOB</dd>
                                 </div>
                                 <div class="py-3 flex justify-between text-sm font-medium">
+                                    <dt class="text-gray-500">Address</dt>
+                                    <dd class="text-gray-900">@form.AddressInfo.StateProvince</dd>
+                                </div>
+                                <div class="py-3 flex justify-between text-sm font-medium">
                                     <dt class="text-gray-500">Competition Information</dt>
                                     <dd class="text-gray-900">@form.CompetitionInfo.Division | @form.CompetitionInfo.Category | @form.CompetitionInfo.Portion</dd>
                                 </div>
@@ -145,7 +172,6 @@
                             }
                         </dl>
                     </div>
-
                 }
                 else
                 {
@@ -162,10 +188,10 @@
             <div class="bg-cyan-800 px-2 py-2 sm:px-6 flex justify-center items-center space-x-4">
                 @if (users != null && users.Any())
                 {
-                    <button @onclick="VerifiedStatus" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500" disabled="@isProcessing">
+                    <button @onclick="VerifiedStatus" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500" disabled="@(isProcessing || string.IsNullOrEmpty(selectedTemplateId))">
                         Verify Current
                     </button>
-                    <button @onclick="StartAutoVerification" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-slate-400 hover:bg-slate-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" disabled="@isProcessing">
+                    <button @onclick="StartAutoVerification" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-slate-400 hover:bg-slate-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" disabled="@(isProcessing || string.IsNullOrEmpty(selectedTemplateId))">
                         Auto Verify All
                     </button>
                     @if (isProcessing)
@@ -180,6 +206,36 @@
     </div>
 </div>
 
+<!-- Email Preview Modal -->
+@if (showEmailPreview)
+{
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 max-h-[90vh] overflow-auto">
+            <div class="bg-cyan-950 px-4 py-3 rounded-t-lg">
+                <h2 class="text-white font-semibold">Email Preview</h2>
+            </div>
+            <div class="p-4">
+                <h3 class="font-medium mb-2">Subject: @previewEmailSubject</h3>
+                <div class="border p-4 mb-4 rounded bg-gray-50">
+                    <h4 class="font-medium mb-2">Plain Text Version:</h4>
+                    <pre class="whitespace-pre-wrap">@previewPlainText</pre>
+                </div>
+                <div class="border p-4 rounded">
+                    <h4 class="font-medium mb-2">HTML Version:</h4>
+                    <div class="bg-white border p-4">
+                        @((MarkupString)previewHtmlContent)
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg">
+                <button @onclick="CloseEmailPreview" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-gray-500 text-base font-medium text-white hover:bg-gray-600 sm:ml-3 sm:w-auto sm:text-sm">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private User user; // Admin
 
@@ -189,10 +245,11 @@
 
     private List<User> allUsers;
     private List<Form> allForms;
+    private List<EmailTemplate> availableTemplates;
 
     private int currentUserIndex = 0;
-    private User currentUser => users[currentUserIndex];
-    private List<Form> currentUserForms => userForms[currentUser.Id];
+    private User currentUser => users != null && users.Any() ? users[currentUserIndex] : null;
+    private List<Form> currentUserForms => userForms != null && currentUser != null && userForms.ContainsKey(currentUser.Id) ? userForms[currentUser.Id] : new List<Form>();
 
     private string successText;
     private string messageText;
@@ -206,6 +263,13 @@
     private DisplayOptions2 selectedDisplayOption = DisplayOptions2.All;
 
     private string selectedDivision;
+    private string selectedTemplateId;
+
+    // Email preview variables
+    private bool showEmailPreview = false;
+    private string previewEmailSubject;
+    private string previewPlainText;
+    private string previewHtmlContent;
 
     [Parameter]
     public string Test { get; set; }
@@ -216,7 +280,7 @@
     {
         successText = null;
 
-        if (users.Count > 0)
+        if (users != null && users.Count > 0)
         {
             // Wrap around to the first user if the current is the last one
             currentUserIndex = (currentUserIndex + 1) % users.Count;
@@ -231,7 +295,7 @@
     {
         successText = null;
 
-        if (users.Count > 0)
+        if (users != null && users.Count > 0)
         {
             // Wrap around to the last user if the current is the first one
             currentUserIndex = (currentUserIndex == 0) ? users.Count - 1 : currentUserIndex - 1;
@@ -257,16 +321,28 @@
 
     private void OnDisplayOptionChange(DisplayOptions2 options)
     {
-        selectedDisplayOption = options; // Reversing Existing Bug
+        selectedDisplayOption = options;
         OnDivisionSelection();
     }
 
-    private void UpdateDivision(ChangeEventArgs e)
+    private async Task UpdateDivision(ChangeEventArgs e)
     {
         if (e.Value is not null)
         {
             selectedDivision = e.Value.ToString();
             OnDivisionSelection();
+            await LoadTemplatesForDivision();
+            StateHasChanged(); // Force UI update after templates are loaded
+        }
+    }
+
+    private async Task LoadTemplatesForDivision()
+    {
+        if (!string.IsNullOrEmpty(selectedDivision))
+        {
+            availableTemplates = await EmailTemplateData.GetEmailTemplatesByDivision(selectedDivision);
+            Console.WriteLine($"Found {availableTemplates?.Count ?? 0} templates for division {selectedDivision}");
+            selectedTemplateId = "";  // Reset template selection
         }
     }
 
@@ -306,6 +382,14 @@
         }
     }
 
+    private async Task OnTemplateSelectionChanged(ChangeEventArgs e)
+    {
+        if (e.Value is not null)
+        {
+            selectedTemplateId = e.Value.ToString();
+        }
+    }
+
     private string GetStatusSpanCssClass(string status)
     {
         switch (status)
@@ -340,6 +424,12 @@
 
     private async Task VerifiedStatus()
     {
+        if (string.IsNullOrEmpty(selectedTemplateId))
+        {
+            successText = "Please select an email template first.";
+            return;
+        }
+
         if (currentUserForms.All(x => x.StatusInfo.Status != "Verified") || true) // Modified to allow re-verification
         {
             foreach (var form in currentUserForms)
@@ -354,7 +444,7 @@
     // New method to start automated verification of all users
     private async Task StartAutoVerification()
     {
-        if (users == null || !users.Any() || isProcessing)
+        if (users == null || !users.Any() || isProcessing || string.IsNullOrEmpty(selectedTemplateId))
             return;
 
         // Reset cancellation token
@@ -451,63 +541,49 @@
 
     private async Task ConfirmationEmailNotification()
     {
+        if (string.IsNullOrEmpty(selectedTemplateId))
+            return;
+
         var creatorUser = currentUser;
         var creatorEmail = creatorUser.EmailAddress;
         var creatorDisplayName = ToTitleCase(creatorUser.DisplayName);
         var creatorUserType = creatorUser.UserType;
 
-        var subject = $"Imam Shatibi Registration {DateTime.Today.Year.ToString()}: Verified Form Status";
 
-        // Check if any form's address is in MN
-        bool isAnyFormInMN = currentUserForms.Any(form => form.AddressInfo.StateProvince == "MN");
+        // Get the selected template
+        var template = await EmailTemplateData.GetEmailTemplate(selectedTemplateId);
 
-        // Create the appropriate final round message based on location
-        string finalRoundMessage = isAnyFormInMN
-            ? "The <strong>final round</strong> this year will be a little earlier than in previous years. The exact dates will be communicated with you soon. It will be held in person in MN, as in prior years."
-            : "The <strong>final round</strong> this year will be held the beginning of July. The exact dates will be communicated with you soon. It will be held in person in MN, as in prior years.";
-
-        // Plain text version of the final round message (without HTML formatting)
-        string finalRoundPlainText = isAnyFormInMN
-            ? "The final round this year will be a little earlier than in previous years. The exact dates will be communicated with you soon. It will be held in person in MN, as in prior years."
-            : "The final round this year will be held the beginning of July. The exact dates will be communicated with you soon. It will be held in person in MN, as in prior years.";
-
-        var plainText = $"Assalamu Alaikum {creatorDisplayName},\n\n" +
-                $"We are pleased to inform you that your status is now verified, and the following student(s) have been verified for the Imam Al-Shatibi Quran Competition Registration {DateTime.Now.Year}, in the {selectedDivision} division:" +
-                $"{BuildHtmlContent(currentUserForms)}\n\n" +
-                $"Please consider this email as confirmation of your verified status. No further action is required on your part at this moment.\n" +
-                $"The preliminary round will be held between May 22nd to May 26th, 2025. The exact scheduled date and time information will be posted soon. Please be aware that the competition will be recorded live on YouTube and Facebook. Make sure to prepare accordingly. Further information on setup and joining the virtual competition will be communicated to your account.\n" +
-                $"{finalRoundPlainText}\n" +
-                $"If you wish to withdraw, please do so as soon as possible before we plan the schedule. If you do not see a competitor you registered for above, or have questions, please let us know.\n\n" +
-                $"To view your form(s), please visit: https://register.imamshatibi.org\n" +
-                $"If you need to contact us, please reply to this email or call us at (612) 800-4435 from 8 AM to 8 PM CT. \n\n" +
-                $"JazakAllahu Khairan,\n" +
-                $"Imam Al-Shatibi Quran Competition";
+        if (template == null)
+        {
+            successText = "Error: Selected template not found.";
+            return;
+        }
 
 
-        var htmlContent = $@"
-            <div style='font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px;'>
-                <div style='margin-top: 20px;'>
-                    <p>Assalamu Alaikum {creatorDisplayName} <small>({creatorUserType})</small>,</p>
-                    <p>We are pleased to inform you that your status is now verified, and the following student(s) have been verified for the Imam Al-Shatibi Quran Competition Registration {DateTime.Now.Year}, in the &quot;{selectedDivision}&quot; division:</p>
-        {BuildHtmlContent(currentUserForms)}
-                <p>Please consider this email as confirmation of your verified status. No further action is required on your part at this moment.</p>
-                <p>The preliminary round will be held between <strong>May 22nd to May 26th, 2025.</strong> The exact scheduled date and time information will be posted soon. Please be aware that the competition will be recorded live on <strong>YouTube and Facebook.</strong> Make sure to prepare accordingly. Further information on setup and joining the virtual competition will be communicated to your account.</p>
-                <p>{finalRoundMessage}</p>
-                <p>If you wish to withdraw, please do so as soon as possible before we plan the schedule. If you do not see a competitor you registered for above, or have questions, please let us know.</p>
-                <p>Thank you for your participation.</p>
-                </div>
-                <div style='margin-top: 20px;'>
-                    <p>To view your form(s), please visit: <a href='https://register.imamshatibi.org' target='_blank'>https://register.imamshatibi.org</a></p>
+        // Prepare variables for template processing
+        var variables = new Dictionary<string, string>
+        {
+            {"CreatorDisplayName", creatorDisplayName},
+            {"CreatorUserType", creatorUserType},
+            {"Year", DateTime.Now.Year.ToString()},
+            {"Division", selectedDivision},
+            {"StudentList", BuildHtmlContent(currentUserForms)}
+        };
 
-                    <p>If you need to contact us, please reply to this email or call us at (612) 800-4435 from 8 AM to 8 PM CT.</p>
-                </div>
-                <div style='margin-top: 20px; font-size: 0.9em; text-align: center; color: #555;'>
-                    JazakAllahu Khairan,<br>
-                    Imam Al-Shatibi Quran Competition
-                </div>
-            </div>";
+        // Process the templates
+        var subject = template.Subject;
+        foreach (var variable in variables)
+        {
+            subject = subject.Replace($"{{{{{variable.Key}}}}}", variable.Value);
+        }
 
-        await EmailService.SendEmailAsync(creatorEmail, creatorDisplayName, subject, plainText, htmlContent);
+        var plainText = TemplateProcessor.ProcessTemplate(template.PlainTextTemplate, variables, template.ConditionalBlocks, currentUserForms);
+        var htmlContent = TemplateProcessor.ProcessTemplate(template.HtmlTemplate, variables, template.ConditionalBlocks, currentUserForms);
+
+        // Send the email
+        // await EmailService.SendEmailAsync(creatorEmail, creatorDisplayName, subject, plainText, htmlContent);
+
+        // Also send to the admin for tracking (you can make this configurable)
         await EmailService.SendEmailAsync("mshiek114@gmail.com", creatorDisplayName, subject, plainText, htmlContent);
 
         successText = $"Email sent successfully to {creatorDisplayName}!";
@@ -517,14 +593,29 @@
     {
         StringBuilder sb = new StringBuilder();
 
-        sb.AppendLine("<ul>");
+        sb.AppendLine("<table style='width: 100%; border-collapse: collapse; margin-bottom: 20px;'>");
+        sb.AppendLine("<thead style='background-color: #f1f5f9;'>");
+        sb.AppendLine("<tr>");
+        sb.AppendLine("<th style='padding: 10px; text-align: left; border-bottom: 2px solid #e2e8f0;'>Participant</th>");
+        sb.AppendLine("<th style='padding: 10px; text-align: left; border-bottom: 2px solid #e2e8f0;'>Date of Birth</th>");
+        sb.AppendLine("<th style='padding: 10px; text-align: left; border-bottom: 2px solid #e2e8f0;'>Gender</th>");
+        sb.AppendLine("<th style='padding: 10px; text-align: left; border-bottom: 2px solid #e2e8f0;'>Category</th>");
+        sb.AppendLine("</tr>");
+        sb.AppendLine("</thead>");
+        sb.AppendLine("<tbody>");
 
         foreach (var form in forms)
         {
-            sb.AppendLine($"<li>Name: <strong>{form.PersonalInfo.GetFirstMiddleLastName()}</strong>, DOB: {form.PersonalInfo.DOB}, Gender: {form.PersonalInfo.Gender}, Category: {CategoryPortion(form.CompetitionInfo.Category, form.CompetitionInfo.Portion)}</li>");
+            sb.AppendLine("<tr>");
+            sb.AppendLine($"<td style='padding: 10px; border-bottom: 1px solid #e2e8f0; font-weight: bold;'>{form.PersonalInfo.GetFirstMiddleLastName()}</td>");
+            sb.AppendLine($"<td style='padding: 10px; border-bottom: 1px solid #e2e8f0;'>{form.PersonalInfo.DOB}</td>");
+            sb.AppendLine($"<td style='padding: 10px; border-bottom: 1px solid #e2e8f0;'>{form.PersonalInfo.Gender}</td>");
+            sb.AppendLine($"<td style='padding: 10px; border-bottom: 1px solid #e2e8f0;'>{CategoryPortion(form.CompetitionInfo.Category, form.CompetitionInfo.Portion)}</td>");
+            sb.AppendLine("</tr>");
         }
 
-        sb.AppendLine("</ul>");
+        sb.AppendLine("</tbody>");
+        sb.AppendLine("</table>");
 
         return sb.ToString();
     }
@@ -539,5 +630,41 @@
         {
             return $"{category}, <small>{portion}</small>";
         }
+    }
+
+    private async Task PreviewEmailTemplate()
+    {
+        if (string.IsNullOrEmpty(selectedTemplateId) || currentUser == null)
+            return;
+
+        var template = await EmailTemplateData.GetEmailTemplate(selectedTemplateId);
+
+        if (template == null)
+            return;
+
+        var creatorDisplayName = ToTitleCase(currentUser.DisplayName);
+        var creatorUserType = currentUser.UserType;
+
+        // Prepare variables for template processing
+        var variables = new Dictionary<string, string>
+        {
+            {"CreatorDisplayName", creatorDisplayName},
+            {"CreatorUserType", creatorUserType},
+            {"Year", DateTime.Now.Year.ToString()},
+            {"Division", selectedDivision},
+            {"StudentList", BuildHtmlContent(currentUserForms)}
+        };
+
+        // Process the templates
+        previewEmailSubject = template.Subject;
+        previewPlainText = TemplateProcessor.ProcessTemplate(template.PlainTextTemplate, variables, template.ConditionalBlocks, currentUserForms);
+        previewHtmlContent = TemplateProcessor.ProcessTemplate(template.HtmlTemplate, variables, template.ConditionalBlocks, currentUserForms);
+
+        showEmailPreview = true;
+    }
+
+    private void CloseEmailPreview()
+    {
+        showEmailPreview = false;
     }
 }

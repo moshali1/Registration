@@ -11,12 +11,14 @@ public class DbConnection : IDbConnection
     public string FormCollectionName { get; private set; } = "forms";
     public string UserCollectionName { get; private set; } = "users";
     public string SettingsCollectionName { get; private set; } = "settings";
+    public string EmailTemplateCollectionName { get; private set; } = "emailTemplates";
 
 
     public MongoClient Client { get; private set; }
     public IMongoCollection<Form> FormCollection { get; private set; }
     public IMongoCollection<User> UserCollection { get; private set; }
     public IMongoCollection<Settings> SettingsCollection { get; private set; }
+    public IMongoCollection<EmailTemplate> EmailTemplateCollection { get; private set; }
 
     public DbConnection(IConfiguration config)
     {
@@ -28,5 +30,6 @@ public class DbConnection : IDbConnection
         FormCollection = _db.GetCollection<Form>(FormCollectionName);
         UserCollection = _db.GetCollection<User>(UserCollectionName);
         SettingsCollection = _db.GetCollection<Settings>(SettingsCollectionName);
+        EmailTemplateCollection = _db.GetCollection<EmailTemplate>(EmailTemplateCollectionName);
     }
 }

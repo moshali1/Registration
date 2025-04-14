@@ -10,4 +10,6 @@ public interface IDbConnection
     string SettingsCollectionName { get; }
     IMongoCollection<User> UserCollection { get; }
     string UserCollectionName { get; }
+    IMongoCollection<EmailTemplate> EmailTemplateCollection { get; }
+    string EmailTemplateCollectionName { get; }
 }

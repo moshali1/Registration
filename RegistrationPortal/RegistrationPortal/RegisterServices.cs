@@ -85,6 +85,7 @@ public static class RegisterServices
         builder.Services.AddScoped<IUserData, UserData>();
         builder.Services.AddScoped<ISettingsData, SettingsData>();
         builder.Services.AddScoped<IDatabaseArchivedFormData, DatabaseArchivedFormData>();
+        builder.Services.AddScoped<IEmailTemplateData, EmailTemplateData>();
 
         builder.Services.AddScoped<IFormService, FormService>();
         builder.Services.AddScoped<IUserService, UserService>();
@@ -93,6 +94,7 @@ public static class RegisterServices
 
         builder.Services.AddScoped<IFaceDetectionService, FaceDetectionService>();
         builder.Services.AddScoped<ITextDetectionService, TextDetectionService>();
+        builder.Services.AddScoped<IEmailTemplateProcessor, EmailTemplateProcessor>();
 
         builder.Services.AddScoped<FormSelectionService>(); // each client
         builder.Services.AddScoped<DefaultListService>(); // each client
