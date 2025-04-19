@@ -1,7 +1,29 @@
 ﻿@inject ISettingsData SettingsData
 @inject NavigationManager NavManager
 
-<p class="text-sm"><strong>Number of Records</strong>: @Forms?.Count()</p>
+<div class="flex flex-wrap items-center gap-2 text-sm py-2">
+    <span class="inline-flex items-center rounded-md bg-slate-100 px-3 py-1 text-slate-800 font-medium ring-1 ring-inset ring-cyan-800/50 shadow-sm">
+        <strong>Total Records:</strong> @Forms?.Count()
+    </span>
+    @if (Forms?.Any(x => x.StatusInfo.Status == "Pending") is true)
+    {
+        <span class="inline-flex items-center rounded-md bg-gray-50/60 px-2 py-1 text-gray-500 ring-1 ring-inset ring-cyan-800/50">
+            <strong>Pending:</strong> @Forms?.Where(x => x.StatusInfo.Status == "Pending").Count()
+        </span>
+    }
+    @if (Forms?.Any(x => x.StatusInfo.Status == "Withdrawn") is true)
+    {
+        <span class="inline-flex items-center rounded-md bg-gray-50/60 px-2 py-1 text-gray-500 ring-1 ring-inset ring-cyan-800/50">
+            <strong>Withdrawn:</strong> @Forms?.Where(x => x.StatusInfo.Status == "Withdrawn").Count()
+        </span>
+    }
+    @if (Forms?.Any(x => x.StatusInfo.Status == "Disqualified") is true)
+    {
+        <span class="inline-flex items-center rounded-md bg-gray-50/60 px-2 py-1 text-gray-500 ring-1 ring-inset ring-cyan-800/50">
+            <strong>Disqualified:</strong> @Forms?.Where(x => x.StatusInfo.Status == "Disqualified").Count()
+        </span>
+    }
+</div>
 
 @if (Type is true)
 {

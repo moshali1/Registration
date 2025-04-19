@@ -580,11 +580,19 @@
         var plainText = TemplateProcessor.ProcessTemplate(template.PlainTextTemplate, variables, template.ConditionalBlocks, currentUserForms);
         var htmlContent = TemplateProcessor.ProcessTemplate(template.HtmlTemplate, variables, template.ConditionalBlocks, currentUserForms);
 
-        // Send the email
-        // await EmailService.SendEmailAsync(creatorEmail, creatorDisplayName, subject, plainText, htmlContent);
+        
 
         // Also send to the admin for tracking (you can make this configurable)
-        await EmailService.SendEmailAsync("mshiek114@gmail.com", creatorDisplayName, subject, plainText, htmlContent);
+
+        if (isTest is true)
+        {
+            await EmailService.SendEmailAsync("mshiek114@gmail.com", creatorDisplayName, subject, plainText, htmlContent);
+        }
+        else
+        {
+            // Send the email
+            await EmailService.SendEmailAsync(creatorEmail, creatorDisplayName, subject, plainText, htmlContent);
+        }
 
         successText = $"Email sent successfully to {creatorDisplayName}!";
     }
