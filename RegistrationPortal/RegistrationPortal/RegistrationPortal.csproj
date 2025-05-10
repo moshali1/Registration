@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="appsettings.Development.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\RegistrationPortal.Data\RegistrationPortal.Data.csproj" />
     <ProjectReference Include="..\..\RegistrationPortal.Shared\RegistrationPortal.Shared.csproj" />
     <ProjectReference Include="..\RegistrationPortal.Client\RegistrationPortal.Client.csproj" />
