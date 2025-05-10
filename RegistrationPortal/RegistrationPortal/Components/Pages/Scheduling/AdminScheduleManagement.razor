@@ -1,0 +1,1182 @@
+﻿@page "/admin/schedule-management"
+@using System.Text.Json
+
+@inject ISchedulingService SchedulingService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+@rendermode InteractiveServer
+
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Schedule Management</PageTitle>
+
+<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="sm:flex sm:items-center mb-6">
+        <div class="sm:flex-auto">
+            <h1 class="text-2xl font-bold mb-3" tabindex="-1">Scheduling Management</h1>
+            <p class="mt-2 text-gray-700">Manage preliminary round scheduling slots and settings.</p>
+        </div>
+        <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+            <div class="flex space-x-3">
+                <button @onclick="() => ShowCreateModal()" class="inline-flex items-center rounded-md bg-cyan-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cyan-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add Slot
+                </button>
+                <button @onclick="ShowSettingsModal" class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Settings
+                </button>
+                <button @onclick="ShowAssignRandomModal" disabled class="inline-flex items-center rounded-md bg-pink-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-pink-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                    Assign Random
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="flex justify-center items-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500"></div>
+        </div>
+    }
+    else
+    {
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="rounded-md bg-red-50 p-4 mb-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">@errorMessage</h3>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(successMessage))
+        {
+            <div class="rounded-md bg-green-50 p-4 mb-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-green-800">@successMessage</h3>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Scheduling Settings Summary -->
+        @if (scheduleSettings != null)
+        {
+            <div class="bg-white shadow-md rounded-lg overflow-hidden mb-6">
+                <div class="border-b border-gray-200 py-3 px-6 flex justify-between items-center bg-gray-50">
+                    <h2 class="text-lg font-medium text-gray-900">Current Settings</h2>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @(scheduleSettings.IsSchedulingEnabled ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800")">
+                        @(scheduleSettings.IsSchedulingEnabled ? "Scheduling Enabled" : "Scheduling Disabled")
+                    </span>
+                </div>
+                <div class="p-4">
+                    <dl class="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-3">
+                        <div class="sm:col-span-1">
+                            <dt class="text-sm font-medium text-gray-500">Event Name</dt>
+                            <dd class="mt-1 text-sm text-gray-900">@scheduleSettings.EventName</dd>
+                        </div>
+                        <div class="sm:col-span-1">
+                            <dt class="text-sm font-medium text-gray-500">Timezone</dt>
+                            <dd class="mt-1 text-sm text-gray-900">@scheduleSettings.TimeZoneDisplay</dd>
+                        </div>
+                        <div class="sm:col-span-1">
+                            <dt class="text-sm font-medium text-gray-500">Refresh Interval</dt>
+                            <dd class="mt-1 text-sm text-gray-900">@scheduleSettings.AutoRefreshInterval seconds</dd>
+                        </div>
+                        <div class="sm:col-span-3">
+                            <dt class="text-sm font-medium text-gray-500">Scheduling Period</dt>
+                            <dd class="mt-1 text-sm text-gray-900">@scheduleSettings.SchedulingStartDate.ToString("MMM dd, yyyy HH:mm") to @scheduleSettings.SchedulingEndDate.ToString("MMM dd, yyyy HH:mm")</dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+        }
+
+
+        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+            <div class="border-b border-gray-200 py-4 px-6 flex justify-between items-center bg-gray-50">
+                <h2 class="text-lg font-medium text-gray-900">Schedule Slots</h2>
+                <div class="relative">
+                    <input type="text" @bind="searchQuery" @bind:event="oninput" placeholder="Search slots..."
+                           class="rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6">
+                </div>
+            </div>
+
+
+            <!-- Add this filter section -->
+            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                <!-- Division Filters -->
+                <div class="mb-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-semibold text-gray-700">Divisions</h3>
+                        <button @onclick="() => showAllDivisions = !showAllDivisions" 
+                                class="px-3 py-1.5 text-sm rounded-md @(showAllDivisions ? "bg-indigo-100 text-indigo-800 border border-indigo-300" : "bg-gray-100 text-gray-800 border border-gray-200")">
+                            @(showAllDivisions ? "Show All Divisions" : "Filter Selected Divisions")
+                        </button>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button @onclick="() => filterMemorization = !filterMemorization" 
+                                class="flex-grow px-3 py-2 text-sm font-medium rounded-md transition-all @(filterMemorization ? "bg-blue-100 text-blue-800 border-2 border-blue-300 shadow-sm" : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50")">
+                            Memorization
+                        </button>
+                        <button @onclick="() => filterTenQiraat = !filterTenQiraat" 
+                                class="flex-grow px-3 py-2 text-sm font-medium rounded-md transition-all @(filterTenQiraat ? "bg-blue-100 text-blue-800 border-2 border-blue-300 shadow-sm" : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50")">
+                            Ten Qira'at
+                        </button>
+                    </div>
+                </div>
+    
+                <!-- Category Filters -->
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-semibold text-gray-700">Categories</h3>
+                        <button @onclick="() => showAllCategories = !showAllCategories" 
+                                class="px-3 py-1.5 text-sm rounded-md @(showAllCategories ? "bg-indigo-100 text-indigo-800 border border-indigo-300" : "bg-gray-100 text-gray-800 border border-gray-200")">
+                            @(showAllCategories ? "Show All Categories" : "Filter Selected Categories")
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-6 gap-3">
+                        <button @onclick="() => filterCategory1Juz = !filterCategory1Juz" 
+                                class="px-3 py-2 text-sm font-medium rounded-md transition-all @(filterCategory1Juz ? "bg-purple-100 text-purple-800 border-2 border-purple-300 shadow-sm" : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50")">
+                            1 Juz
+                        </button>
+                        <button @onclick="() => filterCategory5Juz = !filterCategory5Juz" 
+                                class="px-3 py-2 text-sm font-medium rounded-md transition-all @(filterCategory5Juz ? "bg-purple-100 text-purple-800 border-2 border-purple-300 shadow-sm" : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50")">
+                            5 Juz
+                        </button>
+                        <button @onclick="() => filterCategory10Juz = !filterCategory10Juz" 
+                                class="px-3 py-2 text-sm font-medium rounded-md transition-all @(filterCategory10Juz ? "bg-purple-100 text-purple-800 border-2 border-purple-300 shadow-sm" : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50")">
+                            10 Juz
+                        </button>
+                        <button @onclick="() => filterCategory15Juz = !filterCategory15Juz" 
+                                class="px-3 py-2 text-sm font-medium rounded-md transition-all @(filterCategory15Juz ? "bg-purple-100 text-purple-800 border-2 border-purple-300 shadow-sm" : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50")">
+                            15 Juz
+                        </button>
+                        <button @onclick="() => filterCategory20Juz = !filterCategory20Juz"
+                                class="px-3 py-2 text-sm font-medium rounded-md transition-all @(filterCategory20Juz ? "bg-purple-100 text-purple-800 border-2 border-purple-300 shadow-sm" : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50")">
+                            20 Juz
+                        </button>
+                        <button @onclick="() => filterCategory30Juz = !filterCategory30Juz" 
+                                class="px-3 py-2 text-sm font-medium rounded-md transition-all @(filterCategory30Juz ? "bg-purple-100 text-purple-800 border-2 border-purple-300 shadow-sm" : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50")">
+                            30 Juz
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Date
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Time
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Capacity
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Restrictions
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                    </th>
+                </tr>
+                </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @if (slots == null || !slots.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
+                                    No schedule slots found.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var slot in FilteredSlots)
+                            {
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        @slot.Date
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        @FormatTime(slot.StartTime) - @FormatTime(slot.EndTime)
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <div class="flex items-center">
+                                            <div class="w-full bg-gray-200 rounded-full h-2.5 mr-2">
+                                                <div class="bg-cyan-600 h-2.5 rounded-full" style="width: @(Math.Min(100, (slot.CurrentParticipants * 100) / (slot.MaxParticipants == 0 ? 1 : slot.MaxParticipants)))%"></div>
+                                            </div>
+                                            <span>@slot.CurrentParticipants/@slot.MaxParticipants</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        @if (slot.Divisions.Count > 0 || slot.Categories.Count > 0)
+                                        {
+                                            <div>
+                                                @if (slot.Divisions.Count > 0)
+                                                {
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-1">
+                                                        @string.Join(", ", slot.Divisions)
+                                                    </span>
+                                                }
+                                                @if (slot.Categories.Count > 0)
+                                                {
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                                        @string.Join(", ", slot.Categories)
+                                                    </span>
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-xs text-gray-400">No restrictions</span>
+                                        }
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <div class="flex items-center">
+                                            <button @onclick="() => ToggleSlotStatus(slot)"
+                                                    class="relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 @(slot.IsEnabled ? "bg-cyan-600" : "bg-gray-200")"
+                                                    role="switch"
+                                                    aria-checked="@slot.IsEnabled">
+                                                <span class="sr-only">Enable slot</span>
+                                                <span aria-hidden="true"
+                                                        class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200 @(slot.IsEnabled ? "translate-x-5" : "translate-x-0")">
+                                                </span>
+                                            </button>
+                                            <span class="ml-2 @(slot.IsEnabled ? "text-green-700" : "text-gray-500")">
+                                                @(slot.IsEnabled ? "Enabled" : "Disabled")
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button @onclick="() => DuplicateSlot(slot)" class="text-green-600 hover:text-green-900 mr-3">
+                                            Duplicate
+                                        </button>
+                                        <button @onclick="() => EditSlot(slot)" class="text-indigo-600 hover:text-indigo-900 mr-3">
+                                            Edit
+                                        </button>
+                                        <button @onclick="() => DeleteSlot(slot)" class="text-red-600 hover:text-red-900">
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-700">
+                        <span class="font-medium">@(FilteredSlots?.Count ?? 0)</span>
+                        <span>filtered slots</span>
+                        @if (FilteredSlots?.Count != slots?.Count)
+                        {
+                            <span class="text-gray-500 ml-1">
+                                (out of @(slots?.Count ?? 0) total)
+                            </span>
+                        }
+                    </div>
+                    <div class="text-sm text-gray-700">
+                        <span>
+                            Total Capacity: <span class="font-medium">@(FilteredSlots?.Sum(s => s.MaxParticipants) ?? 0)</span> |
+                            Currently Booked: <span class="font-medium">@(FilteredSlots?.Sum(s => s.CurrentParticipants) ?? 0)</span>
+                        </span>
+                        @if (FilteredSlots?.Count != slots?.Count)
+                        {
+                            <span class="text-gray-500 ml-1">
+                                <button @onclick="ClearFilters"
+                                        class="text-cyan-600 hover:text-cyan-800 underline text-xs ml-1">
+                                    Clear filters
+                                </button>
+                            </span>
+                        }
+                    </div>
+                </div>
+            </div>
+            
+    </div>
+    }
+
+
+
+</div>
+<!-- Create/Edit Slot Modal -->
+@if (showSlotModal)
+{
+    <div class="relative z-10" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+                    <div>
+                        <div class="mt-3 text-center sm:mt-5">
+                            <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">
+                                @(isEditMode ? "Edit Schedule Slot" : "Create New Schedule Slot")
+                            </h3>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 sm:mt-6">
+                        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                            <div class="sm:col-span-3">
+                                <label for="date" class="block text-sm font-medium leading-6 text-gray-900">Date</label>
+                                <div class="mt-2">
+                                    <input type="date" id="date"
+                                           value="@(DateTime.TryParse(currentSlot.Date, out DateTime date) ? date.ToString("yyyy-MM-dd") : DateTime.Now.ToString("yyyy-MM-dd"))"
+                                           @onchange="OnDateChange"
+                                           class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6">
+                                </div>
+                            </div>
+
+                            <div class="sm:col-span-3">
+                                <label for="max-participants" class="block text-sm font-medium leading-6 text-gray-900">Max Participants</label>
+                                <div class="mt-2">
+                                    <input type="number" id="max-participants" min="1" @bind="currentSlot.MaxParticipants"
+                                           class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6">
+                                </div>
+                            </div>
+
+                            <div class="sm:col-span-3">
+                                <label for="start-time" class="block text-sm font-medium leading-6 text-gray-900">Start Time</label>
+                                <div class="mt-2">
+                                    <input type="time" id="start-time" value="@currentSlot.StartTime"
+                                           @onchange="@((args) => currentSlot.StartTime = args.Value?.ToString())"
+                                           class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6">
+                                </div>
+                            </div>
+
+
+                            <div class="sm:col-span-3">
+                                <label for="end-time" class="block text-sm font-medium leading-6 text-gray-900">End Time</label>
+                                <div class="mt-2">
+                                    <input type="time" id="end-time" value="@currentSlot.EndTime"
+                                           @onchange="@((args) => currentSlot.EndTime = args.Value?.ToString())"
+                                           class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6">
+                                </div>
+                            </div>
+
+                            <div class="sm:col-span-6">
+                                <div class="relative flex items-start">
+                                    <div class="flex h-6 items-center">
+                                        <input id="enabled" type="checkbox" @bind="currentSlot.IsEnabled"
+                                               class="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-600">
+                                    </div>
+                                    <div class="ml-3 text-sm leading-6">
+                                        <label for="enabled" class="font-medium text-gray-900">Enabled</label>
+                                        <p class="text-gray-500">When enabled, this slot will be available for scheduling.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="sm:col-span-6">
+                                <label class="block text-sm font-medium leading-6 text-gray-900">Division Restrictions</label>
+                                <p class="text-sm text-gray-500 mb-2">If none are selected, this slot will be available for all divisions.</p>
+                                <div class="mt-2 space-y-2">
+                                    <div class="flex flex-wrap gap-2">
+                                        <div class="relative flex items-start">
+                                            <div class="flex h-6 items-center">
+                                                <input id="memorization" type="checkbox" @bind="divisionMemorization"
+                                                       class="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-600">
+                                            </div>
+                                            <div class="ml-3 text-sm leading-6">
+                                                <label for="memorization" class="font-medium text-gray-900">Memorization</label>
+                                            </div>
+                                        </div>
+                                        <div class="relative flex items-start">
+                                            <div class="flex h-6 items-center">
+                                                <input id="ten-qiraat" type="checkbox" @bind="divisionTenQiraat"
+                                                       class="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-600">
+                                            </div>
+                                            <div class="ml-3 text-sm leading-6">
+                                                <label for="ten-qiraat" class="font-medium text-gray-900">Ten Qira'at</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="sm:col-span-6">
+                                <label class="block text-sm font-medium leading-6 text-gray-900">Category Restrictions</label>
+                                <p class="text-sm text-gray-500 mb-2">If none are selected, this slot will be available for all categories.</p>
+                                <div class="mt-2 space-y-2">
+                                    <div class="flex flex-wrap gap-2">
+                                        <div class="relative flex items-start">
+                                            <div class="flex h-6 items-center">
+                                                <input id="cat-1juz" type="checkbox" @bind="category1Juz"
+                                                       class="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-600">
+                                            </div>
+                                            <div class="ml-3 text-sm leading-6">
+                                                <label for="cat-1juz" class="font-medium text-gray-900">1 Juz</label>
+                                            </div>
+                                        </div>
+                                        <div class="relative flex items-start">
+                                            <div class="flex h-6 items-center">
+                                                <input id="cat-5juz" type="checkbox" @bind="category5Juz"
+                                                       class="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-600">
+                                            </div>
+                                            <div class="ml-3 text-sm leading-6">
+                                                <label for="cat-5juz" class="font-medium text-gray-900">5 Juz</label>
+                                            </div>
+                                        </div>
+                                        <div class="relative flex items-start">
+                                            <div class="flex h-6 items-center">
+                                                <input id="cat-10juz" type="checkbox" @bind="category10Juz"
+                                                       class="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-600">
+                                            </div>
+                                            <div class="ml-3 text-sm leading-6">
+                                                <label for="cat-10juz" class="font-medium text-gray-900">10 Juz</label>
+                                            </div>
+                                        </div>
+                                        <div class="relative flex items-start">
+                                            <div class="flex h-6 items-center">
+                                                <input id="cat-15juz" type="checkbox" @bind="category15Juz"
+                                                       class="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-600">
+                                            </div>
+                                            <div class="ml-3 text-sm leading-6">
+                                                <label for="cat-15juz" class="font-medium text-gray-900">15 Juz</label>
+                                            </div>
+                                        </div>
+                                        <div class="relative flex items-start">
+                                            <div class="flex h-6 items-center">
+                                                <input id="cat-20juz" type="checkbox" @bind="category20Juz"
+                                                       class="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-600">
+                                            </div>
+                                            <div class="ml-3 text-sm leading-6">
+                                                <label for="cat-20juz" class="font-medium text-gray-900">20 Juz</label>
+                                            </div>
+                                        </div>
+                                        <div class="relative flex items-start">
+                                            <div class="flex h-6 items-center">
+                                                <input id="cat-30juz" type="checkbox" @bind="category30Juz"
+                                                       class="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-600">
+                                            </div>
+                                            <div class="ml-3 text-sm leading-6">
+                                                <label for="cat-30juz" class="font-medium text-gray-900">30 Juz</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+                        <button type="button" @onclick="SaveSlot"
+                                class="inline-flex w-full justify-center rounded-md bg-cyan-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cyan-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600 sm:col-start-2">
+                            @(isEditMode ? "Update" : "Create")
+                        </button>
+                        <button type="button" @onclick="() => showSlotModal = false"
+                                class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+<!-- Settings Modal -->
+@if (showSettingsModal)
+{
+    <div class="relative z-10" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+                    <div>
+                        <div class="mt-3 text-center sm:mt-5">
+                            <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">
+                                Schedule Settings
+                            </h3>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 sm:mt-6">
+                        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                            <div class="sm:col-span-6">
+                                <label for="event-name" class="block text-sm font-medium leading-6 text-gray-900">Event Name</label>
+                                <div class="mt-2">
+                                    <input type="text" id="event-name" @bind="scheduleSettings.EventName"
+                                           class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6">
+                                </div>
+                            </div>
+
+                            <div class="sm:col-span-6">
+                                <label for="event-description" class="block text-sm font-medium leading-6 text-gray-900">Event Description</label>
+                                <div class="mt-2">
+                                    <textarea id="event-description" rows="3" @bind="scheduleSettings.EventDescription"
+                                              class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="sm:col-span-6">
+                                <label for="scheduling-instructions" class="block text-sm font-medium leading-6 text-gray-900">Scheduling Instructions</label>
+                                <div class="mt-2">
+                                    <textarea id="scheduling-instructions" rows="3" @bind="scheduleSettings.SchedulingInstructions"
+                                              class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="sm:col-span-3">
+                                <label for="timezone-display" class="block text-sm font-medium leading-6 text-gray-900">Timezone Display</label>
+                                <div class="mt-2">
+                                    <input type="text" id="timezone-display" @bind="scheduleSettings.TimeZoneDisplay"
+                                           class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6">
+                                </div>
+                            </div>
+
+                            <div class="sm:col-span-3">
+                                <label for="auto-refresh" class="block text-sm font-medium leading-6 text-gray-900">Auto-refresh Interval (seconds)</label>
+                                <div class="mt-2">
+                                    <input type="number" id="auto-refresh" min="5" @bind="scheduleSettings.AutoRefreshInterval"
+                                           class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6">
+                                </div>
+                            </div>
+
+                            <div class="sm:col-span-6">
+                                <div class="relative flex items-start">
+                                    <div class="flex h-6 items-center">
+                                        <input id="scheduling-enabled" type="checkbox" @bind="scheduleSettings.IsSchedulingEnabled"
+                                               class="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-600">
+                                    </div>
+                                    <div class="ml-3 text-sm leading-6">
+                                        <label for="scheduling-enabled" class="font-medium text-gray-900">Enable Scheduling</label>
+                                        <p class="text-gray-500">When enabled, users can select their preferred time slots.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="sm:col-span-3">
+                                <label for="scheduling-start" class="block text-sm font-medium leading-6 text-gray-900">Scheduling Start Date</label>
+                                <div class="mt-2">
+                                    <input type="datetime-local" id="scheduling-start" @bind="scheduleSettings.SchedulingStartDate"
+                                           class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6">
+                                </div>
+                            </div>
+
+                            <div class="sm:col-span-3">
+                                <label for="scheduling-end" class="block text-sm font-medium leading-6 text-gray-900">Scheduling End Date</label>
+                                <div class="mt-2">
+                                    <input type="datetime-local" id="scheduling-end" @bind="scheduleSettings.SchedulingEndDate"
+                                           class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+                        <button type="button" @onclick="SaveSettings"
+                                class="inline-flex w-full justify-center rounded-md bg-cyan-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cyan-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600 sm:col-start-2">
+                            Save Settings
+                        </button>
+                        <button type="button" @onclick="() => showSettingsModal = false"
+                                class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Random Assignment Modal -->
+@if (showRandomAssignModal)
+{
+    <div class="relative z-10" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+                    <div>
+                        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100">
+                            <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                            </svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-5">
+                            <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">
+                                Assign Random Slots
+                            </h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500">
+                                    This will automatically assign schedule slots to all unscheduled forms. This action cannot be undone.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+                        <button type="button" @onclick="AssignRandomSlots"
+                                class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 sm:col-start-2">
+                            @if (isAssigning)
+                            {
+                                <span class="flex items-center">
+                                    <span class="animate-spin h-4 w-4 mr-2 border-t-2 border-b-2 border-white rounded-full"></span>
+                                    Assigning...
+                                </span>
+                            }
+                            else
+                            {
+                                <span>Proceed</span>
+                            }
+                        </button>
+                        <button type="button" @onclick="() => showRandomAssignModal = false"
+                                class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Delete Confirmation Modal -->
+@if (showDeleteModal)
+{
+    <div class="relative z-10" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+                    <div>
+                        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+                            <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                            </svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-5">
+                            <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">
+                                Delete Schedule Slot
+                            </h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500">
+                                    Are you sure you want to delete this schedule slot? This action cannot be undone.
+                                </p>
+                                @if (slotToDelete?.CurrentParticipants > 0)
+                                {
+                                    <p class="mt-2 text-sm text-red-500 font-semibold">
+                                        Warning: This slot has @slotToDelete.CurrentParticipants participants scheduled. Deleting it will remove their schedule.
+                                    </p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+                        <button type="button" @onclick="ConfirmDeleteSlot"
+                                class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 sm:col-start-2">
+                            Delete
+                        </button>
+                        <button type="button" @onclick="() => showDeleteModal = false"
+                                class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<ScheduleSlot> slots;
+    private ScheduleSettings scheduleSettings;
+    private bool isLoading = true;
+    private bool isAssigning = false;
+    private string errorMessage;
+    private string successMessage;
+    private string searchQuery = string.Empty;
+
+    // Modal states
+    private bool showSlotModal = false;
+    private bool showSettingsModal = false;
+    private bool showDeleteModal = false;
+    private bool showRandomAssignModal = false;
+
+    // Current slot being edited
+    private ScheduleSlot currentSlot = new ScheduleSlot();
+    private ScheduleSlot slotToDelete;
+
+    // Edit mode flag
+    private bool isEditMode = false;
+
+    // Division restrictions checkboxes
+    private bool divisionMemorization = false;
+    private bool divisionTenQiraat = false;
+
+    // Category restrictions checkboxes
+    private bool category1Juz = false;
+    private bool category5Juz = false;
+    private bool category10Juz = false;
+    private bool category15Juz = false;
+    private bool category20Juz = false;
+    private bool category30Juz = false;
+
+    // Filter states for divisions and categories
+    private bool filterMemorization = true; // Default to filtering for Memorization
+    private bool filterTenQiraat = false;
+    private bool filterCategory1Juz = true; // Default to filtering for 1 Juz
+    private bool filterCategory5Juz = false;
+    private bool filterCategory10Juz = false;
+    private bool filterCategory15Juz = false;
+    private bool filterCategory20Juz = false;
+    private bool filterCategory30Juz = false;
+    private bool showAllDivisions = false;
+    private bool showAllCategories = false;
+
+
+    private List<ScheduleSlot> FilteredSlots => slots?
+    .Where(s => 
+        // Text search filter
+        (string.IsNullOrWhiteSpace(searchQuery) || 
+         s.Date.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+         s.StartTime.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+         s.EndTime.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)) &&
+        
+        // Division filter
+        (showAllDivisions || 
+         (filterMemorization && (s.Divisions.Contains("Memorization") || !s.Divisions.Any())) ||
+         (filterTenQiraat && (s.Divisions.Contains("Ten Qira'at") || !s.Divisions.Any()))) &&
+        
+        // Category filter
+        (showAllCategories || 
+         (filterCategory1Juz && (s.Categories.Contains("1 Juz") || !s.Categories.Any())) ||
+         (filterCategory5Juz && (s.Categories.Contains("5 Juz") || !s.Categories.Any())) ||
+         (filterCategory10Juz && (s.Categories.Contains("10 Juz") || !s.Categories.Any())) ||
+         (filterCategory15Juz && (s.Categories.Contains("15 Juz") || !s.Categories.Any())) ||
+         (filterCategory20Juz && (s.Categories.Contains("20 Juz") || !s.Categories.Any())) ||
+         (filterCategory30Juz && (s.Categories.Contains("30 Juz") || !s.Categories.Any())))
+    )
+    .OrderBy(s => s.Date)
+    .ThenBy(s => s.StartTime)
+    .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            slots = await SchedulingService.GetAllSlotsAsync();
+            scheduleSettings = await SchedulingService.GetScheduleSettingsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ShowCreateModal()
+    {
+        // Try to get the last slot to base the new one on
+        var lastSlot = slots?.OrderBy(s => s.Date).ThenBy(s => s.StartTime).LastOrDefault();
+
+        if (lastSlot != null)
+        {
+            // Parse the times to add one hour
+            if (DateTime.TryParse(lastSlot.StartTime, out DateTime startTime) &&
+                DateTime.TryParse(lastSlot.EndTime, out DateTime endTime))
+            {
+                DateTime newStartTime = startTime.AddHours(1);
+                DateTime newEndTime = endTime.AddHours(1);
+
+                currentSlot = new ScheduleSlot
+                {
+                    Date = lastSlot.Date,
+                    StartTime = newStartTime.ToString("HH:mm"),
+                    EndTime = newEndTime.ToString("HH:mm"),
+                    MaxParticipants = lastSlot.MaxParticipants,
+                    IsEnabled = lastSlot.IsEnabled,
+                    Divisions = new List<string>(lastSlot.Divisions),
+                    Categories = new List<string>(lastSlot.Categories)
+                };
+
+                // Set the checkbox states
+                divisionMemorization = lastSlot.Divisions.Contains("Memorization");
+                divisionTenQiraat = lastSlot.Divisions.Contains("Ten Qira'at");
+
+                category1Juz = lastSlot.Categories.Contains("1 Juz");
+                category5Juz = lastSlot.Categories.Contains("5 Juz");
+                category10Juz = lastSlot.Categories.Contains("10 Juz");
+                category15Juz = lastSlot.Categories.Contains("15 Juz");
+                category20Juz = lastSlot.Categories.Contains("20 Juz");
+                category30Juz = lastSlot.Categories.Contains("30 Juz");
+            }
+            else
+            {
+                // Fallback to default values if time parsing fails
+                CreateDefaultSlot();
+            }
+        }
+        else
+        {
+            // No existing slots, use defaults
+            CreateDefaultSlot();
+        }
+
+        isEditMode = false;
+        showSlotModal = true;
+    }
+
+    private void CreateDefaultSlot()
+    {
+        currentSlot = new ScheduleSlot
+        {
+            Date = DateTime.Now.ToString("MM-dd-yyyy"),
+            StartTime = "08:00",
+            EndTime = "09:00",
+            MaxParticipants = 5,
+            IsEnabled = true,
+            Divisions = new List<string>(),
+            Categories = new List<string>()
+        };
+
+        // Reset checkboxes
+        divisionMemorization = false;
+        divisionTenQiraat = false;
+
+        category1Juz = false;
+        category5Juz = false;
+        category10Juz = false;
+        category15Juz = false;
+        category20Juz = false;
+        category30Juz = false;
+    }
+
+
+    private void OnDateChange(ChangeEventArgs args)
+    {
+        string htmlDateValue = args.Value?.ToString();
+
+        // HTML date input returns "yyyy-MM-dd" format, convert to "MM-dd-yyyy"
+        if (DateTime.TryParse(htmlDateValue, out DateTime parsedDate))
+        {
+            currentSlot.Date = parsedDate.ToString("MM-dd-yyyy");
+        }
+    }
+    
+    private void EditSlot(ScheduleSlot slot)
+    {
+        currentSlot = new ScheduleSlot
+        {
+            Id = slot.Id,
+            Date = slot.Date,
+            StartTime = slot.StartTime,
+            EndTime = slot.EndTime,
+            MaxParticipants = slot.MaxParticipants,
+            CurrentParticipants = slot.CurrentParticipants,
+            IsEnabled = slot.IsEnabled,
+            Divisions = new List<string>(slot.Divisions),
+            Categories = new List<string>(slot.Categories),
+            Version = slot.Version
+        };
+        
+        // Set division checkboxes
+        divisionMemorization = slot.Divisions.Contains("Memorization");
+        divisionTenQiraat = slot.Divisions.Contains("Ten Qira'at");
+        
+        // Set category checkboxes
+        category1Juz = slot.Categories.Contains("1 Juz");
+        category5Juz = slot.Categories.Contains("5 Juz");
+        category10Juz = slot.Categories.Contains("10 Juz");
+        category15Juz = slot.Categories.Contains("15 Juz");
+        category20Juz = slot.Categories.Contains("20 Juz");
+        category30Juz = slot.Categories.Contains("30 Juz");
+        
+        isEditMode = true;
+        showSlotModal = true;
+    }
+    
+    private async Task SaveSlot()
+    {
+        // Update divisions based on checkboxes
+        currentSlot.Divisions = new List<string>();
+        if (divisionMemorization) currentSlot.Divisions.Add("Memorization");
+        if (divisionTenQiraat) currentSlot.Divisions.Add("Ten Qira'at");
+        
+        // Update categories based on checkboxes
+        currentSlot.Categories = new List<string>();
+        if (category1Juz) currentSlot.Categories.Add("1 Juz");
+        if (category5Juz) currentSlot.Categories.Add("5 Juz");
+        if (category10Juz) currentSlot.Categories.Add("10 Juz");
+        if (category15Juz) currentSlot.Categories.Add("15 Juz");
+        if (category20Juz) currentSlot.Categories.Add("20 Juz");
+        if (category30Juz) currentSlot.Categories.Add("30 Juz");
+        
+        try
+        {
+            if (isEditMode)
+            {
+                await SchedulingService.UpdateSlotAsync(currentSlot);
+                successMessage = "Schedule slot updated successfully.";
+            }
+            else
+            {
+                await SchedulingService.CreateSlotAsync(currentSlot);
+                successMessage = "Schedule slot created successfully.";
+            }
+            
+            showSlotModal = false;
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error saving schedule slot: {ex.Message}";
+        }
+    }
+    
+    private void DeleteSlot(ScheduleSlot slot)
+    {
+        slotToDelete = slot;
+        showDeleteModal = true;
+    }
+    
+    private async Task ConfirmDeleteSlot()
+    {
+        try
+        {
+            await SchedulingService.DeleteSlotAsync(slotToDelete.Id);
+            successMessage = "Schedule slot deleted successfully.";
+            showDeleteModal = false;
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error deleting schedule slot: {ex.Message}";
+            showDeleteModal = false;
+        }
+    }
+
+    private async Task ToggleSlotStatus(ScheduleSlot slot)
+    {
+        try
+        {
+            // Create a copy to avoid modifying the original reference
+            var slotToUpdate = new ScheduleSlot
+            {
+                Id = slot.Id,
+                Date = slot.Date,
+                StartTime = slot.StartTime,
+                EndTime = slot.EndTime,
+                MaxParticipants = slot.MaxParticipants,
+                CurrentParticipants = slot.CurrentParticipants,
+                IsEnabled = !slot.IsEnabled, // Toggle the value
+                Divisions = new List<string>(slot.Divisions),
+                Categories = new List<string>(slot.Categories),
+                Version = slot.Version
+            };
+
+            await SchedulingService.UpdateSlotAsync(slotToUpdate);
+
+            // Update the local collection
+            slot.IsEnabled = !slot.IsEnabled;
+
+            successMessage = $"Slot {(slot.IsEnabled ? "enabled" : "disabled")} successfully.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error updating slot status: {ex.Message}";
+        }
+    }
+    
+    private void ShowSettingsModal()
+    {
+        showSettingsModal = true;
+    }
+    
+    private async Task SaveSettings()
+    {
+        try
+        {
+            await SchedulingService.UpdateScheduleSettingsAsync(scheduleSettings);
+            successMessage = "Schedule settings updated successfully.";
+            showSettingsModal = false;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error saving schedule settings: {ex.Message}";
+        }
+    }
+    
+    private void ShowAssignRandomModal()
+    {
+        showRandomAssignModal = true;
+    }
+    
+    private async Task AssignRandomSlots()
+    {
+        isAssigning = true;
+        try
+        {
+            await SchedulingService.AssignRandomSlotsToUnscheduledFormsAsync();
+            successMessage = "Random slots assigned successfully.";
+            showRandomAssignModal = false;
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error assigning random slots: {ex.Message}";
+            showRandomAssignModal = false;
+        }
+        finally
+        {
+            isAssigning = false;
+        }
+    }
+
+    private string FormatTime(string timeString)
+    {
+        if (DateTime.TryParse(timeString, out DateTime time))
+        {
+            return time.ToString("h:mm tt"); // Formats as "10:00 AM"
+        }
+
+        // If it's already just a time string like "10:00:00"
+        if (timeString != null && timeString.Length >= 5)
+        {
+            // Try to remove seconds portion if it exists
+            int colonCount = timeString.Count(c => c == ':');
+            if (colonCount == 2)
+            {
+                // Has seconds - return just hh:mm
+                return timeString.Substring(0, timeString.LastIndexOf(':'));
+            }
+        }
+
+        return timeString;
+    }
+
+    private void DuplicateSlot(ScheduleSlot slot)
+    {
+        // Parse the times
+        if (DateTime.TryParse(slot.StartTime, out DateTime startTime) &&
+            DateTime.TryParse(slot.EndTime, out DateTime endTime))
+        {
+            // Default is to add 1 hour
+            DateTime newStartTime = startTime.AddHours(1);
+            DateTime newEndTime = endTime.AddHours(1);
+
+            // Special handling for 12:00 PM slot - skip to 2:00 PM
+            if (startTime.Hour == 12 && startTime.Minute == 0)
+            {
+                newStartTime = startTime.AddHours(2); // Skip to 2:00 PM
+                newEndTime = endTime.AddHours(2);     // Skip to 3:00 PM
+            }
+
+            // Determine max participants based on the new start time
+            int maxParticipants;
+
+            // Rule 1: If start time is 11:00 AM, 12:00 PM, 4:00 PM, or 9:00 PM, max = 4
+            if ((newStartTime.Hour == 11 && newStartTime.Minute == 0) ||
+                (newStartTime.Hour == 12 && newStartTime.Minute == 0) ||
+                (newStartTime.Hour == 16 && newStartTime.Minute == 0) || // 4:00 PM
+                (newStartTime.Hour == 21 && newStartTime.Minute == 0))   // 9:00 PM
+            {
+                maxParticipants = 4;
+            }
+            // Rule 2: If start time is 5:00 PM, max = 2
+            else if (newStartTime.Hour == 17 && newStartTime.Minute == 0) // 5:00 PM
+            {
+                maxParticipants = 2;
+            }
+            // Rule 3: All other times, max = 6
+            else
+            {
+                maxParticipants = 6;
+            }
+
+            currentSlot = new ScheduleSlot
+            {
+                Date = slot.Date,
+                StartTime = newStartTime.ToString("HH:mm"),
+                EndTime = newEndTime.ToString("HH:mm"),
+                MaxParticipants = maxParticipants, // Use our calculated value instead of copying
+                IsEnabled = slot.IsEnabled,
+                Divisions = new List<string>(slot.Divisions),
+                Categories = new List<string>(slot.Categories)
+            };
+
+            // Set the checkbox states
+            divisionMemorization = slot.Divisions.Contains("Memorization");
+            divisionTenQiraat = slot.Divisions.Contains("Ten Qira'at");
+
+            category1Juz = slot.Categories.Contains("1 Juz");
+            category5Juz = slot.Categories.Contains("5 Juz");
+            category10Juz = slot.Categories.Contains("10 Juz");
+            category15Juz = slot.Categories.Contains("15 Juz");
+            category20Juz = slot.Categories.Contains("20 Juz");
+            category30Juz = slot.Categories.Contains("30 Juz");
+
+            isEditMode = false;
+            showSlotModal = true;
+        }
+    }
+
+    private void ClearFilters()
+    {
+        // Clear search query
+        searchQuery = string.Empty;
+
+        // Reset division filters
+        showAllDivisions = true;
+        filterMemorization = false;
+        filterTenQiraat = false;
+
+        // Reset category filters
+        showAllCategories = true;
+        filterCategory1Juz = false;
+        filterCategory5Juz = false;
+        filterCategory10Juz = false;
+        filterCategory15Juz = false;
+        filterCategory30Juz = false;
+    }
+   
+}

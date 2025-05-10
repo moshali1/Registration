@@ -586,6 +586,7 @@
 
         if (isTest is true)
         {
+            Console.WriteLine("isTest is true");
             await EmailService.SendEmailAsync("mshiek114@gmail.com", creatorDisplayName, subject, plainText, htmlContent);
         }
         else
@@ -604,7 +605,7 @@
         sb.AppendLine("<table style='width: 100%; border-collapse: collapse; margin-bottom: 20px;'>");
         sb.AppendLine("<thead style='background-color: #f1f5f9;'>");
         sb.AppendLine("<tr>");
-        sb.AppendLine("<th style='padding: 10px; text-align: left; border-bottom: 2px solid #e2e8f0;'>Participant</th>");
+        sb.AppendLine("<th style='padding: 10px; text-align: left; border-bottom: 2px solid #e2e8f0;'>Full Name</th>");
         sb.AppendLine("<th style='padding: 10px; text-align: left; border-bottom: 2px solid #e2e8f0;'>Date of Birth</th>");
         sb.AppendLine("<th style='padding: 10px; text-align: left; border-bottom: 2px solid #e2e8f0;'>Gender</th>");
         sb.AppendLine("<th style='padding: 10px; text-align: left; border-bottom: 2px solid #e2e8f0;'>Category</th>");

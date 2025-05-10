@@ -12,6 +12,8 @@ public class DbConnection : IDbConnection
     public string UserCollectionName { get; private set; } = "users";
     public string SettingsCollectionName { get; private set; } = "settings";
     public string EmailTemplateCollectionName { get; private set; } = "emailTemplates";
+    public string SlotCollectionName { get; private set; } = "scheduleSlots";
+    public string ScheduleSettingsCollectionName { get; private set; } = "scheduleSettings";
 
 
     public MongoClient Client { get; private set; }
@@ -19,6 +21,9 @@ public class DbConnection : IDbConnection
     public IMongoCollection<User> UserCollection { get; private set; }
     public IMongoCollection<Settings> SettingsCollection { get; private set; }
     public IMongoCollection<EmailTemplate> EmailTemplateCollection { get; private set; }
+    public IMongoCollection<ScheduleSlot> SlotCollection { get; private set; }
+    public IMongoCollection<ScheduleSettings> ScheduleSettingsCollection { get; private set; }
+
 
     public DbConnection(IConfiguration config)
     {
@@ -31,5 +36,7 @@ public class DbConnection : IDbConnection
         UserCollection = _db.GetCollection<User>(UserCollectionName);
         SettingsCollection = _db.GetCollection<Settings>(SettingsCollectionName);
         EmailTemplateCollection = _db.GetCollection<EmailTemplate>(EmailTemplateCollectionName);
+        SlotCollection = _db.GetCollection<ScheduleSlot>(SlotCollectionName);
+        ScheduleSettingsCollection = _db.GetCollection<ScheduleSettings>(ScheduleSettingsCollectionName);
     }
 }

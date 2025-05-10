@@ -1,0 +1,332 @@
+﻿@* @page "/message/{ID}"
+
+@inject IFormData FormData
+@inject ISchedulingService SchedulingService
+@inject IUserData UserData
+@inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthState
+@inject NavigationManager NavManager
+
+@rendermode InteractiveServer
+
+@attribute [Authorize] *@
+
+@* <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-3xl">
+        <div class="overflow-hidden rounded-lg bg-white shadow">
+            <div class="bg-cyan-950 px-4 py-5 sm:px-6 flex items-center justify-between">
+                <div>
+                    <h1 class="text-base font-semibold leading-6 text-white">Message</h1>
+                    <p class="text-sm text-white">View messages related to this form here. </p>
+                </div>
+                <button @onclick="GoToList" class="text-white bg-cyan-600 hover:bg-cyan-700 rounded-full p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h13M3 14h9m-9 4h6M3 6h9" />
+                    </svg>
+                </button>
+            </div>
+            <div class="px-4 py-5 sm:p-6">
+                @if (isLoading)
+                {
+                    <div class="flex justify-center items-center py-6">
+                        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500"></div>
+                    </div>
+                }
+                else if (form == null)
+                {
+                    <div class="text-center py-6">
+                        <p>Form not found.</p>
+                    </div>
+                }
+                else if (form?.EventScheduleInfo.IsQualified is true && form?.EventScheduleInfo.IsAttended is true)
+                {
+                    <div class="border rounded-lg bg-gray-50 p-2">
+                        <div class="mb-4">
+                            <h6 class="mb-0">Subject: Final Round Qur'an Competition</h6>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0"><strong class="underline decoration-sky-500">Congratulations!</strong> You have qualified for Round 2 (Final Round) of the 10th Annual Imam Al-Shatibi Qur'an Competition. Please check your scheduled date and time below.</h6>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">Competitor Info: <span class="font-semibold">@form.PersonalInfo.GetFirstMiddleLastName()</span> | @form.CompetitionInfo.Division | @form.CompetitionInfo.Category</h6>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">Competition Format: In-Person <span class="font-semibold">(in Minnesota, US)</span></h6>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">Competition Location</h6>
+                            <ul class="list-disc pl-6 text-sm">
+                                <li>Location: <span class="font-semibold">John F. Kennedy High School</span></li>
+                                <li>Address: 9701 Nicollet Ave, Bloomington, MN 55420</li>
+                            </ul>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">Scheduled Date: <span class="font-semibold">@form.EventScheduleInfo.FinalScheduledDate</span></h6>
+                            <h6 class="mb-0">Scheduled Time: <span class="font-semibold">@form.EventScheduleInfo.FinalScheduledTime</span> Central Time (CT)</h6>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="text-sm">We kindly request that you arrive <span class="font-semibold">at least 30 minutes</span> prior to your scheduled time.</h6>
+                        </div>
+                        @if (IsAdmin && form.CompetitionInfo.Category == "1 Juz")
+                        {
+                            <div class="mb-4">
+                                <button @onclick="DownloadCertificateImage"
+                                        class="inline-block bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 px-4 rounded">
+                                    Download Your Participation Certificate
+                                </button>
+                            </div>
+                        }
+
+                        @if (IsAdmin)
+                        {
+                            <div class="mb-4">
+                                <a href="/schedule-update/@form.Id"
+                                   class="inline-block bg-pink-600 hover:bg-pink-700 text-white font-semibold py-2 px-4 rounded">
+                                    Update Schedule
+                                </a>
+                            </div>
+                        }
+                    </div>
+                }
+                else if (form?.EventScheduleInfo.IsQualified is false && form?.EventScheduleInfo.IsAttended is true)
+                {
+                    <div class="border rounded-lg bg-gray-50 p-2">
+                        <div class="mb-4">
+                            <h6 class="mb-0">Subject: Thank You for Participating</h6>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">Competitor Info: <span class="font-semibold">@form.PersonalInfo.GetFirstMiddleLastName()</span> | @form.CompetitionInfo.Division | @form.CompetitionInfo.Category</h6>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">
+                                Thank you for participating in Round 1 (Preliminary Round) of the 10th Annual Imam Al-Shatibi Qur'an Competition.
+                                Unfortunately, you have <strong>not qualified</strong> for Round 2.
+                                May Allah reward you for your efforts. We encourage you to keep practicing for future opportunities.
+                            </h6>
+                        </div>
+                        @if (IsAdmin && form.CompetitionInfo.Category == "1 Juz")
+                        {
+                            <div class="mb-4">
+                                <button @onclick="DownloadCertificateImage"
+                                        class="inline-block bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 px-4 rounded">
+                                    Download Your Participation Certificate
+                                </button>
+                            </div>
+                        }
+                    </div>
+                } 
+                else if (String.IsNullOrEmpty(form?.EventScheduleInfo.PrelimScheduledDate) == false)
+                {
+                    <div class="border rounded-lg bg-gray-50 p-2">
+                        <div class="mb-4">
+                            <h6 class="mb-0">Subject: Preliminary Competition Schedule Information</h6>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">Competitor Info: @form.PersonalInfo.GetFirstMiddleLastName() | @form.CompetitionInfo.Division | @form.CompetitionInfo.Category</h6>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">Competition Format: Virtual <span class="font-semibold">(via Zoom)</span></h6>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">Scheduled Date: <span class="font-semibold">@form.EventScheduleInfo.PrelimScheduledDate</span></h6>
+                            <h6 class="mb-0">Scheduled Time: <span class="font-semibold">@form.EventScheduleInfo.PrelimScheduledTime</span> Central Time (CT)</h6>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="text-sm"><span class="font-semibold">Zoom links</span> will be published on the official website <a class="underline decoration-sky-500" href="https://imamshatibi.org" target="_blank">imamshatibi.org</a> before the start of the preliminary competition.</h6>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">Competition Instructions:</h6>
+                            <ul class="list-disc pl-6 text-sm">
+                                <li>Join the Zoom Conference 1 hour before scheduled time.</li>
+                                <li>Wear appropriate clothing and position your camera against a well-lit background, such as in front of a window or against a well-lit wall, to clearly display your face.</li>
+                                <li>Locate yourself in a private, quiet room. A virtual inspection will be conducted to confirm compliance with competition conditions.</li>
+                            </ul>
+                            <p class="mt-2 text-sm">Further instructions will be provided upon joining the Zoom meeting.</p>
+                        </div>
+
+                        @if (!form.EventScheduleInfo.CheckedPrelimSchedule)
+                        {
+                            <div class="mb-4 bg-cyan-50 p-3 rounded-lg border border-cyan-200">
+                                <p class="text-cyan-800">
+                                    Please review the information above carefully. If you need to change your scheduled time, please return to the scheduling page.
+                                </p>
+                                <button @onclick="MarkAsRead" class="mt-2 bg-cyan-600 hover:bg-cyan-700 text-white py-2 px-4 rounded">
+                                    Mark as Read
+                                </button>
+                            </div>
+                        }
+
+                        <div class="mb-4 mt-6">
+                            <a href="/schedule/@form.Id" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded">
+                                Change My Schedule
+                            </a>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="border rounded-lg bg-gray-50 p-2">
+                        <div class="mb-4">
+                            <h6 class="mb-0">Subject: Preliminary Round Scheduling</h6>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">Competitor Info: <span class="font-semibold">@form.PersonalInfo.GetFirstMiddleLastName()</span> | @form.CompetitionInfo.Division | @form.CompetitionInfo.Category</h6>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">
+                                Welcome to the 11th Annual Imam Al-Shatibi Qur'an Competition! We're excited to have you join us.
+                                Your next step is to schedule your preliminary round competition.
+                            </h6>
+                        </div>
+                        <div class="mb-4">
+                            <h6 class="mb-0">Competition Format: Virtual and Livestream (recorded) <span class="font-semibold">(YouTube and Facebook)</span></h6>
+                        </div>
+                        <div class="mb-4">
+                            <p>Please click the button below to schedule your preferred date and time for the preliminary round competition:</p>
+                            <a href="/schedule/@form.Id" class="inline-block mt-2 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 px-4 rounded">
+                                Schedule Preliminary Round
+                            </a>
+                        </div>
+                        <div class="mb-4">
+                            <p class="text-sm text-gray-600">
+                                Note: If you do not schedule your time by the deadline of <span class="font-semibold">Sunday May 11, 11:59 PM</span>,
+                                the system will automatically assign you a random date and time.
+                            </p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div> *@
+
+@code {
+    // [Parameter]
+    // public string ID { get; set; }
+
+    // private Form form;
+    // private User currentUser;
+    // private bool isLoading = true;
+    // private bool IsAdmin = false;
+    // private bool hasSchedule = false;
+
+    // protected override async Task OnInitializedAsync()
+    // {
+    //     isLoading = true;
+
+    //     try
+    //     {
+    //         if (ID is not null)
+    //         {
+    //             form = await FormData.GetForm(ID);
+    //             if (form == null)
+    //             {
+    //                 return;
+    //             }
+
+    //             currentUser = await AuthState.GetUserFromAuth(UserData);
+
+    //             var authState = await AuthState.GetAuthenticationStateAsync();
+    //             var user = authState.User;
+    //             IsAdmin = user.IsInRole("Admin");
+
+    //             // Check if user has scheduled prelim round
+    //             hasSchedule = await SchedulingService.IsPrelimScheduleSelectedAsync(ID);
+
+    //             if (form.EventScheduleInfo.CheckedFinalSchedule == false &&
+    //                 !string.IsNullOrEmpty(form.EventScheduleInfo.FinalScheduledDate) &&
+    //                 IsAdmin == false)
+    //             {
+    //                 // Mark final schedule as read
+    //                 form.EventScheduleInfo.CheckedFinalSchedule = true;
+    //                 UpdateTrackingInfoForFinal(form);
+    //                 await FormData.UpdateForm(form);
+    //             }
+    //         }
+    //     }
+    //     catch (Exception)
+    //     {
+    //         // Handle exceptions as needed
+    //     }
+    //     finally
+    //     {
+    //         isLoading = false;
+    //     }
+    // }
+
+    // private void UpdateTrackingInfoForFinal(Form form)
+    // {
+    //     // Update Tracking Info
+    //     Tracking tracking = new();
+    //     tracking.PerformedById = currentUser.Id;
+    //     tracking.FullName = currentUser.GetFullName();
+    //     tracking.DisplayName = currentUser.DisplayName;
+    //     tracking.UserType = currentUser.UserType;
+    //     tracking.TrackingAction = $"Read Message: Final Round Qualification / Schedule";
+
+    //     var description = $"Message regarding final round qualification / schedule (date and time) was viewed by {currentUser.DisplayName} ({currentUser.UserType}).";
+    //     tracking.Descriptions.Add(description);
+
+    //     form.FormHistory.Add(tracking);
+    // }
+
+    // private async Task MarkAsRead()
+    // {
+    //     if (form != null && !form.EventScheduleInfo.CheckedPrelimSchedule)
+    //     {
+    //         // Mark prelim schedule as read
+    //         form.EventScheduleInfo.CheckedPrelimSchedule = true;
+
+    //         // Add tracking info
+    //         UpdateTrackingInfoForPrelim(form);
+
+    //         await FormData.UpdateForm(form);
+
+    //         // Refresh the form
+    //         form = await FormData.GetForm(ID);
+    //     }
+    // }
+
+    // private void UpdateTrackingInfoForPrelim(Form form)
+    // {
+    //     // Update Tracking Info
+    //     Tracking tracking = new();
+    //     tracking.PerformedById = currentUser.Id;
+    //     tracking.FullName = currentUser.GetFullName();
+    //     tracking.DisplayName = currentUser.DisplayName;
+    //     tracking.UserType = currentUser.UserType;
+    //     tracking.TrackingAction = $"Read Message: Preliminary Round Schedule";
+
+    //     var description = $"Message regarding preliminary round schedule (date and time) was marked as read by {currentUser.DisplayName} ({currentUser.UserType}).";
+    //     tracking.Descriptions.Add(description);
+
+    //     form.FormHistory.Add(tracking);
+    // }
+
+    // private async Task DownloadCertificateImage()
+    // {
+    //     char gender = 'A';
+    //     if (form.PersonalInfo.Gender == Data.Models.Gender.Male)
+    //     {
+    //         gender = 'M';
+    //     }
+    //     else if (form.PersonalInfo.Gender == Data.Models.Gender.Female)
+    //     {
+    //         gender = 'F';
+    //     }
+    //     var downloadUrl = $"api/CertificateImage/download?name={form.PersonalInfo.GetFirstMiddleLastName()}&category={form.CompetitionInfo.Category}&division={form.CompetitionInfo.Division}&gender={gender}";
+    //     await JSRuntime.InvokeVoidAsync("open", downloadUrl, "_blank");
+    // }
+
+    // private void GoToList()
+    // {
+    //     if (!IsAdmin)
+    //     {
+    //         NavManager.NavigateTo("/list");
+    //     }
+    //     else
+    //     {
+    //         NavManager.NavigateTo("/list2");
+    //     }
+    // }
+}

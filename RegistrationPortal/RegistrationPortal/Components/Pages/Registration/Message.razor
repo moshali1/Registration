@@ -1,6 +1,7 @@
 ﻿@page "/message/{ID}"
 
 @inject IFormData FormData
+@inject ISchedulingService SchedulingService
 @inject IUserData UserData
 @inject IJSRuntime JSRuntime
 @inject AuthenticationStateProvider AuthState
@@ -25,163 +26,311 @@
                 </button>
             </div>
             <div class="px-4 py-5 sm:p-6">
-                @if (form?.EventScheduleInfo.IsQualified is true && form?.EventScheduleInfo.IsAttended is true)
+                @if (isLoading)
                 {
-                    <div class="border rounded-lg bg-gray-50 p-2">
-                        <div class="mb-4">
-                            <h6 class="mb-0">Subject: Final Round Qur'an Competition</h6>
-                        </div>
-                        <div class="mb-4">
-                            <h6 class="mb-0"><strong class="underline decoration-sky-500">Congratulations!</strong> You have qualified for Round 2 (Final Round) of the 10th Annual Imam Al-Shatibi Qur'an Competition. Please check your scheduled date and time below.</h6>
-                        </div>
-                        <div class="mb-4">
-                            <h6 class="mb-0">Competitor Info: <span class="font-semibold">@form.PersonalInfo.GetFirstMiddleLastName()</span> | @form.CompetitionInfo.Division | @form.CompetitionInfo.Category</h6>
-                        </div>
-                        <div class="mb-4">
-                            <h6 class="mb-0">Competition Format: In-Person <span class="font-semibold">(in Minnesota, US)</span></h6>
-                        </div>
-                        <div class="mb-4">
-                            <h6 class="mb-0">Competition Location</h6>
-                            <ul class="list-disc pl-6 text-sm">
-                                <li>Location: <span class="font-semibold">John F. Kennedy High School</span></li>
-                                <li>Address: 9701 Nicollet Ave, Bloomington, MN 55420</li>
-                            </ul>
-                        </div>
-                        <div class="mb-4">
-                            <h6 class="mb-0">Scheduled Date: <span class="font-semibold">@form.EventScheduleInfo.FinalScheduledDate</span></h6>
-                            <h6 class="mb-0">Scheduled Time: <span class="font-semibold">@form.EventScheduleInfo.FinalScheduledTime</span> Central Time (CT)</h6>
-                        </div>
-                        <div class="mb-4">
-                            <h6 class="text-sm">We kindly request that you arrive <span class="font-semibold">at least 30 minutes</span> prior to your scheduled time.</h6>
-                        </div>
-                        @if (IsAdmin && form.CompetitionInfo.Category == "1 Juz")
-                        {
-                            <div class="mb-4">
-                                <button @onclick="DownloadCertificateImage"
-                                        class="inline-block bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 px-4 rounded">
-                                    Download Your Participation Certificate
-                                </button>
-                            </div>
-                        }
-
-                        @if (IsAdmin)
-                        {
-                            <div class="mb-4">
-                                <a href="/schedule-update/@form.Id"
-                                   class="inline-block bg-pink-600 hover:bg-pink-700 text-white font-semibold py-2 px-4 rounded">
-                                    Update Schedule
-                                </a>
-                            </div>
-                        }
+                    <div class="flex justify-center items-center py-6">
+                        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500"></div>
                     </div>
-
                 }
-                else if (form?.EventScheduleInfo.IsQualified is false && form?.EventScheduleInfo.IsAttended is true)
+                else if (form == null)
                 {
-                    <div class="border rounded-lg bg-gray-50 p-2">
-                        <div class="mb-4">
-                            <h6 class="mb-0">Subject: Thank You for Participating</h6>
+                    <div class="text-center py-6">
+                        <p>Form not found.</p>
+                    </div>
+                }
+                else if (String.IsNullOrEmpty(form?.EventScheduleInfo.PrelimScheduledDate) == false)
+                {
+                    <div class="border rounded-xl bg-gray-50 p-6 space-y-5">
+                        <div>
+                            <h2 class="text-lg font-semibold text-cyan-900">
+                                <i class="fas fa-calendar-check text-cyan-700 mr-2"></i>
+                                Subject: Preliminary Competition Schedule Information
+                            </h2>
                         </div>
-                        <div class="mb-4">
-                            <h6 class="mb-0">Competitor Info: <span class="font-semibold">@form.PersonalInfo.GetFirstMiddleLastName()</span> | @form.CompetitionInfo.Division | @form.CompetitionInfo.Category</h6>
+
+                        <!-- Competitor Info Grid -->
+                        <div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
+                                <div>
+                                    <span class="block text-sm font-medium text-gray-500">Name</span>
+                                    <span class="text-base font-semibold">@form.PersonalInfo.GetFirstMiddleLastName()</span>
+                                </div>
+                                <div>
+                                    <span class="block text-sm font-medium text-gray-500">Division</span>
+                                    <span class="text-base font-semibold">@form.CompetitionInfo.Division</span>
+                                </div>
+                                <div>
+                                    <span class="block text-sm font-medium text-gray-500">Category</span>
+                                    <span class="text-base font-semibold">@form.CompetitionInfo.Category</span>
+                                </div>
+                                <div>
+                                    <span class="block text-sm font-medium text-gray-500">Portion</span>
+                                    <span class="text-base font-semibold">@form.CompetitionInfo.Portion</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="mb-4">
-                            <h6 class="mb-0">
-                                Thank you for participating in Round 1 (Preliminary Round) of the 10th Annual Imam Al-Shatibi Qur'an Competition.
-                                Unfortunately, you have <strong>not qualified</strong> for Round 2.
-                                May Allah reward you for your efforts. We encourage you to keep practicing for future opportunities.
-                            </h6>
+
+                        <!-- Scheduled Info -->
+                        <div class="text-gray-700 space-y-1">
+                            <p>
+                                <i class="fas fa-calendar-day text-gray-500 mr-1"></i>
+                                <span class="font-semibold">Scheduled Date:</span> @form.EventScheduleInfo.PrelimScheduledDate
+                            </p>
+                            <p>
+                                <i class="fas fa-clock text-gray-500 mr-1"></i>
+                                <span class="font-semibold">Scheduled Time:</span> @form.EventScheduleInfo.PrelimScheduledTime Central Time (CT)
+                            </p>
+                            <p>
+                                <i class="fas fa-laptop-house text-gray-500 mr-1"></i>
+                                <span class="font-semibold">Format:</span> Virtual Livestream
+                            </p>
                         </div>
-                        @if (IsAdmin && form.CompetitionInfo.Category == "1 Juz")
-                        {
-                            <div class="mb-4">
-                                <button @onclick="DownloadCertificateImage"
-                                        class="inline-block bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 px-4 rounded">
-                                    Download Your Participation Certificate
+
+                        <!-- Zoom Link Note -->
+                        <div class="text-sm text-gray-600">
+                            <p>
+                                <i class="fas fa-link text-gray-500 mr-1"></i>
+                                <span class="font-semibold">Zoom Link:</span>
+                                <button class="ml-2 cursor-not-allowed bg-gray-200 text-gray-500 px-3 py-1 rounded text-xs" disabled>
+                                    Link coming soon
                                 </button>
+                            </p>
+                        </div>
+
+                        <!-- Instructions -->
+                        <div>
+                            <h3 class="text-base font-semibold text-gray-800 mb-2">
+                                <i class="fas fa-info-circle text-gray-500 mr-1"></i>Competition Instructions:
+                            </h3>
+                            <ul class="list-disc pl-6 text-sm text-gray-700 space-y-1">
+                                <li>Join the Zoom Conference at least 30 minutes before your scheduled time.</li>
+                                <li>Wear appropriate clothing and ensure your face is clearly visible with good lighting.</li>
+                                <li>Join from a private, quiet room; a virtual inspection will confirm compliance.</li>
+                                <li>You will first be placed in a waiting room. As your scheduled time approaches, you will be given a link to join the livestream session.</li>
+                            </ul>
+                            <p class="mt-2 text-sm text-gray-600">Further instructions will be provided upon joining the Zoom meeting.</p>
+                        </div>
+
+                        <!-- Error Message for Cancellation -->
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-exclamation-circle text-red-500"></i>
+                                    </div>
+                                    <div class="ml-3">
+                                        <h3 class="text-sm font-medium text-red-800">Error</h3>
+                                        <p class="text-sm text-red-700 mt-1">@errorMessage</p>
+                                    </div>
+                                </div>
                             </div>
                         }
-                    </div>
 
+                        <!-- Single button that opens modal -->
+                        <div class="pt-4">
+                            <button @onclick="ShowChangeScheduleModal" class="inline-block bg-cyan-600 hover:bg-cyan-700 text-white py-2 px-5 rounded-full font-medium transition">
+                                <i class="fas fa-edit mr-2"></i>Change My Schedule
+                            </button>
+                        </div>
+                    </div>
                 }
                 else
                 {
-                    <p><em>No Message</em></p>
-                }
+                    <div class="border rounded-xl bg-gray-50 p-6 space-y-5">
+                        <div>
+                            <h2 class="text-lg font-semibold text-cyan-900">
+                                <i class="fas fa-calendar-alt text-cyan-700 mr-2"></i>
+                                Subject: Preliminary Round Scheduling
+                            </h2>
+                        </div>
 
-                @* @if (String.IsNullOrEmpty(form?.EventScheduleInfo.PrelimScheduledDate) == false)
-                {
-                    <div class="border rounded-lg bg-gray-50 p-2">
-                        <div class="mb-4">
-                            <h6 class="mb-0">Subject: Preliminary Qur'an Competition</h6>
+                        <div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
+                                <div>
+                                    <span class="block text-sm font-medium text-gray-500">Name</span>
+                                    <span class="text-base font-semibold">@form.PersonalInfo.GetFirstMiddleLastName()</span>
+                                </div>
+                                <div>
+                                    <span class="block text-sm font-medium text-gray-500">Division</span>
+                                    <span class="text-base font-semibold">@form.CompetitionInfo.Division</span>
+                                </div>
+                                <div>
+                                    <span class="block text-sm font-medium text-gray-500">Category</span>
+                                    <span class="text-base font-semibold">@form.CompetitionInfo.Category</span>
+                                </div>
+                                <div>
+                                    <span class="block text-sm font-medium text-gray-500">Portion</span>
+                                    <span class="text-base font-semibold">@form.CompetitionInfo.Portion</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="mb-4">
-                            <h6 class="mb-0">Competitor Info: @form.PersonalInfo.GetFirstMiddleLastName() | @form.CompetitionInfo.Division | @form.CompetitionInfo.Category</h6>
+
+                        <div>
+                            <p class="text-base text-gray-700">
+                                <span class="font-semibold">Welcome to the 11th Annual Imam Al-Shatibi Qur'an Competition!</span>
+                                We're excited to have you join us. Your next step is to schedule your preliminary round.
+                            </p>
                         </div>
-                        <div class="mb-4">
-                            <h6 class="mb-0">Competition Format: Virtual <span class="font-semibold">(via Zoom)</span></h6>
+
+                        <div>
+                            <p class="text-sm text-gray-600 italic">
+                                <i class="fas fa-exclamation-circle text-yellow-500 mr-1"></i>
+                                If you do not schedule your time by
+                                <span class="font-semibold text-gray-800">Tuesday, May 13 at 11:59 PM</span>,
+                                we will randomly schedule you on one of the remaining available times.
+                            </p>
+                            <p class="mt-1 text-xs text-gray-500 italic">
+                                While we will try our best to schedule you at your chosen time, due to logistics and the pace of other participants, this cannot be guaranteed.
+                            </p>
                         </div>
-                        <div class="mb-4">
-                            <h6 class="mb-0">Scheduled Date: <span class="font-semibold">@form.EventScheduleInfo.PrelimScheduledDate</span></h6>
-                            <h6 class="mb-0">Scheduled Time: <span class="font-semibold">@form.EventScheduleInfo.PrelimScheduledTime</span> Central Time (CT)</h6>
-                        </div>
-                        <div class="mb-4">
-                            <h6 class="text-sm"><span class="font-semibold">Zoom links</span> will be published on the official website <a class="underline decoration-sky-500" href="https://imamshatibi.org" target="_blank">imamshatibi.org</a> before the start of the preliminary competition.</h6>
-                        </div>
-                        <div class="mb-4">
-                            <h6 class="mb-0">Competition Instructions:</h6>
-                            <ul class="list-disc pl-6 text-sm">
-                                <li>Join the Zoom Conference 1 hour before scheduled time.</li>
-                                <li>Wear appropriate clothing and position your camera against a well-lit background, such as in front of a window or against a well-lit wall, to clearly display your face.</li>
-                                <li>Locate yourself in a private, quiet room. A virtual inspection will be conducted to confirm compliance with competition conditions.</li>
-                            </ul>
-                            <p class="mt-2 text-sm">Further instructions will be provided upon joining the Zoom meeting.</p>
+
+                        <div>
+                            <p class="mb-2 text-base text-gray-700">Please click the button below to choose your preferred date and time:</p>
+                            <a href="/schedule/@form.Id"
+                               class="inline-block bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 px-5 rounded-full transition">
+                                <i class="fas fa-clock mr-2"></i>Schedule Preliminary Round
+                            </a>
                         </div>
                     </div>
-
                 }
-                else
-                {
-                    <p><em>No Message</em></p>
-                } *@
             </div>
         </div>
     </div>
 </div>
+
+<!-- Change Schedule Modal -->
+@if (showChangeScheduleModal)
+{
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 overflow-hidden">
+            <div class="bg-cyan-950 px-4 py-3 text-white">
+                <h3 class="text-lg font-medium">Change Schedule</h3>
+            </div>
+            <div class="p-5">
+                <p class="text-gray-700 mb-4">
+                    Changing your schedule requires cancelling your current time slot first.
+                    You will then be redirected to select a new time.
+                </p>
+                <p class="text-yellow-600 bg-yellow-50 p-3 rounded-lg text-sm mb-4">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    <strong>Important:</strong> Your current time slot will be immediately cancelled.
+                    Available slots may be limited, so be prepared to select a new time.
+                </p>
+
+                @if (isCancelling)
+                {
+                    <div class="flex justify-center mb-4">
+                        <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-cyan-500"></div>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                        <p class="text-sm text-red-700">@errorMessage</p>
+                    </div>
+                }
+
+                <div class="flex justify-end space-x-3">
+                    <button @onclick="CloseModal"
+                            class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md text-gray-700">
+                        Cancel
+                    </button>
+                    <button @onclick="ProcessChangeSchedule"
+                            disabled="@isCancelling"
+                            class="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 rounded-md text-white">
+                        Proceed to Change
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
     [Parameter]
     public string ID { get; set; }
 
     private Form form;
-
     private User currentUser;
-
+    private bool isLoading = true;
     private bool IsAdmin = false;
+    private bool hasSchedule = false;
+    private string errorMessage;
+    private bool isCancelling = false;
+    private bool showChangeScheduleModal = false;
+
 
     protected override async Task OnInitializedAsync()
     {
-        if (ID is not null) 
+        isLoading = true;
+
+        try
         {
-            form = await FormData.GetForm(ID);
-            currentUser = await AuthState.GetUserFromAuth(UserData);
-
-            var authState = await AuthState.GetAuthenticationStateAsync();
-            var user = authState.User;
-            IsAdmin = user.IsInRole("Admin");
-
-            if (form.EventScheduleInfo.CheckedFinalSchedule == false && IsAdmin == false)
+            if (ID is not null)
             {
-                form.EventScheduleInfo.CheckedFinalSchedule = true;
+                form = await FormData.GetForm(ID);
+                if (form == null)
+                {
+                    return;
+                }
 
-                UpdateTrackingInfo(form);
+                currentUser = await AuthState.GetUserFromAuth(UserData);
 
-                await FormData.UpdateForm(form);
+                var authState = await AuthState.GetAuthenticationStateAsync();
+                var user = authState.User;
+                IsAdmin = user.IsInRole("Admin");
+
+                // TEMP CODE
+                // This is a temporary fix to prevent access to the message page for non-memorization divisions
+                if (form.CompetitionInfo.Division != "Memorization")
+                {
+                    NavManager.NavigateTo("/", forceLoad: true);
+                }
+
+                // Check if user has scheduled prelim round
+                hasSchedule = await SchedulingService.IsPrelimScheduleSelectedAsync(ID);
+
+                if (form.EventScheduleInfo.CheckedPrelimSchedule == false &&
+                    !string.IsNullOrEmpty(form.EventScheduleInfo.PrelimScheduledDate) &&
+                    IsAdmin == false)
+                {
+                    // Mark prelim schedule as read
+                    form.EventScheduleInfo.CheckedPrelimSchedule = true;
+                    UpdateTrackingInfoForPrelim(form);
+                    await FormData.UpdateForm(form);
+                }
             }
+        }
+        catch (Exception)
+        {
+            // Handle exceptions as needed
+        }
+        finally
+        {
+            isLoading = false;
         }
     }
 
-    private void UpdateTrackingInfo(Form form)
+    private async Task MarkAsRead()
+    {
+        if (form != null && !form.EventScheduleInfo.CheckedPrelimSchedule)
+        {
+            // Mark prelim schedule as read
+            form.EventScheduleInfo.CheckedPrelimSchedule = true;
+
+            // Add tracking info
+            UpdateTrackingInfoForPrelim(form);
+
+            await FormData.UpdateForm(form);
+
+            // Refresh the form
+            form = await FormData.GetForm(ID);
+        }
+    }
+
+    private void UpdateTrackingInfoForPrelim(Form form)
     {
         // Update Tracking Info
         Tracking tracking = new();
@@ -189,32 +338,17 @@
         tracking.FullName = currentUser.GetFullName();
         tracking.DisplayName = currentUser.DisplayName;
         tracking.UserType = currentUser.UserType;
-        tracking.TrackingAction = $"Read Message: Final Round Qualification / Schedule";
+        tracking.TrackingAction = $"Read Message: Preliminary Round Schedule";
 
-        var description = $"Message regarding final round qualification / schedule (date and time) was viewed by {currentUser.DisplayName} ({currentUser.UserType}).";
+        var description = $"Message regarding preliminary round schedule (date and time) was marked as read by {currentUser.DisplayName} ({currentUser.UserType}).";
         tracking.Descriptions.Add(description);
 
         form.FormHistory.Add(tracking);
     }
 
-    private async Task DownloadCertificateImage()
-    {
-        char gender = 'A'; 
-        if (form.PersonalInfo.Gender == Data.Models.Gender.Male)
-        {
-            gender = 'M';
-        }
-        else if (form.PersonalInfo.Gender == Data.Models.Gender.Female)
-        {
-            gender = 'F';
-        }
-        var downloadUrl = $"api/CertificateImage/download?name={form.PersonalInfo.GetFirstMiddleLastName()}&category={form.CompetitionInfo.Category}&division={form.CompetitionInfo.Division}&gender={gender}";
-        await JSRuntime.InvokeVoidAsync("open", downloadUrl, "_blank");
-    }
-
     private void GoToList()
     {
-        @if (!IsAdmin)
+        if (!IsAdmin)
         {
             NavManager.NavigateTo("/list");
         }
@@ -222,7 +356,152 @@
         {
             NavManager.NavigateTo("/list2");
         }
-        
     }
 
+    private void ChangeSchedule()
+    {
+        NavManager.NavigateTo($"/schedule/{ID}");
+    }
+
+    private async Task CancelSchedule()
+    {
+        errorMessage = null;
+        isCancelling = true;
+
+        try
+        {
+            var result = await SchedulingService.CancelReservationAsync(ID);
+
+            if (result)
+            {
+                // Add tracking info
+                await AddScheduleTrackingInfo("Schedule Cancelled", "User cancelled their preliminary round time slot.");
+
+                // Clear cache and reload the form to show updated state
+                FormData.ClearCache();
+                form = await FormData.GetForm(ID);
+            }
+            else
+            {
+                errorMessage = "Failed to cancel schedule. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error cancelling schedule: {ex.Message}";
+        }
+        finally
+        {
+            isCancelling = false;
+        }
+    }
+
+    private async Task AddScheduleTrackingInfo(string action, string description)
+    {
+        try
+        {
+            // Get the latest form data
+            var formData = await FormData.GetForm(ID);
+            if (formData == null) return;
+
+            // Create tracking entry
+            var tracking = new Tracking
+            {
+                PerformedById = currentUser.Id,
+                FullName = currentUser.GetFullName(),
+                DisplayName = currentUser.DisplayName,
+                UserType = currentUser.UserType,
+                TrackingAction = $"Preliminary Round {action}",
+                ActionDateTime = DateTime.UtcNow
+            };
+
+            // Add details to the description
+            tracking.Descriptions.Add(description);
+
+            if (action == "Schedule Cancelled")
+            {
+                tracking.Descriptions.Add($"Cancelled date: {formData.EventScheduleInfo.PrelimScheduledDate}");
+                tracking.Descriptions.Add($"Cancelled time: {formData.EventScheduleInfo.PrelimScheduledTime}");
+            }
+
+            // Add the tracking to the form history
+            formData.FormHistory.Add(tracking);
+
+            // Save the updated form
+            await FormData.UpdateForm(formData);
+        }
+        catch (Exception ex)
+        {
+            // Log the error but don't disrupt the user flow
+            Console.WriteLine($"Error adding tracking info: {ex.Message}");
+        }
+    }
+
+    private string FormatTime(string timeString)
+    {
+        if (DateTime.TryParse(timeString, out DateTime time))
+        {
+            return time.ToString("h:mm tt"); // Formats as "10:00 AM"
+        }
+
+        // If it's already just a time string like "10:00:00"
+        if (timeString != null && timeString.Length >= 5)
+        {
+            // Try to remove seconds portion if it exists
+            int colonCount = timeString.Count(c => c == ':');
+            if (colonCount == 2)
+            {
+                // Has seconds - return just hh:mm
+                return timeString.Substring(0, timeString.LastIndexOf(':'));
+            }
+        }
+
+        return timeString;
+    }
+
+
+    private void ShowChangeScheduleModal()
+    {
+        showChangeScheduleModal = true;
+        errorMessage = null;
+    }
+
+    private void CloseModal()
+    {
+        showChangeScheduleModal = false;
+        errorMessage = null;
+    }
+
+    private async Task ProcessChangeSchedule()
+    {
+        errorMessage = null;
+        isCancelling = true;
+
+        try
+        {
+            var result = await SchedulingService.CancelReservationAsync(ID);
+
+            if (result)
+            {
+                // Add tracking info
+                await AddScheduleTrackingInfo("Schedule Cancelled", "User cancelled their schedule to select a new time slot.");
+
+                // Clear cache to ensure fresh data
+                FormData.ClearCache();
+
+                // Navigate to schedule page
+                NavManager.NavigateTo($"/schedule/{ID}");
+            }
+            else
+            {
+                errorMessage = "Failed to cancel current schedule. Please try again.";
+                isCancelling = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+            isCancelling = false;
+        }
+    }
 }

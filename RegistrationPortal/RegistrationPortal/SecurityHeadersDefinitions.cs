@@ -31,6 +31,18 @@ public static class SecurityHeadersDefinitions
                     .UnsafeEval() // due to Blazor WASM
                     .UnsafeInline(); // only a fallback for older browsers when the nonce is used 
 
+                builder.AddStyleSrc()
+                    .Self()
+                    .From("https://fonts.googleapis.com")
+                    .From("https://cdnjs.cloudflare.com")
+                    .UnsafeInline();
+
+                builder.AddFontSrc()
+                    .Self()
+                    .From("https://fonts.gstatic.com")
+                    .From("https://cdnjs.cloudflare.com")
+                    .From("data:");
+
             })
             .RemoveServerHeader()
             .AddPermissionsPolicy(builder =>

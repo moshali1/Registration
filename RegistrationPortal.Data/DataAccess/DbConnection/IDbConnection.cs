@@ -12,4 +12,8 @@ public interface IDbConnection
     string UserCollectionName { get; }
     IMongoCollection<EmailTemplate> EmailTemplateCollection { get; }
     string EmailTemplateCollectionName { get; }
+    IMongoCollection<ScheduleSlot> SlotCollection { get; }
+    string SlotCollectionName { get; }
+    IMongoCollection<ScheduleSettings> ScheduleSettingsCollection { get; }
+    string ScheduleSettingsCollectionName { get; }
 }

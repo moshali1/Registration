@@ -1,0 +1,585 @@
+﻿@page "/schedule/{formId}"
+@using RegistrationPortal.Data.Models.ViewModels
+@inject ISchedulingService SchedulingService
+@inject IFormData FormData
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthState
+@inject IUserData UserData
+
+@rendermode InteractiveServer
+
+@attribute [Authorize]
+
+<PageTitle>Schedule Selection</PageTitle>
+
+<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-3xl">
+        <div class="overflow-hidden rounded-lg bg-white shadow">
+            <!-- Header matching message page style -->
+            <div class="bg-cyan-950 px-4 py-5 sm:px-6 flex items-center justify-between">
+                <div>
+                    <h1 class="text-base font-semibold leading-6 text-white">Preliminary Round Scheduling</h1>
+                    <p class="text-sm text-white">Select your preferred time slot below.</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button @onclick="GoBack" class="text-white bg-cyan-600 hover:bg-cyan-700 rounded-full p-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="px-4 py-5 sm:p-6">
+                @if (isLoading)
+                {
+                    <div class="flex justify-center items-center py-6">
+                        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500"></div>
+                    </div>
+                }
+                else
+                {
+                    <!-- Competitor Info Card -->
+                    <div class="mb-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
+                            <div>
+                                <span class="block text-sm font-medium text-gray-500">Name</span>
+                                <span class="text-base font-semibold">@currentForm?.PersonalInfo?.GetFirstMiddleLastName()</span>
+                            </div>
+                            <div>
+                                <span class="block text-sm font-medium text-gray-500">Division</span>
+                                <span class="text-base font-semibold">@currentForm?.CompetitionInfo?.Division</span>
+                            </div>
+                            <div>
+                                <span class="block text-sm font-medium text-gray-500">Category</span>
+                                <span class="text-base font-semibold">@currentForm?.CompetitionInfo?.Category</span>
+                            </div>
+                            <div>
+                                <span class="block text-sm font-medium text-gray-500">Portion</span>
+                                <span class="text-base font-semibold">@currentForm?.CompetitionInfo?.Portion</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Available Slots -->
+                    <div class="border rounded-xl bg-gray-50 p-5 space-y-5">
+                        <div>
+                            <h2 class="text-lg font-semibold text-cyan-900">
+                                <i class="fas fa-calendar-alt text-cyan-700 mr-2"></i>
+                                Available Time Slots
+                            </h2>
+                        </div>
+
+                        @if (viewModel?.AvailableSlots?.Any(s => s.IsAvailable) == true)
+                        {
+                            <div class="grid grid-cols-1 gap-4">
+                                @foreach (var group in viewModel.AvailableSlots
+                                                            .Where(s => s.IsAvailable)
+                                                            .GroupBy(s => s.Date)
+                                                            .OrderBy(g => g.Key))
+                                {
+                                    <div class="border rounded-lg bg-white p-4 shadow-sm">
+                                        <div @onclick="() => ToggleDate(group.Key)" 
+                                             class="flex items-center justify-between cursor-pointer">
+                                            <div class="flex items-center">
+                                                <i class="fas fa-calendar-day text-cyan-700 mr-2"></i>
+                                                <h3 class="font-medium text-gray-800">@FormatDate(group.Key)</h3>
+                                                <span class="ml-3 text-sm text-gray-500">@group.Count() time slots available</span>
+                                            </div>
+                                            <div class="text-cyan-600">
+                                                <i class="fas @(IsDateExpanded(group.Key) ? "fa-chevron-up" : "fa-chevron-down")"></i>
+                                            </div>
+                                        </div>
+                
+                                        @if (IsDateExpanded(group.Key))
+                                        {
+                                            <ul class="space-y-3 mt-3">
+                                                @foreach (var slot in group.OrderBy(s => s.StartTime))
+                                                {
+                                                    <li @onclick="() => SelectSlot(slot.Id)" 
+                                                        class="flex items-center p-3 rounded-lg border transition cursor-pointer
+                                                             @(slot.Id == selectedSlotId 
+                                                                 ? "border-cyan-600 bg-cyan-50 shadow-sm" 
+                                                                 : "border-gray-200 hover:bg-gray-50 hover:border-gray-300")">
+                                                        <label class="flex items-center cursor-pointer w-full">
+                                                            <input type="radio" name="slot"
+                                                                   class="h-4 w-4 text-cyan-600 focus:ring-cyan-500 border-gray-300"
+                                                                   value="@slot.Id"
+                                                                   checked="@(slot.Id == selectedSlotId)"
+                                                                   @onchange="() => SelectSlot(slot.Id)" />
+                                                            <div class="ml-3 flex-1">
+                                                                <div class="text-gray-800 flex items-center">
+                                                                    <i class="fas fa-clock text-cyan-600 mr-1"></i>
+                                                                    @FormatTime(slot.StartTime) – @FormatTime(slot.EndTime)
+                                                                </div>
+                                                                <AuthorizeView Roles="Admin">
+                                                                    <div class="flex items-center mt-1 text-xs text-gray-600">
+                                                                    <div class="w-24 h-1.5 bg-gray-200 rounded-full mr-2">
+                                                                        <div class="h-full bg-cyan-600 rounded-full" 
+                                                                             style="width:@GetAvailabilityPercentage(slot)%"></div>
+                                                                    </div>
+                                                                    @slot.CurrentParticipants of @slot.MaxParticipants spots
+                                                                </div>
+                                                                </AuthorizeView>
+                                                            </div>
+                                                        </label>
+                                                    </li>
+                                                }
+                                            </ul>
+                                        }
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- Selection Notice -->
+                            @if (!string.IsNullOrEmpty(selectedSlotId))
+                            {
+                                <div class="bg-cyan-50 border border-cyan-200 rounded-lg p-4">
+                                    <div class="flex">
+                                        <div class="flex-shrink-0">
+                                            <i class="fas fa-info-circle text-cyan-600"></i>
+                                        </div>
+                                        <div class="ml-3">
+                                            <h3 class="text-sm font-medium text-cyan-800">Selected Time Slot</h3>
+                                            @{
+                                                var selectedSlot = viewModel.AvailableSlots.FirstOrDefault(s => s.Id == selectedSlotId);
+                                                if (selectedSlot != null)
+                                                {
+                                                    <p class="text-sm text-cyan-700 mt-1">
+                                                        @FormatDate(selectedSlot.Date) • @FormatTime(selectedSlot.StartTime) – @FormatTime(selectedSlot.EndTime)
+                                                    </p>
+                                                }
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- Error Message -->
+                            @if (!string.IsNullOrEmpty(errorMessage))
+                            {
+                                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                                    <div class="flex">
+                                        <div class="flex-shrink-0">
+                                            <i class="fas fa-exclamation-circle text-red-500"></i>
+                                        </div>
+                                        <div class="ml-3">
+                                            <h3 class="text-sm font-medium text-red-800">Error</h3>
+                                            <p class="text-sm text-red-700 mt-1">@errorMessage</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- Confirm Button -->
+                            <div class="pt-2 flex justify-end">
+                                <button @onclick="ReserveSelectedSlot"
+                                        disabled="@(!viewModel.AvailableSlots.Any(s => s.Id == selectedSlotId) || isReserving)"
+                                        class="bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-300
+                                               text-white py-2 px-5 rounded-full font-medium shadow-sm transition">
+                                    @if (isReserving)
+                                    {
+                                        <span class="inline-flex items-center">
+                                            <span class="animate-spin h-4 w-4 mr-2 border-t-2 border-b-2 border-white rounded-full"></span>
+                                            Reserving…
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center">
+                                            <i class="fas fa-check-circle mr-2"></i>
+                                            Confirm Selection
+                                        </span>
+                                    }
+                                </button>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="border border-yellow-200 bg-yellow-50 rounded-lg p-4 flex items-start space-x-3">
+                                <i class="fas fa-exclamation-triangle text-yellow-600 mt-0.5"></i>
+                                <div>
+                                    <p class="font-medium text-yellow-800">No available slots</p>
+                                    <p class="text-sm text-yellow-700">No slots open for your category. Please check back later or contact support.</p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.registerBeforeUnload = (dotnetRef) => {
+    window.addEventListener('beforeunload', async () => {
+        await dotnetRef.invokeMethodAsync('HandleBeforeUnload');
+    });
+};
+</script>
+
+@code {
+    [Parameter]
+    public string FormId { get; set; }
+
+    private ScheduleViewModel viewModel;
+    private string selectedSlotId;
+    private bool isLoading = false;
+    private bool isReserving = false;
+    private string errorMessage;
+    private Form currentForm;
+    private bool IsAdmin = false;
+    private int activeViewers = 0;
+    private string userId;
+
+
+    // Auto-refresh timer
+    private System.Threading.Timer _refreshTimer;
+    private bool _isTimerRunning = false;
+    private ScheduleSettings _settings;
+
+    private Dictionary<string, bool> expandedDates = new Dictionary<string, bool>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+
+        var authState = await AuthState.GetAuthenticationStateAsync();
+        var user = authState.User;
+        IsAdmin = user.IsInRole("Admin");
+
+        // Get current user for tracking
+        var currentUser = await AuthState.GetUserFromAuth(UserData);
+        userId = currentUser?.Id;
+
+        
+
+        try
+        {
+            // Load schedule settings first to get the refresh interval
+            _settings = await SchedulingService.GetScheduleSettingsAsync();
+            
+            await LoadData();
+
+            // TEMP CODE
+            // This is a temporary fix to prevent access to the message page for non-memorization divisions
+            if (currentForm.CompetitionInfo.Division != "Memorization")
+            {
+                NavigationManager.NavigateTo("/", forceLoad: true);
+            }
+
+            if (viewModel?.AvailableSlots?.Any(s => s.IsAvailable) == true)
+            {
+                // Get the first date and expand it by default
+                var firstDate = viewModel.AvailableSlots
+                    .Where(s => s.IsAvailable)
+                    .GroupBy(s => s.Date)
+                    .OrderBy(g => g.Key)
+                    .FirstOrDefault()?.Key;
+        
+                if (!string.IsNullOrEmpty(firstDate))
+                {
+                    expandedDates[firstDate] = true;
+                }
+            }
+            
+            // Setup auto-refresh based on settings
+            SetupAutoRefresh();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+
+
+
+     private async Task LoadData()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            // Get the current form
+            currentForm = await FormData.GetForm(FormId);
+            if (currentForm == null)
+            {
+                errorMessage = "Form not found.";
+                isLoading = false;
+                return;
+            }
+
+            // Check if already scheduled - if so, redirect to message page
+            bool isScheduled = !string.IsNullOrEmpty(currentForm.EventScheduleInfo.ScheduleSlotId) &&
+                              !string.IsNullOrEmpty(currentForm.EventScheduleInfo.PrelimScheduledDate) &&
+                              !string.IsNullOrEmpty(currentForm.EventScheduleInfo.PrelimScheduledTime);
+
+            if (isScheduled)
+            {
+                NavigationManager.NavigateTo($"/message/{FormId}");
+                return;
+            }
+
+            // Get the schedule view model
+            viewModel = await SchedulingService.GetScheduleViewModelAsync(
+                FormId, 
+                currentForm.CompetitionInfo.Division, 
+                currentForm.CompetitionInfo.Category);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading schedule data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void SelectSlot(string slotId)
+    {
+        selectedSlotId = slotId;
+    
+        // Expand the date that contains the selected slot
+        var selectedSlot = viewModel?.AvailableSlots?.FirstOrDefault(s => s.Id == slotId);
+        if (selectedSlot != null)
+        {
+            expandedDates[selectedSlot.Date] = true;
+        }
+    }
+
+    private async Task ReserveSelectedSlot()
+    {
+        if (string.IsNullOrEmpty(selectedSlotId))
+        {
+            errorMessage = "Please select a time slot.";
+            return;
+        }
+
+        isReserving = true;
+        errorMessage = null;
+
+        try
+        {
+            var result = await SchedulingService.ReserveSlotAsync(FormId, selectedSlotId);
+
+            if (result)
+            {
+                // Add tracking info for the scheduling action
+                await AddScheduleTrackingInfo("Schedule Created", "User scheduled a preliminary round time slot.");
+
+
+                // Clear cache to ensure fresh data
+                FormData.ClearCache();
+
+                // Redirect to message page to show confirmation
+                NavigationManager.NavigateTo($"/message/{FormId}");
+            }
+            else
+            {
+                errorMessage = "Unable to reserve this time slot. It may have been taken by another participant. Please select another slot.";
+                await LoadData();  // Reload data to get fresh slot availability
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error reserving time slot: {ex.Message}";
+        }
+        finally
+        {
+            isReserving = false;
+        }
+    }
+
+    private async Task AddScheduleTrackingInfo(string action, string description)
+    {
+        try
+        {
+            // Get the latest form data
+            var form = await FormData.GetForm(FormId);
+            if (form == null) return;
+        
+            // Get the current user
+            var currentUser = await AuthState.GetUserFromAuth(UserData);
+            if (currentUser == null) return;
+        
+            // Create tracking entry
+            var tracking = new Tracking
+            {
+                PerformedById = currentUser.Id,
+                FullName = currentUser.GetFullName(),
+                DisplayName = currentUser.DisplayName,
+                UserType = currentUser.UserType,
+                TrackingAction = $"Preliminary Round {action}",
+                ActionDateTime = DateTime.UtcNow
+            };
+        
+            // Add details to the description
+            tracking.Descriptions.Add(description);
+        
+            if (action == "Schedule Created" || action == "Schedule Updated")
+            {
+                var slot = viewModel.AvailableSlots.FirstOrDefault(s => s.Id == selectedSlotId);
+                if (slot != null)
+                {
+                    tracking.Descriptions.Add($"Selected date: {slot.Date}");
+                    tracking.Descriptions.Add($"Selected time: {slot.StartTime} - {slot.EndTime}");
+                }
+            }
+        
+            // Add the tracking to the form history
+            form.FormHistory.Add(tracking);
+        
+            // Save the updated form
+            await FormData.UpdateForm(form);
+        }
+        catch (Exception ex)
+        {
+            // Log the error but don't disrupt the user flow
+            Console.WriteLine($"Error adding tracking info: {ex.Message}");
+        }
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo($"/message/{FormId}");
+    }
+
+    private string FormatDate(string dateString)
+    {
+        if (DateTime.TryParse(dateString, out DateTime date))
+        {
+            return date.ToString("dddd, MMMM d, yyyy"); // Friday, May 22, 2025
+        }
+        return dateString;
+    }
+    
+    private string FormatTime(string timeString)
+    {
+        if (DateTime.TryParse(timeString, out DateTime time))
+        {
+            return time.ToString("h:mm tt"); // Formats as "10:00 AM"
+        }
+        
+        // If it's already just a time string like "10:00:00"
+        if (timeString != null && timeString.Length >= 5)
+        {
+            // Try to remove seconds portion if it exists
+            int colonCount = timeString.Count(c => c == ':');
+            if (colonCount == 2)
+            {
+                // Has seconds - return just hh:mm
+                return timeString.Substring(0, timeString.LastIndexOf(':'));
+            }
+        }
+        
+        return timeString;
+    }
+    
+    private string GetAvailabilityPercentage(ScheduleSlotViewModel slot)
+    {
+        if (slot.MaxParticipants == 0) return "0";
+        return Math.Min(100, (slot.CurrentParticipants * 100) / slot.MaxParticipants).ToString();
+    }
+
+    private void SetupAutoRefresh()
+    {
+        if (_refreshTimer != null)
+        {
+            _refreshTimer.Dispose();
+            _refreshTimer = null;
+        }
+
+        if (_settings != null && _settings.AutoRefreshInterval > 0 && _settings.IsSchedulingEnabled)
+        {
+            // Convert seconds to milliseconds
+            int intervalMs = _settings.AutoRefreshInterval * 1000;
+            
+            // Ensure minimum interval of 5 seconds
+            intervalMs = Math.Max(intervalMs, 5000);
+            
+            _refreshTimer = new System.Threading.Timer(
+                async _ => 
+                {
+                    // Only refresh if not in the middle of another operation
+                    if (!isLoading && !isReserving && !_isTimerRunning)
+                    {
+                        _isTimerRunning = true;
+                        try
+                        {
+                            await InvokeAsync(async () => 
+                            {
+                                // Only refresh slot data, not the entire form data
+                                await RefreshSlotData();
+                                StateHasChanged();
+                            });
+                        }
+                        finally
+                        {
+                            _isTimerRunning = false;
+                        }
+                    }
+                },
+                null,
+                intervalMs,  // Initial delay
+                intervalMs   // Periodic interval
+            );
+        }
+    }
+    
+    // Method to just refresh the slot data without reloading the entire form
+    private async Task RefreshSlotData()
+    {
+        if (isLoading || isReserving || currentForm == null) return;
+        
+        try
+        {
+            // Get fresh data without changing the loading state
+            var freshViewModel = await SchedulingService.GetScheduleViewModelAsync(
+                FormId, 
+                currentForm.CompetitionInfo.Division, 
+                currentForm.CompetitionInfo.Category);
+                
+            if (freshViewModel != null && freshViewModel.AvailableSlots != null)
+            {
+                // Update only the slots, keeping selected slot if it's still valid
+                viewModel.AvailableSlots = freshViewModel.AvailableSlots;
+                
+                // Check if selected slot is still available
+                if (!string.IsNullOrEmpty(selectedSlotId) && 
+                    !viewModel.AvailableSlots.Any(s => s.Id == selectedSlotId && s.IsAvailable))
+                {
+                    // Selected slot is no longer available, clear selection
+                    selectedSlotId = null;
+                    errorMessage = "Your selected time slot is no longer available. Please select another slot.";
+                }
+            }
+        }
+        catch (Exception)
+        {
+            // Silently ignore refresh errors - don't disrupt the user
+        }
+    }
+
+    private void ToggleDate(string date)
+    {
+        if (expandedDates.ContainsKey(date))
+            expandedDates[date] = !expandedDates[date];
+        else
+            expandedDates[date] = true;
+    }
+
+    private bool IsDateExpanded(string date)
+    {
+        return expandedDates.ContainsKey(date) && expandedDates[date];
+    }
+
+     // Clean up timer when component is disposed
+    public void Dispose()
+    {
+        _refreshTimer?.Dispose();
+    }
+}

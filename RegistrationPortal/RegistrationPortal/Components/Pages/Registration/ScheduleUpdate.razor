@@ -1,4 +1,4 @@
-﻿@page "/schedule-update/{ID}"
+﻿@* @page "/schedule-update/{ID}"
 
 @inject IFormData FormData
 @inject IUserData UserData
@@ -41,64 +41,64 @@
             </div>
         </div>
     </div>
-</div>
+</div> *@
 
 @code {
-    [Parameter]
-    public string ID { get; set; }
+    // [Parameter]
+    // public string ID { get; set; }
 
-    private Form form;
-    private User currentUser;
+    // private Form form;
+    // private User currentUser;
 
-    private string initialDate;
-    private string initialTime;
+    // private string initialDate;
+    // private string initialTime;
 
-    protected override async Task OnInitializedAsync()
-    {
-        if (ID is not null)
-        {
-            form = await FormData.GetForm(ID);
-            currentUser = await AuthState.GetUserFromAuth(UserData);
+    // protected override async Task OnInitializedAsync()
+    // {
+    //     if (ID is not null)
+    //     {
+    //         form = await FormData.GetForm(ID);
+    //         currentUser = await AuthState.GetUserFromAuth(UserData);
 
-            initialDate = form.EventScheduleInfo.FinalScheduledDate;
-            initialTime = form.EventScheduleInfo.FinalScheduledTime;
-        }
-    }
+    //         initialDate = form.EventScheduleInfo.FinalScheduledDate;
+    //         initialTime = form.EventScheduleInfo.FinalScheduledTime;
+    //     }
+    // }
 
-    private async Task SaveSchedule()
-    {
-        if (form.EventScheduleInfo != null)
-        {
-            form.EventScheduleInfo.CheckedFinalSchedule = false;
-            UpdateTrackingInfo(form, "Edited Final Round Schedule");
+    // private async Task SaveSchedule()
+    // {
+    //     if (form.EventScheduleInfo != null)
+    //     {
+    //         form.EventScheduleInfo.CheckedFinalSchedule = false;
+    //         UpdateTrackingInfo(form, "Edited Final Round Schedule");
 
-            await FormData.UpdateForm(form);
+    //         await FormData.UpdateForm(form);
 
-            FormData.ClearCache();
+    //         FormData.ClearCache();
 
-            // Optionally, navigate to another page or show a success message
-            NavManager.NavigateTo($"/message/{ID}");
-        }
-    }
+    //         // Optionally, navigate to another page or show a success message
+    //         NavManager.NavigateTo($"/message/{ID}");
+    //     }
+    // }
 
-    private void UpdateTrackingInfo(Form form, string action)
-    {
-        Tracking tracking = new()
-            {
-                PerformedById = currentUser.Id,
-                FullName = currentUser.GetFullName(),
-                DisplayName = currentUser.DisplayName,
-                UserType = currentUser.UserType,
-                TrackingAction = action
-            };
+    // private void UpdateTrackingInfo(Form form, string action)
+    // {
+    //     Tracking tracking = new()
+    //         {
+    //             PerformedById = currentUser.Id,
+    //             FullName = currentUser.GetFullName(),
+    //             DisplayName = currentUser.DisplayName,
+    //             UserType = currentUser.UserType,
+    //             TrackingAction = action
+    //         };
 
-        var description = $"Scheduled date and time were edited by {currentUser.DisplayName} ({currentUser.UserType}).";
-        var description2 = $"Scheduled date changed from ({initialDate}) to ({form.EventScheduleInfo.FinalScheduledDate}).";
-        var description3 = $"Scheduled time changed from ({initialTime}) to ({form.EventScheduleInfo.FinalScheduledTime}).";
-        tracking.Descriptions.Add(description);
-        tracking.Descriptions.Add(description2);
-        tracking.Descriptions.Add(description3);
+    //     var description = $"Scheduled date and time were edited by {currentUser.DisplayName} ({currentUser.UserType}).";
+    //     var description2 = $"Scheduled date changed from ({initialDate}) to ({form.EventScheduleInfo.FinalScheduledDate}).";
+    //     var description3 = $"Scheduled time changed from ({initialTime}) to ({form.EventScheduleInfo.FinalScheduledTime}).";
+    //     tracking.Descriptions.Add(description);
+    //     tracking.Descriptions.Add(description2);
+    //     tracking.Descriptions.Add(description3);
 
-        form.FormHistory.Add(tracking);
-    }
+    //     form.FormHistory.Add(tracking);
+    // }
 }

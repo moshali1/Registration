@@ -31,7 +31,7 @@ public static class RegisterServices
             .AddMicrosoftIdentityWebApp(builder.Configuration)
             .EnableTokenAcquisitionToCallDownstreamApi(initialScopes)
             .AddInMemoryTokenCaches();
-            //.AddInMemoryTokenCaches(); what is this?
+        //.AddInMemoryTokenCaches(); what is this?
 
         // Without, the client component using the API as an error in server mode
         builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, BlazorAuthorizationMiddlewareResultHandler>();
@@ -76,6 +76,9 @@ public static class RegisterServices
 
         builder.Services.AddSwaggerGen();
 
+        // Add SignalR
+        builder.Services.AddSignalR();
+
         builder.Services.AddSingleton<IDbConnection, DbConnection>();
         builder.Services.AddSingleton<IArchivedDbConnection, ArchivedDbConnection>();
 
@@ -95,6 +98,10 @@ public static class RegisterServices
         builder.Services.AddScoped<IFaceDetectionService, FaceDetectionService>();
         builder.Services.AddScoped<ITextDetectionService, TextDetectionService>();
         builder.Services.AddScoped<IEmailTemplateProcessor, EmailTemplateProcessor>();
+
+        builder.Services.AddScoped<IScheduleSlotData, ScheduleSlotData>();
+        builder.Services.AddScoped<IScheduleSettingsData, ScheduleSettingsData>();
+        builder.Services.AddScoped<ISchedulingService, SchedulingService>();
 
         builder.Services.AddScoped<FormSelectionService>(); // each client
         builder.Services.AddScoped<DefaultListService>(); // each client

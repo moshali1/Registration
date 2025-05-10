@@ -19,6 +19,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Components" Version="8.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid" Version="8.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.4" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.4" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.AzureAppServices" Version="9.0.0-preview.1.24081.5" />
