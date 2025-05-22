@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging.AzureAppServices;
 using RegistrationPortal.Components;
+using RegistrationPortal.Extensions;
 using RegistrationPortal.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -46,6 +47,8 @@ app.UseAntiforgery();
 AuthenticationExtensions.SetupEndpoints(app);
 
 app.MapControllers();
+
+app.MapFormApi();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()

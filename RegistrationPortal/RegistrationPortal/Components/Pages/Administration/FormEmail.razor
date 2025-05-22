@@ -465,14 +465,14 @@
                 currentProcessingIndex = i;
 
                 // Verify current user's forms
-                if (currentUserForms.Any(x => x.StatusInfo.Status == "Reviewed"))
+                if (currentUserForms.Any(x => x.StatusInfo.Status == "Verified"))
                 {
                     foreach (var form in currentUserForms)
                     {
                         if (cts.Token.IsCancellationRequested)
                             break;
 
-                        await UpdateStatusAndTrackingInfo(form);
+                        // await UpdateStatusAndTrackingInfo(form);
                     }
 
                     await ConfirmationEmailNotification();
@@ -567,7 +567,8 @@
             {"CreatorUserType", creatorUserType},
             {"Year", DateTime.Now.Year.ToString()},
             {"Division", selectedDivision},
-            {"StudentList", BuildHtmlContent(currentUserForms)}
+            // {"StudentList", BuildHtmlContent(currentUserForms)}
+            {"StudentList", BuildHtmlContentv2(currentUserForms)}
         };
 
         // Process the templates
@@ -628,6 +629,49 @@
 
         return sb.ToString();
     }
+
+    private string BuildHtmlContentv2(List<Form> forms)
+    {
+        StringBuilder sb = new StringBuilder();
+
+        sb.AppendLine("<table style='width: 100%; border-collapse: collapse; margin-bottom: 20px;'>");
+        sb.AppendLine("<thead style='background-color: #f1f5f9;'>");
+        sb.AppendLine("<tr>");
+        sb.AppendLine("<th style='padding: 10px; text-align: left; border-bottom: 2px solid #e2e8f0;'>Full Name</th>");
+        sb.AppendLine("<th style='padding: 10px; text-align: left; border-bottom: 2px solid #e2e8f0;'>Date of Birth</th>");
+        sb.AppendLine("<th style='padding: 10px; text-align: left; border-bottom: 2px solid #e2e8f0;'>Gender</th>");
+        sb.AppendLine("<th style='padding: 10px; text-align: left; border-bottom: 2px solid #e2e8f0;'>Category</th>");
+        sb.AppendLine("</tr>");
+        sb.AppendLine("</thead>");
+        sb.AppendLine("<tbody>");
+
+        foreach (var form in forms)
+        {
+            // Main row
+            sb.AppendLine("<tr>");
+            sb.AppendLine($"<td style='padding: 10px; border-bottom: 1px solid #e2e8f0; font-weight: bold;'>{form.PersonalInfo.GetFirstMiddleLastName()}</td>");
+            sb.AppendLine($"<td style='padding: 10px; border-bottom: 1px solid #e2e8f0;'>{form.PersonalInfo.DOB}</td>");
+            sb.AppendLine($"<td style='padding: 10px; border-bottom: 1px solid #e2e8f0;'>{form.PersonalInfo.Gender}</td>");
+            sb.AppendLine($"<td style='padding: 10px; border-bottom: 1px solid #e2e8f0;'>{CategoryPortion(form.CompetitionInfo.Category, form.CompetitionInfo.Portion)}</td>");
+            sb.AppendLine("</tr>");
+
+            // Conditional row for scheduled date/time
+            if (form.EventScheduleInfo?.CheckedPrelimSchedule == true)
+            {
+                sb.AppendLine("<tr>");
+                sb.AppendLine($"<td colspan='4' style='padding: 10px; background-color: #f9fafb; border-bottom: 1px solid #e2e8f0; font-style: italic;'>");
+                sb.AppendLine($"Scheduled: {form.EventScheduleInfo.PrelimScheduledDate} at {form.EventScheduleInfo.PrelimScheduledTime}");
+                sb.AppendLine("</td>");
+                sb.AppendLine("</tr>");
+            }
+        }
+
+        sb.AppendLine("</tbody>");
+        sb.AppendLine("</table>");
+
+        return sb.ToString();
+    }
+
 
     private string CategoryPortion(string category, string portion)
     {

@@ -18,6 +18,8 @@ public class BasicForm
     public string Division { get; set; }
 
     public string Status { get; set; }
+    public bool CheckedPrelimSchedule { get; set; } = false;
+    public bool CheckedFinalSchedule { get; set; } = false;
 
     public string GetRegionalAddress()
     {

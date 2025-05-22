@@ -91,11 +91,33 @@
                             <p>
                                 <i class="fas fa-link text-gray-500 mr-1"></i>
                                 <span class="font-semibold">Zoom Link:</span>
-                                <button class="ml-2 cursor-not-allowed bg-gray-200 text-gray-500 px-3 py-1 rounded text-xs" disabled>
-                                    Link coming soon
-                                </button>
+                                @{
+                                    var cat = form.CompetitionInfo.Category;
+                                    string? zoomUrl = (cat == "1 Juz" || cat == "15 Juz")
+                                    ? "https://us06web.zoom.us/j/84878509856"
+                                    : (cat == "5 Juz" || cat == "10 Juz")
+                                    ? "https://us06web.zoom.us/j/87910494755"
+                                    : (cat == "20 Juz" || cat == "30 Juz")
+                                    ? "https://us06web.zoom.us/j/84644766393"
+                                    : null;
+                                }
+                                @if (!string.IsNullOrEmpty(zoomUrl))
+                                {
+                                    <a href="@zoomUrl"
+                                       target="_blank"
+                                       class="ml-2 underline text-blue-600 hover:text-blue-800 text-xs">
+                                        @zoomUrl
+                                    </a>
+                                }
+                                else
+                                {
+                                    <button class="ml-2 cursor-not-allowed bg-gray-200 text-gray-500 px-3 py-1 rounded text-xs" disabled>
+                                        Link coming soon
+                                    </button>
+                                }
                             </p>
                         </div>
+
 
                         <!-- Instructions -->
                         <div>
@@ -110,6 +132,7 @@
                             </ul>
                             <p class="mt-2 text-sm text-gray-600">Further instructions will be provided upon joining the Zoom meeting.</p>
                         </div>
+                        
 
                         <!-- Error Message for Cancellation -->
                         @if (!string.IsNullOrEmpty(errorMessage))
@@ -127,12 +150,16 @@
                             </div>
                         }
 
-                        <!-- Single button that opens modal -->
-                        <div class="pt-4">
-                            <button @onclick="ShowChangeScheduleModal" class="inline-block bg-cyan-600 hover:bg-cyan-700 text-white py-2 px-5 rounded-full font-medium transition">
-                                <i class="fas fa-edit mr-2"></i>Change My Schedule
-                            </button>
-                        </div>
+                        @if (canReschedule)
+                        {
+                            <!-- Single button that opens modal -->
+                            <div class="pt-4">
+                                <button @onclick="ShowChangeScheduleModal" class="inline-block bg-cyan-600 hover:bg-cyan-700 text-white py-2 px-5 rounded-full font-medium transition">
+                                    <i class="fas fa-edit mr-2"></i>Change My Schedule
+                                </button>
+                            </div>
+                        }
+                        
                     </div>
                 }
                 else
@@ -172,18 +199,21 @@
                                 We're excited to have you join us. Your next step is to schedule your preliminary round.
                             </p>
                         </div>
-
-                        <div>
-                            <p class="text-sm text-gray-600 italic">
-                                <i class="fas fa-exclamation-circle text-yellow-500 mr-1"></i>
-                                If you do not schedule your time by
-                                <span class="font-semibold text-gray-800">Tuesday, May 13 at 11:59 PM</span>,
-                                we will randomly schedule you on one of the remaining available times.
-                            </p>
-                            <p class="mt-1 text-xs text-gray-500 italic">
-                                While we will try our best to schedule you at your chosen time, due to logistics and the pace of other participants, this cannot be guaranteed.
-                            </p>
-                        </div>
+                        @if (false)
+                        {
+                            <div>
+                                <p class="text-sm text-gray-600 italic">
+                                    <i class="fas fa-exclamation-circle text-yellow-500 mr-1"></i>
+                                    If you do not schedule your time by
+                                    <span class="font-semibold text-gray-800">Tuesday, May 13 at 11:59 PM</span>,
+                                    we will randomly schedule you on one of the remaining available times.
+                                </p>
+                                <p class="mt-1 text-xs text-gray-500 italic">
+                                    While we will try our best to schedule you at your chosen time, due to logistics and the pace of other participants, this cannot be guaranteed.
+                                </p>
+                            </div>  
+                        }
+                        
 
                         <div>
                             <p class="mb-2 text-base text-gray-700">Please click the button below to choose your preferred date and time:</p>
@@ -253,6 +283,9 @@
     public string ID { get; set; }
 
     private Form form;
+    private ScheduleSettings scheduleSettings;
+    private bool canReschedule = false;
+    private bool canSchedule = false;
     private User currentUser;
     private bool isLoading = true;
     private bool IsAdmin = false;
@@ -282,9 +315,54 @@
                 var user = authState.User;
                 IsAdmin = user.IsInRole("Admin");
 
+                scheduleSettings = await SchedulingService.GetScheduleSettingsAsync();
+
+
+                // Future BUG Fix
+                // Currently Pre Scheduling Deadlinea and Post have different criteria
+                // Pre Scheduling Deadline - users should be able to reschedule if they wish to as long as schedling is enabled
+                // Post deadline - users who already scheduled should not be able to reschedule, it should also be open to verified users who 
+                // did not check their prelim schedule (false) until we manually remove scheudling option//
+                // scheduling settings logic is currently set only for those who did not schedule yet (reschelding)
+
+                if (IsAdmin)
+                {
+                    canReschedule = true;
+                }
+                else if (scheduleSettings == null || !scheduleSettings.IsSchedulingEnabled)
+                {
+                    // no settings or explicitly disabled → no rescheduling
+                    canReschedule = false;
+                }
+                else
+                {
+                    var now = DateTime.UtcNow;
+                    var start = scheduleSettings.SchedulingStartDate;
+                    var end = scheduleSettings.SchedulingEndDate;
+
+                    if (now < start || now > end)
+                    {
+                        canReschedule = false;
+                        errorMessage =
+                            $"Scheduling is not available. Please check back between " +
+                            $"{start:MM/dd/yyyy} and {end:MM/dd/yyyy}.";
+                    }
+                    else
+                    {
+                        canReschedule = true;
+                    }
+                }
+
                 // TEMP CODE
                 // This is a temporary fix to prevent access to the message page for non-memorization divisions
                 if (form.CompetitionInfo.Division != "Memorization")
+                {
+                    NavManager.NavigateTo("/", forceLoad: true);
+                }
+
+                // TEMP CODE
+                // Hard Disable - Morning of Competition
+                if (String.IsNullOrWhiteSpace(form.EventScheduleInfo.PrelimScheduledDate))
                 {
                     NavManager.NavigateTo("/", forceLoad: true);
                 }

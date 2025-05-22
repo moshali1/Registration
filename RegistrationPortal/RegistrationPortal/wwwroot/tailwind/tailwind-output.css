@@ -1609,6 +1609,10 @@ select {
   row-gap: 1.5rem;
 }
 
+.gap-y-8 {
+  row-gap: 2rem;
+}
+
 .space-x-2 > :not([hidden]) ~ :not([hidden]) {
   --tw-space-x-reverse: 0;
   margin-right: calc(0.5rem * var(--tw-space-x-reverse));
@@ -2047,6 +2051,11 @@ select {
   background-color: rgb(209 213 219 / var(--tw-bg-opacity));
 }
 
+.bg-gray-400 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(156 163 175 / var(--tw-bg-opacity));
+}
+
 .bg-gray-50 {
   --tw-bg-opacity: 1;
   background-color: rgb(249 250 251 / var(--tw-bg-opacity));
@@ -2382,6 +2391,11 @@ select {
   padding-bottom: 1.5rem;
 }
 
+.py-8 {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
 .pb-3 {
   padding-bottom: 0.75rem;
 }
@@ -2578,6 +2592,11 @@ select {
 .text-amber-700 {
   --tw-text-opacity: 1;
   color: rgb(180 83 9 / var(--tw-text-opacity));
+}
+
+.text-amber-800 {
+  --tw-text-opacity: 1;
+  color: rgb(146 64 14 / var(--tw-text-opacity));
 }
 
 .text-amber-950 {
@@ -3002,6 +3021,11 @@ select {
   transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
 }
 
+/*
+@import "/tailwind/utilities.css";
+
+*/
+
 .file\:mr-4::file-selector-button {
   margin-right: 1rem;
 }
@@ -3042,6 +3066,12 @@ select {
 .placeholder\:text-gray-400::placeholder {
   --tw-text-opacity: 1;
   color: rgb(156 163 175 / var(--tw-text-opacity));
+}
+
+.hover\:scale-105:hover {
+  --tw-scale-x: 1.05;
+  --tw-scale-y: 1.05;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
 
 .hover\:scale-\[1\.02\]:hover {
@@ -3209,6 +3239,11 @@ select {
   color: rgb(14 116 144 / var(--tw-text-opacity));
 }
 
+.hover\:text-cyan-800:hover {
+  --tw-text-opacity: 1;
+  color: rgb(21 94 117 / var(--tw-text-opacity));
+}
+
 .hover\:text-cyan-900:hover {
   --tw-text-opacity: 1;
   color: rgb(22 78 99 / var(--tw-text-opacity));
@@ -3249,6 +3284,11 @@ select {
   color: rgb(49 46 129 / var(--tw-text-opacity));
 }
 
+.hover\:text-purple-900:hover {
+  --tw-text-opacity: 1;
+  color: rgb(88 28 135 / var(--tw-text-opacity));
+}
+
 .hover\:text-red-900:hover {
   --tw-text-opacity: 1;
   color: rgb(127 29 29 / var(--tw-text-opacity));
@@ -3262,11 +3302,6 @@ select {
 .hover\:text-yellow-700:hover {
   --tw-text-opacity: 1;
   color: rgb(161 98 7 / var(--tw-text-opacity));
-}
-
-.hover\:text-cyan-800:hover {
-  --tw-text-opacity: 1;
-  color: rgb(21 94 117 / var(--tw-text-opacity));
 }
 
 .hover\:underline:hover {

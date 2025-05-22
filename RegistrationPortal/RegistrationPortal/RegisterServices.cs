@@ -108,6 +108,8 @@ public static class RegisterServices
 
         builder.Services.AddSingleton<MockData>();
 
+        builder.Services.AddScoped<SchedulingAuditService>();
+
         builder.Services.AddSyncfusionBlazor();
 
         Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(

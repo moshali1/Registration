@@ -8,7 +8,9 @@
 
 @rendermode InteractiveServer
 
-@attribute [Authorize]
+@* @attribute [Authorize] *@
+@* Morning of Competition Change *@
+@attribute [Authorize(Roles = "Admin")]
 
 <PageTitle>Schedule Selection</PageTitle>
 
@@ -211,13 +213,6 @@
     </div>
 </div>
 
-<script>
-    window.registerBeforeUnload = (dotnetRef) => {
-    window.addEventListener('beforeunload', async () => {
-        await dotnetRef.invokeMethodAsync('HandleBeforeUnload');
-    });
-};
-</script>
 
 @code {
     [Parameter]
@@ -265,6 +260,12 @@
             // TEMP CODE
             // This is a temporary fix to prevent access to the message page for non-memorization divisions
             if (currentForm.CompetitionInfo.Division != "Memorization")
+            {
+                NavigationManager.NavigateTo("/", forceLoad: true);
+            }
+
+            //Morning of Competition Hard Disable
+            if (IsAdmin is false)
             {
                 NavigationManager.NavigateTo("/", forceLoad: true);
             }

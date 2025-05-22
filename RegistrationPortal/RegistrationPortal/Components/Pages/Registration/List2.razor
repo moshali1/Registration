@@ -1,4 +1,5 @@
 ﻿@page "/list2"
+@page "/list2/{SearchName}"
 
 @inject IFormData FormData
 @inject IUserData UserData
@@ -188,6 +189,8 @@ else
 
     private List<Form> forms;
 
+    [Parameter] public string SearchName { get; set; }
+
     private char activeTab = 'M';
     private string activeCategory = "All";
     private string activeGender = "All";
@@ -209,10 +212,26 @@ else
 
         UpdateCurrentCategories();
 
+        // If SearchName parameter is provided, set it as the search query
+        if (!string.IsNullOrEmpty(SearchName))
+        {
+            searchQuery = Uri.UnescapeDataString(SearchName);
+        }
+
 
         await LoadFilterState(); // Load filter state before loading forms
         await LoadForms(); // Load forms based on the filter state
         await FilterForms(); // Apply filters after loading forms
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // This runs when route parameters change
+        if (!string.IsNullOrEmpty(SearchName) && searchQuery != Uri.UnescapeDataString(SearchName))
+        {
+            searchQuery = Uri.UnescapeDataString(SearchName);
+            await FilterForms();
+        }
     }
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
@@ -530,6 +549,9 @@ else
         activePortion = "All";
         searchQuery = string.Empty;
         await FilterForms();
+
+        // Navigate back to base URL
+        NavManager.NavigateTo("/list2", false);
     }
 
     private async Task RefreshForms()

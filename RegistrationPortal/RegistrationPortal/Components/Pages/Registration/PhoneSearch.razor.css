@@ -1,0 +1,16 @@
+﻿.animate-loading-bar {
+    width: 100%;
+    animation: loading-bar 1.5s infinite;
+    background: linear-gradient(to right, transparent, #0891b2, transparent);
+    background-size: 200% 100%;
+}
+
+@keyframes loading-bar {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}

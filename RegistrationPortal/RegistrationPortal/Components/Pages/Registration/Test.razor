@@ -1,0 +1,43 @@
+﻿@* @page "/test"
+@rendermode InteractiveServer
+
+<h1 class="heading">Test UI Components</h1>
+
+<!-- Counter -->
+<div class="mb-6">
+    <p class="text-lg font-medium mb-2">Count: @count</p>
+    <button class="btn-primary animate-bounce-once" @onclick="Increment">Increase</button>
+</div>
+
+<!-- Buttons -->
+<div class="space-x-2 mb-6">
+    <button class="btn-primary">Primary</button>
+    <button class="btn-secondary">Secondary</button>
+    <button class="btn-danger">Danger</button>
+</div>
+
+<!-- Card -->
+<div class="card mb-6 transition-all duration-500 hover:scale-105">
+    <div class="card-header">Card Title</div>
+    <div class="card-body">This is some sample card content.</div>
+</div>
+
+<!-- Form -->
+<div class="mb-6">
+    <label class="label" for="email">Email</label>
+    <input class="input" type="email" id="email" placeholder="you@example.com" />
+</div>
+
+<!-- Alerts -->
+<div class="alert-success mb-4">This is a success message.</div>
+<div class="alert-danger">This is an error message.</div>
+
+@code {
+    private int count = 0;
+
+    private void Increment()
+    {
+        count++;
+    }
+}
+ *@
