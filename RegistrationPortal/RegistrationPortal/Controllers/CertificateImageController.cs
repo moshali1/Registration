@@ -11,9 +11,9 @@ public class CertificateImageController : ControllerBase
     }
 
     [HttpGet("download")]
-    public async Task<IActionResult> DownloadCertificateImage(string name, string category, string division, char gender)
+    public async Task<IActionResult> DownloadCertificateImage(string name, string category, string division)
     {
-        var imageBytes = await _certificateImageService.GenerateCertificateImageAsync(name, category, division, gender);
+        var imageBytes = await _certificateImageService.GenerateCertificateImageAsync(name, category, division);
         return File(imageBytes, "image/png", "Certificate.png");
     }
 }

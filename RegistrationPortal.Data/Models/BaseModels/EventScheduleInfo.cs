@@ -8,6 +8,7 @@ public class EventScheduleInfo
     public bool IsQualified { get; set; } = false;
     public string FinalScheduledDate { get; set; }
     public string FinalScheduledTime { get; set; }
+    public bool CheckedPrelimResults { get; set; } = false;
     public bool CheckedFinalSchedule { get; set; } = false;
     public DateTime CheckInDateTime { get; set; }
 

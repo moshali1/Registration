@@ -331,6 +331,51 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Unique Countries and States and list of States/Provinces-->
+                        <div class="mt-6 bg-white rounded-lg border border-gray-200 p-6">
+                            <h3 class="text-md font-medium text-gray-900">Geographic Distribution</h3>
+                            <div class="mt-4 space-y-4">
+                                @{
+                                    var countriesAndStates = GetUniqueCountriesAndStates();
+                                    if (countriesAndStates.Count == 0)
+                                    {
+                                        <p class="text-sm text-gray-500">No location data available.</p>
+                                    }
+                                    else
+                                    {
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            @foreach (var country in countriesAndStates.OrderBy(x => x.Key))
+                                            {
+                                                <div class="bg-gray-50 p-4 rounded-lg">
+                                                    <h4 class="text-sm font-medium text-gray-900">@country.Key</h4>
+                                                    <p class="text-sm text-gray-500 mt-1">
+                                                        <span class="font-medium">States/Provinces:</span>
+                                                        @if (string.IsNullOrWhiteSpace(country.Value))
+                                                        {
+                                                            <span>None specified</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span>@country.Value</span>
+                                                        }
+                                                        </p>
+                                                        <p class="text-sm text-gray-500 mt-1">
+                                                            <span class="font-medium">Participants:</span>
+                                                            @forms.Count(x => (x.AddressInfo.Country == country.Key &&
+                                                            (x.CompetitionInfo.Division == DivisionConstants.Memorization ||
+                                                            x.CompetitionInfo.Division == DivisionConstants.TenQiraat) && x.StatusInfo.Status == "Verified"))
+                                                            </p>
+                                                        </div>
+                                                        }
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+
+
+                        
                     </div>
                 }
             </div>
@@ -563,4 +608,25 @@
             .OrderBy(x => x.FullName)
             .ToList();
     }
+
+    // this method retrieves unique countries and states for the memorization and ten qira'at divisions
+    // also add the states/province of each country and lists the states, seperated by commas
+    private Dictionary<string, string> GetUniqueCountriesAndStates()
+    {
+        if (forms == null)
+        {
+            return new Dictionary<string, string>();
+        }
+        var countries = forms
+            .Where(x => (x.CompetitionInfo.Division == DivisionConstants.Memorization || 
+                        x.CompetitionInfo.Division == DivisionConstants.TenQiraat) && 
+                        x.StatusInfo.Status == "Verified")
+            .GroupBy(x => x.AddressInfo.Country)
+            .ToDictionary(
+                g => g.Key,
+                g => string.Join(", ", g.Select(x => x.AddressInfo.StateProvince).Distinct())
+            );
+        return countries ?? new Dictionary<string, string>();
+    }
+    
 }

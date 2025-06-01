@@ -47,7 +47,7 @@
 
                                             <div class="text-gray-900">
                                                 <h2 class="py-2 text-sm font-semibold sec-col-main">Message</h2>
-                                                @if (Form.CompetitionInfo.Division == DivisionConstants.Memorization && Form.StatusInfo.Status == "Verified")
+                                                @* @if (Form.CompetitionInfo.Division == DivisionConstants.Memorization && Form.StatusInfo.Status == "Verified")
                                                 {
                                                     @if (!string.IsNullOrEmpty(Form.EventScheduleInfo.PrelimScheduledDate))
                                                     {
@@ -76,6 +76,20 @@
                                                             </span>
                                                         </a>
                                                     }
+                                                } *@
+                                                @if (Form.EventScheduleInfo.IsAttended == true)
+                                                {
+                                                    <a href="/message/@Form.Id" class="relative bg-teal-600 hover:bg-teal-700 text-white font-medium py-1 px-2 rounded inline-flex items-center text-sm sec-col-main">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                        </svg>
+                                                        Round I Message
+                                                        @if (Form.EventScheduleInfo.CheckedPrelimResults == false)
+                                                        {
+                                                            <span class="flex absolute -right-2 -top-2 justify-center items-center w-4 h-4 bg-red-500 rounded-full border-2 border-white">
+                                                            </span>
+                                                        }
+                                                    </a>
                                                 }
                                             </div>
                                             <div class="sec-col-main pt-1 whitespace-nowrap">
@@ -90,7 +104,7 @@
                                             <span class="inline-flex items-center rounded-md px-2 py-1 font-medium text-800-700 ring-1 ring-inset ring-gray-600/20 @GetStatusSpanCssClass(Form.StatusInfo.Status)">@Form.StatusInfo.Status</span>
                                         </td>
                                         <td class="whitespace-normal px-3 py-3 text-gray-600 sec-col">
-                                            @if (Form.CompetitionInfo.Division == DivisionConstants.Memorization && Form.StatusInfo.Status == "Verified")
+                                            @* @if (Form.CompetitionInfo.Division == DivisionConstants.Memorization && Form.StatusInfo.Status == "Verified")
                                             {
                                                 @if (!string.IsNullOrEmpty(Form.EventScheduleInfo.PrelimScheduledDate))
                                                 {
@@ -119,6 +133,20 @@
                                                         </span>
                                                     </a>
                                                 }
+                                            } *@
+                                            @if (Form.EventScheduleInfo.IsAttended == true)
+                                            {
+                                                <a href="/message/@Form.Id" class="relative bg-teal-600 hover:bg-teal-700 text-white font-medium py-1 px-2 rounded inline-flex items-center text-sm">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    </svg>
+                                                    Round I Message
+                                                    @if (Form.EventScheduleInfo.CheckedPrelimResults == false)
+                                                    {
+                                                        <span class="flex absolute -right-2 -top-2 justify-center items-center w-4 h-4 bg-red-500 rounded-full border-2 border-white">
+                                                        </span>
+                                                    }
+                                                </a>
                                             }
                                         </td>
                                         <td class="whitespace-normal py-3 pl-3 pr-4 text-right font-medium sm:pr-0 sec-col">

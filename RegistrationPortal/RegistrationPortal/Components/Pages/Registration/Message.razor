@@ -6,6 +6,7 @@
 @inject IJSRuntime JSRuntime
 @inject AuthenticationStateProvider AuthState
 @inject NavigationManager NavManager
+@inject IJSRuntime JSRuntime
 
 @rendermode InteractiveServer
 
@@ -38,7 +39,151 @@
                         <p>Form not found.</p>
                     </div>
                 }
-                else if (String.IsNullOrEmpty(form?.EventScheduleInfo.PrelimScheduledDate) == false)
+                else if (form?.EventScheduleInfo.IsAttended == true)
+                {
+                    if (form.EventScheduleInfo.IsQualified == true)
+                    {
+                        <!-- QUALIFIED MESSAGE -->
+                        <div class="border rounded-xl bg-gray-50 p-6 space-y-5">
+                            <div>
+                                <h2 class="text-lg font-semibold text-cyan-900">
+                                    <i class="fas fa-trophy text-yellow-500 mr-2"></i>
+                                    <strong>Congratulations! You Have Qualified for Round 2</strong>
+                                </h2>
+                            </div>
+
+                            <!-- Competitor Info Grid -->
+                            <div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
+                                    <div>
+                                        <span class="block text-sm font-medium text-gray-500">Name</span>
+                                        <span class="text-base font-semibold">@form.PersonalInfo.GetFirstMiddleLastName()</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-sm font-medium text-gray-500">Division</span>
+                                        <span class="text-base font-semibold">@form.CompetitionInfo.Division</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-sm font-medium text-gray-500">Category</span>
+                                        <span class="text-base font-semibold">@form.CompetitionInfo.Category</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-sm font-medium text-gray-500">Portion</span>
+                                        <span class="text-base font-semibold">@form.CompetitionInfo.Portion</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Result Message -->
+                            <div class="text-gray-700 space-y-2">
+                                <p class="font-bold">
+                                    <i class="fas fa-check-circle text-violet-800 mr-2"></i>
+                                    You have qualified for Round 2 (Final Round) of the <strong>11th Annual Imam Al-Shatibi Qur'an Competition</strong>.
+                                </p>
+                                <p class="text-sm">
+                                    <i class="fas fa-heart text-violet-800 mr-1"></i>
+                                    We extend our heartfelt gratitude for your dedication and efforts. May Allah reward you, your teachers, and your parents for their unwavering support and guidance. <strong>JazakAllahu Khayran.</strong>
+                                </p>
+                                <p class="text-sm font-medium">
+                                    <i class="fas fa-calendar-check text-blue-500 mr-2"></i>
+                                    We will update you soon on steps for scheduling the final round.
+                                </p>
+                                <p class="text-sm font-medium">
+                                    The final round will be in-person in MN starting on <strong>Saturday, June 28th, 2025</strong> and will continue until <strong>Sunday, July 6th, 2024</strong>. 
+                                </p>
+                            </div>
+
+                            <!-- Important Notice -->
+                            <div class="text-xs text-gray-600 bg-yellow-50 border border-yellow-200 rounded p-3">
+                                <p class="font-bold mb-1">
+                                    <i class="fas fa-exclamation-triangle text-yellow-600 mr-2"></i>
+                                    Important Notice:
+                                </p>
+                                <p>
+                                    Due to the extremely close scores and limited finalist slots, we ask all finalists to treat their advancement with <strong>seriousness and respect</strong>. Withdrawing or failing to attend the final round without valid cause (e.g., certified medical emergency or unforeseen serious circumstance) will result in <strong>disqualification from future competitions</strong>.
+                                </p>
+                                <p class="mt-2">
+                                    This policy not only ensures fairness to those who narrowly missed qualifying but also respects the time and effort invested by judges, organizers, and fellow participants who have committed to the final round. We appreciate your understanding and cooperation.
+                                </p>
+                            </div>
+
+                            <div class="mb-4">
+                                <button @onclick="DownloadCertificateImage"
+                                        class="inline-block bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 px-4 rounded">
+                                    Download Your Participation Certificate
+                                </button>
+                            </div>
+                        </div>
+                    }
+                    else if (form.EventScheduleInfo.IsQualified == false)
+                    {
+                        <!-- NON-QUALIFIED MESSAGE -->
+                        <div class="border rounded-xl bg-gray-50 p-6 space-y-5">
+                            <div>
+                                <h2 class="text-lg font-semibold text-cyan-900">
+                                    <i class="fas fa-envelope text-blue-500 mr-2"></i>
+                                    Subject: Competition Results - Round 1
+                                </h2>
+                            </div>
+
+                            <!-- Competitor Info Grid -->
+                            <div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
+                                    <div>
+                                        <span class="block text-sm font-medium text-gray-500">Name</span>
+                                        <span class="text-base font-semibold">@form.PersonalInfo.GetFirstMiddleLastName()</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-sm font-medium text-gray-500">Division</span>
+                                        <span class="text-base font-semibold">@form.CompetitionInfo.Division</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-sm font-medium text-gray-500">Category</span>
+                                        <span class="text-base font-semibold">@form.CompetitionInfo.Category</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-sm font-medium text-gray-500">Portion</span>
+                                        <span class="text-base font-semibold">@form.CompetitionInfo.Portion</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Result Message -->
+                            <div class="text-gray-700 space-y-2">
+                                <p>
+                                    <i class="fas fa-hand-holding-heart text-purple-500 mr-2"></i>
+                                    Thank you for participating in Round 1 (Preliminary Round) of the <strong>10th Annual Imam Al-Shatibi Qur'an Competition</strong>.
+                                </p>
+                                <p class="font-medium">
+                                    <i class="fas fa-info-circle text-orange-500 mr-2"></i>
+                                    Unfortunately, you have <strong>not qualified</strong> for Round 2.
+                                </p>
+                                <p class="text-sm">
+                                    <i class="fas fa-heart text-violet-800 mr-1"></i>
+                                    May Allah reward you for your efforts. We encourage you to <strong>keep practicing</strong> for future opportunities.
+                                </p>
+                            </div>
+
+                            <!-- Appreciation -->
+                            <div class="text-sm text-gray-600">
+                                <p>
+                                    Thank you for participating and thank you for your efforts and dedication towards the Quran.
+                                </p>
+                                <p>
+                                    May Allah reward the teachers, parents and the students who put in the effort. <strong>JazakAllahu Khayran.</strong>
+                                </p>
+                            </div>
+
+                            <div class="mb-4">
+                                <button @onclick="DownloadCertificateImage"
+                                        class="inline-block bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 px-4 rounded">
+                                    Download Your Participation Certificate
+                                </button>
+                            </div>
+                        </div>
+                    }
+                }
+                @* else if (String.IsNullOrEmpty(form?.EventScheduleInfo.PrelimScheduledDate) == false)
                 {
                     <div class="border rounded-xl bg-gray-50 p-6 space-y-5">
                         <div>
@@ -223,7 +368,7 @@
                             </a>
                         </div>
                     </div>
-                }
+                } *@
             </div>
         </div>
     </div>
@@ -581,5 +726,11 @@
             errorMessage = $"Error: {ex.Message}";
             isCancelling = false;
         }
+    }
+
+    private async Task DownloadCertificateImage()
+    {
+        var downloadUrl = $"api/CertificateImage/download?name={form.PersonalInfo.GetFirstMiddleLastName()}&category={form.CompetitionInfo.Category}&division={form.CompetitionInfo.Division}";
+        await JSRuntime.InvokeVoidAsync("open", downloadUrl, "_blank");
     }
 }
