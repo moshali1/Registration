@@ -14,4 +14,7 @@ public class EventScheduleInfo
 
     public string ScheduleSlotId { get; set; }  // Reference to the selected slot
     public DateTime? ScheduleSelectionTime { get; set; }  // When the selection was made
+
+    public string FinalScheduleSlotId { get; set; }
+    public DateTime? FinalScheduleSelectionTime { get; set; }
 }

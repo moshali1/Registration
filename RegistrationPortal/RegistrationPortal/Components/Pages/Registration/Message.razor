@@ -89,7 +89,7 @@
                                     We will update you soon on steps for scheduling the final round.
                                 </p>
                                 <p class="text-sm font-medium">
-                                    The final round will be in-person in MN starting on <strong>Saturday, June 28th, 2025</strong> and will continue until <strong>Sunday, July 6th, 2024</strong>. 
+                                    The final round will be in-person in MN starting on <strong>Saturday, June 28th, 2025</strong> and will continue until <strong>Sunday, July 6th, 2025</strong>.
                                 </p>
                             </div>
 
@@ -152,7 +152,7 @@
                             <div class="text-gray-700 space-y-2">
                                 <p>
                                     <i class="fas fa-hand-holding-heart text-purple-500 mr-2"></i>
-                                    Thank you for participating in Round 1 (Preliminary Round) of the <strong>10th Annual Imam Al-Shatibi Qur'an Competition</strong>.
+                                    Thank you for participating in Round 1 (Preliminary Round) of the <strong>11th Annual Imam Al-Shatibi Qur'an Competition</strong>.
                                 </p>
                                 <p class="font-medium">
                                     <i class="fas fa-info-circle text-orange-500 mr-2"></i>
@@ -277,7 +277,7 @@
                             </ul>
                             <p class="mt-2 text-sm text-gray-600">Further instructions will be provided upon joining the Zoom meeting.</p>
                         </div>
-                        
+                       
 
                         <!-- Error Message for Cancellation -->
                         @if (!string.IsNullOrEmpty(errorMessage))
@@ -304,7 +304,7 @@
                                 </button>
                             </div>
                         }
-                        
+                       
                     </div>
                 }
                 else
@@ -358,7 +358,7 @@
                                 </p>
                             </div>  
                         }
-                        
+                       
 
                         <div>
                             <p class="mb-2 text-base text-gray-700">Please click the button below to choose your preferred date and time:</p>
@@ -466,7 +466,7 @@
                 // Future BUG Fix
                 // Currently Pre Scheduling Deadlinea and Post have different criteria
                 // Pre Scheduling Deadline - users should be able to reschedule if they wish to as long as schedling is enabled
-                // Post deadline - users who already scheduled should not be able to reschedule, it should also be open to verified users who 
+                // Post deadline - users who already scheduled should not be able to reschedule, it should also be open to verified users who
                 // did not check their prelim schedule (false) until we manually remove scheudling option//
                 // scheduling settings logic is currently set only for those who did not schedule yet (reschelding)
 
@@ -500,27 +500,36 @@
 
                 // TEMP CODE
                 // This is a temporary fix to prevent access to the message page for non-memorization divisions
-                if (form.CompetitionInfo.Division != "Memorization")
+                if (form.CompetitionInfo.Division != "Memorization" && form.CompetitionInfo.Division != DivisionConstants.TenQiraat)
                 {
                     NavManager.NavigateTo("/", forceLoad: true);
                 }
 
                 // TEMP CODE
                 // Hard Disable - Morning of Competition
-                if (String.IsNullOrWhiteSpace(form.EventScheduleInfo.PrelimScheduledDate))
-                {
-                    NavManager.NavigateTo("/", forceLoad: true);
-                }
+                // if (String.IsNullOrWhiteSpace(form.EventScheduleInfo.PrelimScheduledDate))
+                // {
+                //     NavManager.NavigateTo("/", forceLoad: true);
+                // }
 
                 // Check if user has scheduled prelim round
                 hasSchedule = await SchedulingService.IsPrelimScheduleSelectedAsync(ID);
 
-                if (form.EventScheduleInfo.CheckedPrelimSchedule == false &&
-                    !string.IsNullOrEmpty(form.EventScheduleInfo.PrelimScheduledDate) &&
+                // if (form.EventScheduleInfo.CheckedPrelimSchedule == false &&
+                //     !string.IsNullOrEmpty(form.EventScheduleInfo.PrelimScheduledDate) &&
+                //     IsAdmin == false)
+                // {
+                //     // Mark prelim schedule as read
+                //     form.EventScheduleInfo.CheckedPrelimSchedule = true;
+                //     UpdateTrackingInfoForPrelim(form);
+                //     await FormData.UpdateForm(form);
+                // }
+
+                if (form.EventScheduleInfo.CheckedPrelimResults is false &&
                     IsAdmin == false)
                 {
                     // Mark prelim schedule as read
-                    form.EventScheduleInfo.CheckedPrelimSchedule = true;
+                    form.EventScheduleInfo.CheckedPrelimResults = true;
                     UpdateTrackingInfoForPrelim(form);
                     await FormData.UpdateForm(form);
                 }
@@ -561,9 +570,11 @@
         tracking.FullName = currentUser.GetFullName();
         tracking.DisplayName = currentUser.DisplayName;
         tracking.UserType = currentUser.UserType;
-        tracking.TrackingAction = $"Read Message: Preliminary Round Schedule";
+        // tracking.TrackingAction = $"Read Message: Preliminary Round Schedule";
+        tracking.TrackingAction = $"Read Message: Preliminary Round Results";
 
-        var description = $"Message regarding preliminary round schedule (date and time) was marked as read by {currentUser.DisplayName} ({currentUser.UserType}).";
+        // var description = $"Message regarding preliminary round schedule (date and time) was marked as read by {currentUser.DisplayName} ({currentUser.UserType}).";
+        var description = $"Message regarding preliminary round results was marked as read by {currentUser.DisplayName} ({currentUser.UserType}).";
         tracking.Descriptions.Add(description);
 
         form.FormHistory.Add(tracking);
